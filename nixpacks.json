@@ -1,0 +1,5 @@
+{
+  "providers": ["node"],
+  "buildCmd": "npm install && npm run db:generate && npm run build",
+  "startCmd": "npm run db:migrate && npm start"
+}

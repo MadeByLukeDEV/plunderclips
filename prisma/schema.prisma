@@ -1,0 +1,99 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  twitchId      String   @unique
+  twitchLogin   String   @unique
+  displayName   String
+  profileImage  String?
+  email         String?
+  role          Role     @default(USER)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  clips         Clip[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique @db.VarChar(500)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Clip {
+  id          String     @id @default(cuid())
+  twitchClipId String    @unique
+  twitchUrl   String
+  embedUrl    String
+  title       String
+  thumbnailUrl String?
+  viewCount   Int        @default(0)
+  duration    Float?
+  submittedBy String
+  submittedByName String
+  status      ClipStatus @default(PENDING)
+  tags        ClipTag[]
+  game        String     @default("Sea of Thieves")
+  broadcasterId String
+  broadcasterName String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  reviewedAt  DateTime?
+  reviewedBy  String?
+  reviewNotes String?
+  user        User       @relation(fields: [submittedBy], references: [id], onDelete: Cascade)
+
+  @@map("clips")
+}
+
+model ClipTag {
+  id     String @id @default(cuid())
+  clipId String
+  tag    Tag
+  clip   Clip   @relation(fields: [clipId], references: [id], onDelete: Cascade)
+
+  @@unique([clipId, tag])
+  @@map("clip_tags")
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum ClipStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+enum Tag {
+  FUNNY
+  KILL
+  TUCK
+  HIGHLIGHT
+  PVP
+  PVE
+  SAILING
+  TREASURE
+  KRAKEN
+  EPIC_FAIL
+  TEAM_PLAY
+  SOLO
+}
