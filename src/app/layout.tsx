@@ -6,7 +6,7 @@ import { QueryProvider } from '@/components/providers/QueryProvider';
 import Navbar from '@/components/layout/Navbar';
 
 export const metadata: Metadata = {
-  title: 'SoT Clips — Sea of Thieves Community Clips',
+  title: 'Plunder Clips — Sea of Thieves Community Clips',
   description: 'The ultimate Sea of Thieves streaming clip showcase.',
 };
 
