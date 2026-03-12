@@ -5,9 +5,54 @@ import { AuthProvider } from '@/components/providers/AuthProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import Navbar from '@/components/layout/Navbar';
 
+const BASE_URL = process.env.NEXTAUTH_URL || 'https://plunderclips.gg';
+
 export const metadata: Metadata = {
-  title: 'Plunder Clips — Sea of Thieves Community Clips',
-  description: 'The ultimate Sea of Thieves streaming clip showcase.',
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: 'PlunderClips — Sea of Thieves Community Clips',
+    template: '%s — PlunderClips',
+  },
+  description: 'The finest Sea of Thieves moments from the seven seas. Discover, submit and showcase the best Twitch clips from the SoT streaming community.',
+  keywords: ['Sea of Thieves', 'SoT', 'Twitch clips', 'streaming', 'community', 'PlunderClips', 'gaming clips'],
+  authors: [{ name: 'PlunderClips' }],
+  creator: 'PlunderClips',
+
+  openGraph: {
+    type: 'website',
+    url: BASE_URL,
+    siteName: 'PlunderClips',
+    title: 'PlunderClips — Sea of Thieves Community Clips',
+    description: 'The finest Sea of Thieves moments from the seven seas — battles, blunders, and brilliance.',
+    images: [{ url: '/android-chrome-512x512.png', width: 512, height: 512, alt: 'PlunderClips' }],
+  },
+
+  twitter: {
+    card: 'summary',
+    title: 'PlunderClips — Sea of Thieves Community Clips',
+    description: 'The finest Sea of Thieves moments from the seven seas — battles, blunders, and brilliance.',
+    images: ['/android-chrome-512x512.png'],
+  },
+
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png' }],
+    other: [
+      { rel: 'android-chrome-192x192', url: '/android-chrome-192x192.png' },
+      { rel: 'android-chrome-512x512', url: '/android-chrome-512x512.png' },
+    ],
+  },
+
+  manifest: '/site.webmanifest',
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -21,10 +66,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <main className="flex-1">{children}</main>
               <footer className="border-t border-white/5 py-8 text-center">
                 <p className="font-display text-sm text-white/20 tracking-widest mb-3">
-                  PLUNDER CLIPS — SAIL. PLUNDER. CLIP.
+                  PLUNDERCLIPS — SAIL. PLUNDER. CLIP.
                 </p>
                 <div className="flex items-center justify-center gap-6 mb-3">
-                  <a href="/privacy" className="text-xs text-white/20 hover:text-teal font-display tracking-widest transition-colors">PRIVACY POLICY</a>
+                  <a href="/datenschutz" className="text-xs text-white/20 hover:text-teal font-display tracking-widest transition-colors">PRIVACY POLICY</a>
                 </div>
                 <p className="text-xs text-white/10 font-body">Not affiliated with Rare or Xbox Game Studios</p>
               </footer>

@@ -1,0 +1,13 @@
+{
+  "name": "PlunderClips",
+  "short_name": "PlunderClips",
+  "description": "The finest Sea of Thieves moments from the seven seas.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0e10",
+  "theme_color": "#00e5c0",
+  "icons": [
+    { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
