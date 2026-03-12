@@ -5,11 +5,12 @@ import { Eye, Clock, ExternalLink, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
-interface Props { params: { id: string } }
+interface Props { params: Promise<{ id: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
   const clip = await prisma.clip.findUnique({
-    where: { id: params.id, status: 'APPROVED' },
+    where: { id, status: 'APPROVED' },
   });
   if (!clip) return { title: 'Clip Not Found' };
   return {
@@ -31,8 +32,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ClipPage({ params }: Props) {
+  const { id } = await params;
   const clip = await prisma.clip.findUnique({
-    where: { id: params.id, status: 'APPROVED' },
+    where: { id, status: 'APPROVED' },
     include: { tags: true },
   });
 

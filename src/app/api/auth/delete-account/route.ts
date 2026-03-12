@@ -1,17 +1,16 @@
-import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/middleware-auth';
 import { prisma } from '@/lib/prisma';
 
-export async function DELETE(req: Request) {
-  const session = await getSession(req);
-  if (!session) {
+export async function DELETE(request: NextRequest) {
+  const { user, error } = await requireAuth(request);
+  if (error || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    // Delete in order: tags → clips → sessions → user
     const userClips = await prisma.clip.findMany({
-      where: { submittedById: session.userId },
+      where: { submittedBy: user.id },
       select: { id: true },
     });
     const clipIds = userClips.map(c => c.id);
@@ -21,10 +20,9 @@ export async function DELETE(req: Request) {
       await prisma.clip.deleteMany({ where: { id: { in: clipIds } } });
     }
 
-    await prisma.session.deleteMany({ where: { userId: session.userId } });
-    await prisma.user.delete({ where: { id: session.userId } });
+    await prisma.session.deleteMany({ where: { userId: user.id } });
+    await prisma.user.delete({ where: { id: user.id } });
 
-    // Clear cookie
     const response = NextResponse.json({ success: true });
     response.cookies.set('auth-token', '', { maxAge: 0, path: '/' });
     return response;
