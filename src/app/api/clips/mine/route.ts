@@ -10,8 +10,14 @@ export async function GET(request: NextRequest) {
 
   const clips = await prisma.clip.findMany({
     where: { submittedBy: user.id },
-    include: { tags: true },
     orderBy: { createdAt: 'desc' },
+    select: {
+      id: true, twitchClipId: true, twitchUrl: true, embedUrl: true,
+      title: true, thumbnailUrl: true, viewCount: true, duration: true,
+      submittedByName: true, broadcasterName: true, status: true,
+      reviewNotes: true, reviewedAt: true, createdAt: true,
+      tags: true,
+    },
   });
 
   return NextResponse.json({ clips });

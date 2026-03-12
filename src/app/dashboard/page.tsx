@@ -202,6 +202,11 @@ export default function DashboardPage() {
                     <div className="flex flex-wrap gap-1 mt-1">
                       {clip.tags.slice(0, 2).map((t: any) => <TagBadge key={t.id} tag={t.tag} small />)}
                     </div>
+                    {clip.status === 'DECLINED' && clip.reviewNotes && (
+                      <p className="text-xs text-red-400/60 font-body mt-1 flex items-center gap-1">
+                        <span className="flex-shrink-0">→</span>Reason: {clip.reviewNotes}
+                      </p>
+                    )}
                   </div>
                   <div className={`flex items-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-1 rounded-sm text-xs font-display tracking-wider border flex-shrink-0 ${s.cls}`}>
                     {s.icon}

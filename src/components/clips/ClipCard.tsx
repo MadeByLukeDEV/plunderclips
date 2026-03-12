@@ -1,5 +1,6 @@
 'use client';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useState } from 'react';
 import { TagBadge } from '@/components/ui/TagBadge';
 import { Eye, Clock, ExternalLink } from 'lucide-react';
@@ -67,11 +68,16 @@ export function ClipCard({ clip }: { clip: Clip }) {
 
       {/* Info */}
       <div className="p-3">
-        <h3 className="font-display text-sm font-700 text-white line-clamp-2 mb-1 leading-snug tracking-wide">
+        <Link href={`/clips/${clip.id}`}
+          className="font-display text-sm font-700 text-white hover:text-teal transition-colors line-clamp-2 mb-1 leading-snug tracking-wide block">
           {clip.title}
-        </h3>
+        </Link>
         <div className="flex items-center justify-between text-xs text-white/40 mb-2 font-mono">
-          <span>{clip.broadcasterName}</span>
+          <Link
+            href={`/streamers/${clip.broadcasterName.toLowerCase()}`}
+            onClick={e => e.stopPropagation()}
+            className="hover:text-teal transition-colors"
+          >{clip.broadcasterName}</Link>
           <span className="flex items-center gap-1">
             <Eye className="w-3 h-3" />{clip.viewCount.toLocaleString()}
           </span>
