@@ -9,17 +9,21 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  twitchId      String   @unique
-  twitchLogin   String   @unique
-  displayName   String
-  profileImage  String?
-  email         String?
-  role          Role     @default(USER)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  clips         Clip[]
-  sessions      Session[]
+  id                 String   @id @default(cuid())
+  twitchId           String   @unique
+  twitchLogin        String   @unique
+  displayName        String
+  profileImage       String?
+  email              String?
+  role               Role     @default(USER)
+  youtubeChannelId   String?
+  youtubeChannelName String?
+  medalUserId        String?
+  medalUsername      String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  clips              Clip[]
+  sessions           Session[]
 
   @@map("users")
 }
@@ -36,27 +40,29 @@ model Session {
 }
 
 model Clip {
-  id          String     @id @default(cuid())
-  twitchClipId String    @unique
-  twitchUrl   String
-  embedUrl    String
-  title       String
-  thumbnailUrl String?
-  viewCount   Int        @default(0)
-  duration    Float?
-  submittedBy String
-  submittedByName String
-  status      ClipStatus @default(PENDING)
-  tags        ClipTag[]
-  game        String     @default("Sea of Thieves")
-  broadcasterId String
-  broadcasterName String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  reviewedAt  DateTime?
-  reviewedBy  String?
-  reviewNotes String?
-  user        User       @relation(fields: [submittedBy], references: [id], onDelete: Cascade)
+  id               String     @id @default(cuid())
+  twitchClipId     String     @unique
+  twitchUrl        String
+  embedUrl         String
+  title            String
+  thumbnailUrl     String?
+  viewCount        Int        @default(0)
+  duration         Float?
+  submittedBy      String
+  submittedByName  String
+  status           ClipStatus @default(PENDING)
+  platform         Platform   @default(TWITCH)
+  platformVerified Boolean    @default(true)
+  tags             ClipTag[]
+  game             String     @default("Sea of Thieves")
+  broadcasterId    String
+  broadcasterName  String
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  reviewedAt       DateTime?
+  reviewedBy       String?
+  reviewNotes      String?
+  user             User       @relation(fields: [submittedBy], references: [id], onDelete: Cascade)
 
   @@map("clips")
 }
@@ -81,6 +87,12 @@ enum ClipStatus {
   PENDING
   APPROVED
   DECLINED
+}
+
+enum Platform {
+  TWITCH
+  YOUTUBE
+  MEDAL
 }
 
 enum Tag {

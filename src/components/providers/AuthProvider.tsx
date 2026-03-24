@@ -2,11 +2,14 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
 interface User {
+  [x: string]: string;
+  youtubeChannelId: any;
+  medalUserId: any;
   id: string;
   twitchId: string;
   twitchLogin: string;
   displayName: string;
-  profileImage: string | null;
+  profileImage: string;
   role: 'USER' | 'ADMIN' | 'MODERATOR';
   createdAt: string;
 }

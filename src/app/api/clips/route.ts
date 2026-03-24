@@ -1,13 +1,20 @@
+// src/app/api/clips/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/middleware-auth';
 import { handleCors, withCors } from '@/lib/cors';
 import { extractClipId, fetchTwitchClip, isSeaOfThievesClip, buildEmbedUrl } from '@/lib/twitch';
+import {
+  detectPlatform,
+  extractYouTubeVideoId, fetchYouTubeVideo, isSeaOfThievesYouTube,
+  buildYouTubeEmbedUrl, parseYouTubeDuration,
+  extractMedalClipId, fetchMedalClip, isSeaOfThievesMedal, buildMedalEmbedUrl,
+} from '@/lib/platforms';
 import { z } from 'zod';
-import { Tag } from '@prisma/client';
+import { Tag, Platform } from '@prisma/client';
 
 const submitSchema = z.object({
-  twitchUrl: z.string().url(),
+  clipUrl: z.string().url(),
   tags: z.array(z.nativeEnum(Tag)).min(1).max(5),
 });
 
@@ -20,15 +27,13 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(parseInt(searchParams.get('limit') || '12'), 50);
   const tag = searchParams.get('tag') as Tag | null;
   const search = searchParams.get('search') || '';
+  const sort = searchParams.get('sort') || 'newest';
+  const platform = searchParams.get('platform') as Platform | null;
+  const orderBy = sort === 'popular' ? { viewCount: 'desc' as const } : { createdAt: 'desc' as const };
 
-  const where: Record<string, unknown> = {
-    status: 'APPROVED',
-  };
-
-  if (tag) {
-    where.tags = { some: { tag } };
-  }
-
+  const where: Record<string, unknown> = { status: 'APPROVED' };
+  if (tag) where.tags = { some: { tag } };
+  if (platform) where.platform = platform;
   if (search) {
     where.OR = [
       { title: { contains: search } },
@@ -38,27 +43,14 @@ export async function GET(request: NextRequest) {
   }
 
   const [clips, total] = await Promise.all([
-    prisma.clip.findMany({
-      where,
-      include: { tags: true },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
+    prisma.clip.findMany({ where, include: { tags: true }, orderBy, skip: (page - 1) * limit, take: limit }),
     prisma.clip.count({ where }),
   ]);
 
-  const response = NextResponse.json({
-    clips,
-    pagination: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit),
-    },
-  });
-
-  return withCors(response, request.headers.get('origin'));
+  return withCors(
+    NextResponse.json({ clips, pagination: { page, limit, total, pages: Math.ceil(total / limit) } }),
+    request.headers.get('origin')
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -67,111 +59,193 @@ export async function POST(request: NextRequest) {
 
   const { user, error } = await requireAuth(request);
   if (error || !user) {
-    return withCors(
-      NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
-      request.headers.get('origin')
-    );
+    return withCors(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }), request.headers.get('origin'));
   }
 
   let body;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
+  try { body = await request.json(); }
+  catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
+
+  // Support both old twitchUrl and new clipUrl field
+  if (body.twitchUrl && !body.clipUrl) body.clipUrl = body.twitchUrl;
 
   const parsed = submitSchema.safeParse(body);
   if (!parsed.success) {
+    return withCors(NextResponse.json({ error: 'Validation failed', details: parsed.error.flatten() }, { status: 400 }), request.headers.get('origin'));
+  }
+
+  const { clipUrl, tags } = parsed.data;
+  const platform = detectPlatform(clipUrl);
+
+  if (!platform) {
     return withCors(
-      NextResponse.json({ error: 'Validation failed', details: parsed.error.flatten() }, { status: 400 }),
+      NextResponse.json({ error: 'Unsupported URL. Please submit a Twitch clip, YouTube video, or Medal.tv clip.' }, { status: 400 }),
       request.headers.get('origin')
     );
   }
 
-  const { twitchUrl, tags } = parsed.data;
+  const origin = request.headers.get('origin');
 
-  // Extract clip ID
-  const clipId = extractClipId(twitchUrl);
-  if (!clipId) {
-    return withCors(
-      NextResponse.json({ error: 'Invalid Twitch clip URL' }, { status: 400 }),
-      request.headers.get('origin')
-    );
-  }
+  // ── TWITCH ────────────────────────────────────────────────────────────────
+  if (platform === 'TWITCH') {
+    const clipId = extractClipId(clipUrl);
+    if (!clipId) return withCors(NextResponse.json({ error: 'Invalid Twitch clip URL' }, { status: 400 }), origin);
 
-  // Check for duplicate
-  const existing = await prisma.clip.findUnique({ where: { twitchClipId: clipId } });
-  if (existing) {
-    return withCors(
-      NextResponse.json({ error: 'This clip has already been submitted' }, { status: 409 }),
-      request.headers.get('origin')
-    );
-  }
+    const existing = await prisma.clip.findUnique({ where: { twitchClipId: clipId } });
+    if (existing) return withCors(NextResponse.json({ error: 'This clip has already been submitted' }, { status: 409 }), origin);
 
-  // Fetch clip data from Twitch
-  const clipData = await fetchTwitchClip(clipId);
-  if (!clipData) {
-    return withCors(
-      NextResponse.json({ error: 'Could not fetch clip from Twitch. Make sure the URL is correct.' }, { status: 404 }),
-      request.headers.get('origin')
-    );
-  }
+    const clipData = await fetchTwitchClip(clipId);
+    if (!clipData) return withCors(NextResponse.json({ error: 'Could not fetch clip from Twitch' }, { status: 404 }), origin);
 
-  // Verify it's Sea of Thieves
-  if (!isSeaOfThievesClip(clipData)) {
-    return withCors(
-      NextResponse.json({ error: 'This clip is not from Sea of Thieves. Only SoT clips are allowed.' }, { status: 422 }),
-      request.headers.get('origin')
-    );
-  }
+    if (!isSeaOfThievesClip(clipData)) {
+      return withCors(NextResponse.json({ error: 'This clip is not from Sea of Thieves' }, { status: 422 }), origin);
+    }
 
-  // Verify the broadcaster (streamer) is registered on the platform
-  const broadcaster = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { twitchLogin: clipData.broadcaster_name.toLowerCase() },
-        { twitchId: clipData.broadcaster_id },
-      ],
-    },
-  });
+    const broadcaster = await prisma.user.findFirst({
+      where: { OR: [{ twitchLogin: clipData.broadcaster_name.toLowerCase() }, { twitchId: clipData.broadcaster_id }] },
+    });
+    if (!broadcaster) {
+      return withCors(NextResponse.json({ error: `The streamer "${clipData.broadcaster_name}" is not registered on this platform.` }, { status: 403 }), origin);
+    }
 
-  if (!broadcaster) {
-    return withCors(
-      NextResponse.json({
-        error: `The streamer "${clipData.broadcaster_name}" is not registered on this platform. Only clips from registered streamers can be submitted.`,
-      }, { status: 403 }),
-      request.headers.get('origin')
-    );
-  }
-
-  const appUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-  const parentDomain = new URL(appUrl).hostname;
-
-  const clip = await prisma.clip.create({
-    data: {
-      twitchClipId: clipId,
-      twitchUrl: clipData.url,
-      embedUrl: buildEmbedUrl(clipId, parentDomain),
-      title: clipData.title,
-      thumbnailUrl: clipData.thumbnail_url,
-      viewCount: clipData.view_count,
-      duration: clipData.duration,
-      submittedBy: user.id,
-      submittedByName: user.displayName,
-      broadcasterId: clipData.broadcaster_id,
-      broadcasterName: clipData.broadcaster_name,
-      status: 'PENDING',
-      tags: {
-        create: tags.map(tag => ({ tag })),
+    const appUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const clip = await prisma.clip.create({
+      data: {
+        twitchClipId: clipId,
+        twitchUrl: clipData.url,
+        embedUrl: buildEmbedUrl(clipId, new URL(appUrl).hostname),
+        title: clipData.title,
+        thumbnailUrl: clipData.thumbnail_url,
+        viewCount: clipData.view_count,
+        duration: clipData.duration,
+        submittedBy: user.id,
+        submittedByName: user.displayName,
+        broadcasterId: clipData.broadcaster_id,
+        broadcasterName: clipData.broadcaster_name,
+        platform: 'TWITCH',
+        platformVerified: true,
+        status: 'PENDING',
+        tags: { create: tags.map(tag => ({ tag })) },
       },
-    },
-    include: { tags: true },
-  });
+      include: { tags: true },
+    });
+    return withCors(NextResponse.json({ clip, message: 'Clip submitted! It will be reviewed shortly.' }, { status: 201 }), origin);
+  }
 
-  return withCors(
-    NextResponse.json({ clip, message: 'Clip submitted successfully! It will be reviewed shortly.' }, { status: 201 }),
-    request.headers.get('origin')
-  );
+  // ── YOUTUBE ───────────────────────────────────────────────────────────────
+  if (platform === 'YOUTUBE') {
+    const videoId = extractYouTubeVideoId(clipUrl);
+    if (!videoId) return withCors(NextResponse.json({ error: 'Invalid YouTube URL' }, { status: 400 }), origin);
+
+    const existing = await prisma.clip.findUnique({ where: { twitchClipId: `yt_${videoId}` } });
+    if (existing) return withCors(NextResponse.json({ error: 'This video has already been submitted' }, { status: 409 }), origin);
+
+    const video = await fetchYouTubeVideo(videoId);
+    if (!video) return withCors(NextResponse.json({ error: 'Could not fetch video from YouTube' }, { status: 404 }), origin);
+
+    if (!isSeaOfThievesYouTube(video)) {
+      return withCors(NextResponse.json({ error: 'This video does not appear to be Sea of Thieves content. Make sure "Sea of Thieves" appears in the title, description, or tags.' }, { status: 422 }), origin);
+    }
+
+    // Check if user has YouTube linked and if it matches
+    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+    const platformVerified = !!dbUser?.youtubeChannelId && dbUser.youtubeChannelId === video.channelId;
+
+    // Check broadcaster registered
+    const broadcaster = await prisma.user.findFirst({
+      where: { youtubeChannelId: video.channelId },
+    });
+    if (!broadcaster) {
+      return withCors(
+        NextResponse.json({ error: `The channel "${video.channelName}" is not registered on this platform. The streamer must register and link their YouTube channel first.` }, { status: 403 }),
+        origin
+      );
+    }
+
+    const reviewNotes = !platformVerified
+      ? '⚠️ YouTube account not linked by submitter — ownership unverified. Please check manually.'
+      : undefined;
+
+    const clip = await prisma.clip.create({
+      data: {
+        twitchClipId: `yt_${videoId}`,
+        twitchUrl: clipUrl,
+        embedUrl: buildYouTubeEmbedUrl(videoId),
+        title: video.title,
+        thumbnailUrl: video.thumbnailUrl,
+        viewCount: 0,
+        duration: parseYouTubeDuration(video.duration),
+        submittedBy: user.id,
+        submittedByName: user.displayName,
+        broadcasterId: video.channelId,
+        broadcasterName: video.channelName,
+        platform: 'YOUTUBE',
+        platformVerified,
+        status: 'PENDING',
+        reviewNotes,
+        tags: { create: tags.map(tag => ({ tag })) },
+      },
+      include: { tags: true },
+    });
+    return withCors(NextResponse.json({ clip, message: 'Clip submitted! It will be reviewed shortly.' }, { status: 201 }), origin);
+  }
+
+  // ── MEDAL ─────────────────────────────────────────────────────────────────
+  if (platform === 'MEDAL') {
+    const clipId = extractMedalClipId(clipUrl);
+    if (!clipId) return withCors(NextResponse.json({ error: 'Invalid Medal.tv clip URL' }, { status: 400 }), origin);
+
+    const existing = await prisma.clip.findUnique({ where: { twitchClipId: `medal_${clipId}` } });
+    if (existing) return withCors(NextResponse.json({ error: 'This clip has already been submitted' }, { status: 409 }), origin);
+
+    const clip = await fetchMedalClip(clipUrl);
+    if (!clip) return withCors(NextResponse.json({ error: 'Could not fetch clip from Medal.tv' }, { status: 404 }), origin);
+
+    if (!isSeaOfThievesMedal(clip)) {
+      return withCors(NextResponse.json({ error: 'This clip does not appear to be from Sea of Thieves.' }, { status: 422 }), origin);
+    }
+
+    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+    const platformVerified = !!dbUser?.medalUserId && dbUser.medalUserId === clip.userId;
+
+    // Check broadcaster registered by Medal userId
+    const broadcaster = await prisma.user.findFirst({
+      where: { medalUserId: clip.userId },
+    });
+    if (!broadcaster) {
+      return withCors(
+        NextResponse.json({ error: 'The Medal.tv user in this clip is not registered on this platform. The streamer must register and link their Medal.tv account first.' }, { status: 403 }),
+        origin
+      );
+    }
+
+    const reviewNotes = !platformVerified
+      ? '⚠️ Medal.tv account not linked by submitter — ownership unverified. Please check manually.'
+      : undefined;
+
+    const saved = await prisma.clip.create({
+      data: {
+        twitchClipId: `medal_${clipId}`,
+        twitchUrl: clipUrl,
+        embedUrl: buildMedalEmbedUrl(clip),
+        title: clip.title,
+        thumbnailUrl: clip.thumbnailUrl,
+        viewCount: 0,
+        duration: clip.duration,
+        submittedBy: user.id,
+        submittedByName: user.displayName,
+        broadcasterId: clip.userId,
+        broadcasterName: broadcaster.displayName,
+        platform: 'MEDAL',
+        platformVerified,
+        status: 'PENDING',
+        reviewNotes,
+        tags: { create: tags.map(tag => ({ tag })) },
+      },
+      include: { tags: true },
+    });
+    return withCors(NextResponse.json({ clip: saved, message: 'Clip submitted! It will be reviewed shortly.' }, { status: 201 }), origin);
+  }
 }
 
 export async function OPTIONS(request: NextRequest) {
