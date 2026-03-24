@@ -96,7 +96,7 @@ export default function SettingsPage() {
   );
 
   const linkYouTube = async (channelUrl: string) => {
-    const res = await fetch('/api/settings/link-youtube', {
+    const res = await fetch('/api/settings/youtube', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ channelUrl }),
     });
@@ -107,14 +107,14 @@ export default function SettingsPage() {
   };
 
   const unlinkYouTube = async () => {
-    const res = await fetch('/api/settings/link-youtube', { method: 'DELETE' });
+    const res = await fetch('/api/settings/youtube', { method: 'DELETE' });
     if (!res.ok) { toast.error('Failed to unlink'); return; }
     toast.success('YouTube unlinked');
     refetch?.();
   };
 
   const linkMedal = async (profileUrl: string) => {
-    const res = await fetch('/api/settings/link-medal', {
+    const res = await fetch('/api/settings/medal', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ profileUrl }),
     });
@@ -125,7 +125,7 @@ export default function SettingsPage() {
   };
 
   const unlinkMedal = async () => {
-    const res = await fetch('/api/settings/link-medal', { method: 'DELETE' });
+    const res = await fetch('/api/settings/medal', { method: 'DELETE' });
     if (!res.ok) { toast.error('Failed to unlink'); return; }
     toast.success('Medal.tv unlinked');
     refetch?.();
