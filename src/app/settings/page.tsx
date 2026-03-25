@@ -169,6 +169,7 @@ export default function SettingsPage() {
           placeholder="https://www.youtube.com/@YourChannel"
           field="youtubeChannelId"
         />
+        <span aria-disabled className="block opacity-50 pointer-events-none">
         <LinkedCard
           title="Medal.tv"
           icon={<span className="text-yellow-400 text-base">🏅</span>}
@@ -177,7 +178,9 @@ export default function SettingsPage() {
           onUnlink={unlinkMedal}
           placeholder="https://medal.tv/users/12345"
           field="medalUserId"
+          
         />
+        </span>
       </div>
 
       {/* Info box */}
