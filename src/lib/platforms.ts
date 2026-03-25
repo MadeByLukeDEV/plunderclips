@@ -41,8 +41,6 @@ export interface YouTubeChannelInfo {
 
 export async function fetchYouTubeChannel(url: string): Promise<YouTubeChannelInfo | null> {
   const apiKey = process.env.YOUTUBE_API_KEY;
-  console.log('Fetching YouTube channel for URL:', url);
-  console.log('Fetching key:', apiKey);
   if (!apiKey) throw new Error('YOUTUBE_API_KEY not set');
 
   const handle = extractYouTubeChannelHandle(url);
