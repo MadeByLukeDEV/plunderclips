@@ -60,7 +60,7 @@ export async function validateSession(token: string) {
   if (!payload) return null;
 
   const session = await prisma.session.findUnique({
-    where: { id: payload.sessionId, token },
+    where: { id: payload.sessionId },
     include: { user: true },
   });
 
