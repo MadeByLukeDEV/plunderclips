@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
       profileImage: true,
       role: true,
       youtubeChannelName: true,
-      medalUsername: true,
       createdAt: true,
       _count: { select: { clips: true } },
     },

@@ -18,8 +18,6 @@ export async function GET(request: NextRequest) {
         { broadcasterName: user.twitchLogin.toLowerCase() },
         // YouTube: match by linked channel ID
         ...(user.youtubeChannelId ? [{ broadcasterId: user.youtubeChannelId }] : []),
-        // Medal: match by linked medal user ID
-        ...(user.medalUserId ? [{ broadcasterId: user.medalUserId }] : []),
       ],
     },
     include: { tags: true },
