@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { usePathname } from 'next/navigation';
-import { LogOut, Shield, Swords, LayoutDashboard, Compass } from 'lucide-react';
+import { LogOut, Shield, Swords, LayoutDashboard, Compass, Youtube, Coffee } from 'lucide-react';
 
 export default function Navbar() {
   const { user, loading } = useAuth();
@@ -13,13 +13,18 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-white/5 bg-sot-bg/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
-
+      <div className='flex items-center justify-between gap-3'>
         {/* Logo */}
         <Link href="/">
           <span className="font-display text-xl font-900 tracking-widest text-white">
             PLUNDER<span className="text-teal">CLIPS</span>
           </span>
-        </Link>
+        </Link >
+      </div>
+
+
+        
+        
 
         {/* Desktop nav links */}
         <div className="hidden md:flex items-center gap-8">

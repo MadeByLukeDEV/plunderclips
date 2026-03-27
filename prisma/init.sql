@@ -12,8 +12,6 @@ CREATE TABLE IF NOT EXISTS users (
   role ENUM('USER', 'ADMIN', 'MODERATOR') NOT NULL DEFAULT 'USER',
   youtube_channel_id VARCHAR(191),
   youtube_channel_name VARCHAR(191),
-  medal_user_id VARCHAR(191),
-  medal_username VARCHAR(191),
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at DATETIME(3) NOT NULL,
 

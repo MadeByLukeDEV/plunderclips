@@ -18,8 +18,6 @@ model User {
   role               Role     @default(USER)
   youtubeChannelId   String?
   youtubeChannelName String?
-  medalUserId        String?
-  medalUsername      String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   clips              Clip[]
@@ -81,6 +79,7 @@ enum Role {
   USER
   ADMIN
   MODERATOR
+  PARTNER
 }
 
 enum ClipStatus {

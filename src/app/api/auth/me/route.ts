@@ -19,8 +19,6 @@ export async function GET(request: NextRequest) {
       role: true,
       youtubeChannelId: true,
       youtubeChannelName: true,
-      medalUserId: true,
-      medalUsername: true,
     },
   });
 

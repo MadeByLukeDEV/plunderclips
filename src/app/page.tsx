@@ -54,6 +54,7 @@ export default function HomePage() {
           <p className="font-body text-white/50 text-base md:text-lg max-w-md mx-auto mb-10">
             The finest Sea of Thieves moments from the seven seas — battles, blunders, and brilliance.
           </p>
+          <div className='flex gap-5 justify-center'>
           {!user ? (
             <a href="/api/auth/login" className="btn-teal-solid px-8 py-3 rounded text-base inline-block">
               Join the Crew
@@ -63,6 +64,7 @@ export default function HomePage() {
               Submit a Clip
             </Link>
           )}
+            </div>
         </div>
       </div>
 

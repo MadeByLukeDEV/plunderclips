@@ -177,11 +177,6 @@ export default function DashboardPage() {
                     YouTube
                   </span>
                 )}
-                {user.medalUserId && (
-                  <span className="px-2 py-0.5 rounded-sm text-xs font-display tracking-wider border text-yellow-400 border-yellow-400/30 bg-yellow-400/10">
-                    Medal.tv
-                  </span>
-                )}
               </div>
             </div>
           </div>
