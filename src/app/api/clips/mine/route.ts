@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       title: true, thumbnailUrl: true, viewCount: true, duration: true,
       submittedByName: true, broadcasterName: true, status: true,
       reviewNotes: true, reviewedAt: true, createdAt: true,
-      tags: true,
+      tags: true, platform: true, 
     },
   });
 

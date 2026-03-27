@@ -113,23 +113,7 @@ export default function SettingsPage() {
     refetch?.();
   };
 
-  const linkMedal = async (profileUrl: string) => {
-    const res = await fetch('/api/settings/link-medal', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profileUrl }),
-    });
-    const data = await res.json();
-    if (!res.ok) { toast.error(data.error); return; }
-    toast.success(`Medal.tv linked: ${data.username}`);
-    refetch?.();
-  };
 
-  const unlinkMedal = async () => {
-    const res = await fetch('/api/settings/link-medal', { method: 'DELETE' });
-    if (!res.ok) { toast.error('Failed to unlink'); return; }
-    toast.success('Medal.tv unlinked');
-    refetch?.();
-  };
 
   return (
     <div className="max-w-2xl mx-auto px-4 md:px-6 py-8 md:py-12">
@@ -169,28 +153,18 @@ export default function SettingsPage() {
           placeholder="https://www.youtube.com/@YourChannel"
           field="youtubeChannelId"
         />
-        <span aria-disabled className="block opacity-50 pointer-events-none">
-        <LinkedCard
-          title="Medal.tv"
-          icon={<span className="text-yellow-400 text-base">🏅</span>}
-          linked={user.medalUserId ? { name: user.medalUsername || 'Medal User', id: user.medalUserId } : null}
-          onLink={linkMedal}
-          onUnlink={unlinkMedal}
-          placeholder="https://medal.tv/users/12345"
-          field="medalUserId"
-          
-        />
-        </span>
+
       </div>
 
       {/* Info box */}
       <div className="sot-card rounded p-4 border-l-2 border-l-white/10">
         <p className="font-display text-xs text-white/30 tracking-widest mb-2">WHY LINK ACCOUNTS?</p>
         <ul className="text-xs text-white/30 space-y-1 font-body">
-          <li>→ Linking YouTube or Medal.tv lets us verify clip ownership automatically</li>
-          <li>→ Unlinked clips go to moderation with an ownership warning flag</li>
+          <li>→ Linking YouTube lets us verify clip ownership automatically</li>
+          <li>→ Unlinked YouTube clips are flagged for manual review by mods</li>
+          <li>→ Medal.tv clips always go to manual review — no linking required</li>
           <li>→ Twitch is your primary account and cannot be unlinked</li>
-          <li>→ You can unlink at any time — past clips are not affected</li>
+          <li>→ You can unlink YouTube at any time — past clips are not affected</li>
         </ul>
       </div>
     </div>

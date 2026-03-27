@@ -14,7 +14,7 @@ type Platform = 'TWITCH' | 'YOUTUBE' | 'MEDAL' | null;
 
 function detectPlatform(url: string): Platform {
   if (/clips\.twitch\.tv|twitch\.tv\/.+\/clip\//i.test(url)) return 'TWITCH';
-  if (/youtube\.com\/watch|youtu\.be\//i.test(url)) return 'YOUTUBE';
+  if (/youtube\.com\/(watch|shorts\/)|youtu\.be\//i.test(url)) return 'YOUTUBE';
   if (/medal\.tv/i.test(url)) return 'MEDAL';
   return null;
 }
@@ -30,12 +30,11 @@ function PlatformHint({ platform, user }: { platform: Platform; user: any }) {
       </span>
     </div>
   );
-  if (platform === 'MEDAL' && !user?.medalUserId) return (
+  if (platform === 'MEDAL') return (
     <div className="sot-card rounded p-3 border-l-2 border-l-yellow-400/50 flex items-start gap-2 text-sm">
       <span className="text-yellow-400 flex-shrink-0">🏅</span>
       <span className="text-white/50">
-        You haven't linked a Medal.tv account. The clip will be flagged for manual review.{' '}
-        <Link href="/settings" className="text-teal hover:underline">Link it in Settings →</Link>
+        Medal.tv clips are always sent to manual review — our crew will verify the clip before it goes live.
       </span>
     </div>
   );

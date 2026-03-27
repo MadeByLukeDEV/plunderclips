@@ -8,7 +8,7 @@ import {
   detectPlatform,
   extractYouTubeVideoId, fetchYouTubeVideo, isSeaOfThievesYouTube,
   buildYouTubeEmbedUrl, parseYouTubeDuration,
-  extractMedalClipId, fetchMedalClip, isSeaOfThievesMedal, buildMedalEmbedUrl,
+  extractMedalClipId,
 } from '@/lib/platforms';
 import { z } from 'zod';
 import { Tag, Platform } from '@prisma/client';
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
   try { body = await request.json(); }
   catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
 
-  // Support both old twitchUrl and new clipUrl field
+  // Support both old twitchUrl and new clipUrl
   if (body.twitchUrl && !body.clipUrl) body.clipUrl = body.twitchUrl;
 
   const parsed = submitSchema.safeParse(body);
@@ -76,15 +76,14 @@ export async function POST(request: NextRequest) {
 
   const { clipUrl, tags } = parsed.data;
   const platform = detectPlatform(clipUrl);
+  const origin = request.headers.get('origin');
 
   if (!platform) {
     return withCors(
       NextResponse.json({ error: 'Unsupported URL. Please submit a Twitch clip, YouTube video, or Medal.tv clip.' }, { status: 400 }),
-      request.headers.get('origin')
+      origin
     );
   }
-
-  const origin = request.headers.get('origin');
 
   // ── TWITCH ────────────────────────────────────────────────────────────────
   if (platform === 'TWITCH') {
@@ -105,7 +104,10 @@ export async function POST(request: NextRequest) {
       where: { OR: [{ twitchLogin: clipData.broadcaster_name.toLowerCase() }, { twitchId: clipData.broadcaster_id }] },
     });
     if (!broadcaster) {
-      return withCors(NextResponse.json({ error: `The streamer "${clipData.broadcaster_name}" is not registered on this platform.` }, { status: 403 }), origin);
+      return withCors(
+        NextResponse.json({ error: `The streamer "${clipData.broadcaster_name}" is not registered on this platform.` }, { status: 403 }),
+        origin
+      );
     }
 
     const appUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
@@ -125,7 +127,7 @@ export async function POST(request: NextRequest) {
         platform: 'TWITCH',
         platformVerified: true,
         status: 'PENDING',
-        tags: { create: tags.map(tag => ({ tag })) },
+        tags: { create: tags.map(t => ({ tag: t })) },
       },
       include: { tags: true },
     });
@@ -144,26 +146,29 @@ export async function POST(request: NextRequest) {
     if (!video) return withCors(NextResponse.json({ error: 'Could not fetch video from YouTube' }, { status: 404 }), origin);
 
     if (!isSeaOfThievesYouTube(video)) {
-      return withCors(NextResponse.json({ error: 'This video does not appear to be Sea of Thieves content. Make sure "Sea of Thieves" appears in the title, description, or tags.' }, { status: 422 }), origin);
+      return withCors(
+        NextResponse.json({ error: 'This video does not appear to be Sea of Thieves content. Make sure "Sea of Thieves" appears in the title, description, or tags.' }, { status: 422 }),
+        origin
+      );
     }
 
-    // Check if user has YouTube linked and if it matches
-    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
-    const platformVerified = !!dbUser?.youtubeChannelId && dbUser.youtubeChannelId === video.channelId;
-
-    // Check broadcaster registered
+    // Find the broadcaster by their linked YouTube channel
     const broadcaster = await prisma.user.findFirst({
       where: { youtubeChannelId: video.channelId },
     });
     if (!broadcaster) {
       return withCors(
-        NextResponse.json({ error: `The channel "${video.channelName}" is not registered on this platform. The streamer must register and link their YouTube channel first.` }, { status: 403 }),
+        NextResponse.json({ error: `The YouTube channel "${video.channelName}" is not registered on this platform. The streamer must register and link their YouTube channel first.` }, { status: 403 }),
         origin
       );
     }
 
+    // platformVerified = the submitter IS the broadcaster (same YouTube channel linked)
+    // This correctly handles both: streamer submitting own clip, AND someone else submitting
+    const platformVerified = user.youtubeChannelId === video.channelId;
+
     const reviewNotes = !platformVerified
-      ? '⚠️ YouTube account not linked by submitter — ownership unverified. Please check manually.'
+      ? `⚠️ Submitted by ${user.displayName} — YouTube ownership unverified. Please check manually.`
       : undefined;
 
     const clip = await prisma.clip.create({
@@ -183,7 +188,7 @@ export async function POST(request: NextRequest) {
         platformVerified,
         status: 'PENDING',
         reviewNotes,
-        tags: { create: tags.map(tag => ({ tag })) },
+        tags: { create: tags.map(t => ({ tag: t })) },
       },
       include: { tags: true },
     });
@@ -198,53 +203,32 @@ export async function POST(request: NextRequest) {
     const existing = await prisma.clip.findUnique({ where: { twitchClipId: `medal_${clipId}` } });
     if (existing) return withCors(NextResponse.json({ error: 'This clip has already been submitted' }, { status: 409 }), origin);
 
-    const clip = await fetchMedalClip(clipUrl);
-    if (!clip) return withCors(NextResponse.json({ error: 'Could not fetch clip from Medal.tv' }, { status: 404 }), origin);
-
-    if (!isSeaOfThievesMedal(clip)) {
-      return withCors(NextResponse.json({ error: 'This clip does not appear to be from Sea of Thieves.' }, { status: 422 }), origin);
-    }
-
-    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
-    const platformVerified = !!dbUser?.medalUserId && dbUser.medalUserId === clip.userId;
-
-    // Check broadcaster registered by Medal userId
-    const broadcaster = await prisma.user.findFirst({
-      where: { medalUserId: clip.userId },
-    });
-    if (!broadcaster) {
-      return withCors(
-        NextResponse.json({ error: 'The Medal.tv user in this clip is not registered on this platform. The streamer must register and link their Medal.tv account first.' }, { status: 403 }),
-        origin
-      );
-    }
-
-    const reviewNotes = !platformVerified
-      ? '⚠️ Medal.tv account not linked by submitter — ownership unverified. Please check manually.'
-      : undefined;
-
-    const saved = await prisma.clip.create({
+    // No Medal API ownership check possible — always flag for manual review
+    const clip = await prisma.clip.create({
       data: {
         twitchClipId: `medal_${clipId}`,
         twitchUrl: clipUrl,
-        embedUrl: buildMedalEmbedUrl(clip),
-        title: clip.title,
-        thumbnailUrl: clip.thumbnailUrl,
+        embedUrl: `https://medal.tv/clip/${clipId}`,
+        title: `Medal.tv clip by ${user.displayName}`,
+        thumbnailUrl: null,
         viewCount: 0,
-        duration: clip.duration,
+        duration: null,
         submittedBy: user.id,
         submittedByName: user.displayName,
-        broadcasterId: clip.userId,
-        broadcasterName: broadcaster.displayName,
+        broadcasterId: '',
+        broadcasterName: user.displayName,
         platform: 'MEDAL',
-        platformVerified,
+        platformVerified: false,
         status: 'PENDING',
-        reviewNotes,
-        tags: { create: tags.map(tag => ({ tag })) },
+        reviewNotes: `⚠️ Medal.tv clip — ownership and game cannot be auto-verified. Submitted by ${user.displayName}. Manual review required.`,
+        tags: { create: tags.map(t => ({ tag: t })) },
       },
       include: { tags: true },
     });
-    return withCors(NextResponse.json({ clip: saved, message: 'Clip submitted! It will be reviewed shortly.' }, { status: 201 }), origin);
+    return withCors(
+      NextResponse.json({ clip, message: 'Medal.tv clip submitted! It will be manually reviewed by the crew.' }, { status: 201 }),
+      origin
+    );
   }
 }
 
