@@ -7,6 +7,7 @@ import { TAG_LABELS } from '@/components/ui/TagBadge';
 import toast from 'react-hot-toast';
 import { CheckCircle, Link as LinkIcon, Loader2, Eye, Clock, Youtube, Settings } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const ALL_TAGS = Object.keys(TAG_LABELS);
 
@@ -175,7 +176,7 @@ export default function SubmitPage() {
           <div className="sot-card rounded overflow-hidden border border-teal/20">
             <div className="relative aspect-video bg-sot-dark overflow-hidden">
               {preview.thumbnailUrl ? (
-                <img src={preview.thumbnailUrl} alt={preview.title} className="w-full h-full object-cover" />
+                <Image src={preview.thumbnailUrl} alt={preview.title} priority={false} objectFit='cover' layout='fill'/>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-4xl">🏴‍☠️</div>
               )}

@@ -3,7 +3,7 @@ interface TagBadgeProps { tag: string; small?: boolean; }
 const TAG_LABELS: Record<string, string> = {
   FUNNY: '😂 Funny', KILL: '⚔️ Kill', TUCK: '🐢 Tuck', HIGHLIGHT: '⭐ Highlight',
   PVP: '🏴‍☠️ PvP', PVE: '🐉 PvE', SAILING: '⛵ Sailing', TREASURE: '💰 Treasure', KEG: '💥 Keg',
-  KRAKEN: '🐙 Kraken', EPIC_FAIL: '🤦 Epic Fail', TEAM_PLAY: '🤝 Team Play', SOLO: '🦅 Solo',
+  KRAKEN: '🐙 Kraken', MEGALODON: '🦈 Megalodon', EPIC_FAIL: '🤦 Epic Fail', TEAM_PLAY: '🤝 Team Play', SOLO: '🦅 Solo',
 };
 
 export function TagBadge({ tag, small }: TagBadgeProps) {

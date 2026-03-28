@@ -10,6 +10,8 @@ import { ArrowLeft, Eye, Film, TrendingUp, ExternalLink, RefreshCw } from 'lucid
 import { useState } from 'react';
 import { TAG_LABELS } from '@/components/ui/TagBadge';
 
+
+
 const TAGS = Object.keys(TAG_LABELS);
 
 export default function StreamerPage() {
@@ -60,7 +62,6 @@ export default function StreamerPage() {
   );
 
   const { user, stats } = data;
-
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
       {/* Back */}
@@ -97,10 +98,12 @@ export default function StreamerPage() {
               </h1>
               <span className={`px-2 py-0.5 rounded-sm text-xs font-display tracking-wider border ${
                 user.role === 'ADMIN' ? 'text-red-400 border-red-400/30 bg-red-400/10' :
-                user.role === 'MODERATOR' ? 'text-teal border-teal/30 bg-teal/10' :
-                'text-white/30 border-white/10'
+                user.role === 'MODERATOR' ? 'text-green-400 border-green-400/30 bg-green-400/10' :
+                user.role === 'PARTNER' ? 'text-purple-400 border-purple-400/30 bg-purple-400/10' :
+                user.role === 'SUPPORTER' ? 'text-blue-400 border-blue-400/30 bg-blue-400/10' :
+                'text-gray-300 border-gray-400/20 bg-gray-400/10'
               }`}>
-                {user.role === 'ADMIN' ? 'Captain' : user.role === 'MODERATOR' ? 'First Mate' : 'Crew Member'}
+                {user.role === 'ADMIN' ? 'Captain' : user.role === 'MODERATOR' ? 'First Mate' : user.role === 'PARTNER' ? 'Partner' : user.role === 'SUPPORTER' ? 'Bilge Rat' : 'Crew Member'}
               </span>
             </div>
             <p className="font-mono text-white/30 text-xs mb-3">@{user.twitchLogin}</p>

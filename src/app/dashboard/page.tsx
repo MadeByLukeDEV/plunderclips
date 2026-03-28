@@ -7,8 +7,9 @@ import { TagBadge } from '@/components/ui/TagBadge';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { CheckCircle, Clock, XCircle, Swords, Trash2, AlertTriangle, Settings, Youtube, Users } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, Swords, Trash2, AlertTriangle, Settings, Youtube, Users, Monitor } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Shield, Crown, Star, User as UserIcon } from "lucide-react";
 
 const STATUS = {
   APPROVED: { icon: <CheckCircle className="w-3.5 h-3.5" />, cls: 'text-teal border-teal/30 bg-teal/10' },
@@ -16,9 +17,38 @@ const STATUS = {
   DECLINED: { icon: <XCircle className="w-3.5 h-3.5" />,      cls: 'text-red-400 border-red-400/30 bg-red-400/10' },
 };
 
+const ROLES = {
+  USER: {
+    label: 'Crew Member',
+    icon: <UserIcon className="w-3.5 h-3.5" />,
+    cls: 'text-gray-300 border-gray-400/20 bg-gray-400/10'
+  },
+  MODERATOR: {
+    label: 'First Mate',
+    icon: <Shield className="w-3.5 h-3.5" />,
+    cls: 'text-green-400 border-green-400/30 bg-green-400/10'
+  },
+  ADMIN: {
+    label: 'Captain',
+    icon: <Crown className="w-3.5 h-3.5" />,
+    cls: 'text-red-400 border-red-400/30 bg-red-400/10'
+  },
+  PARTNER: {
+    label: 'Partner',
+    icon: <Star className="w-3.5 h-3.5" />,
+    cls: 'text-purple-400 border-purple-400/30 bg-purple-400/10'
+  },
+  SUPPORTER: {
+    label: 'Bilge Rat',
+    icon: <Star className="w-3.5 h-3.5" />,
+    cls: 'text-blue-400 border-blue-400/30 bg-blue-400/10'
+  }
+};
+
+
 const PLATFORM_BADGE: Record<string, React.ReactNode> = {
-  YOUTUBE: <span className="text-xs font-mono text-red-400 border border-red-400/30 bg-red-400/10 px-1.5 py-0.5 rounded">YT</span>,
-  MEDAL:   <span className="text-xs font-mono text-yellow-400 border border-yellow-400/30 bg-yellow-400/10 px-1.5 py-0.5 rounded">🏅</span>,
+  YOUTUBE: <span className="text-xs font-mono text-red-400"> <Youtube className="w-3.5 h-3.5" /></span>,
+  MEDAL:   <span className="text-xs font-mono text-yellow-400 "><Monitor className="w-3.5 h-3.5" /></span>,
   TWITCH:  null,
 };
 
@@ -67,7 +97,7 @@ function ClipRow({ clip, showStatus = true }: { clip: any; showStatus?: boolean 
     <div className="sot-card rounded flex items-center gap-3 p-3 hover:border-teal/20 transition-colors">
       <div className="w-20 h-12 md:w-24 md:h-14 rounded overflow-hidden flex-shrink-0 bg-sot-dark">
         {clip.thumbnailUrl
-          ? <img src={clip.thumbnailUrl} alt={clip.title} className="w-full h-full object-cover" />
+          ?  <Image src={clip.thumbnailUrl} alt={clip.title} priority={false} objectFit='cover' height={300} width={300} />
           : <div className="w-full h-full flex items-center justify-center text-lg">🎬</div>
         }
       </div>
@@ -143,7 +173,7 @@ export default function DashboardPage() {
 
   const myClips = myData?.clips || [];
   const channelClips = channelData?.clips || [];
-
+const role = ROLES[user.role as keyof typeof ROLES] ?? ROLES.USER;
   const counts = {
     APPROVED: myClips.filter((c: any) => c.status === 'APPROVED').length,
     PENDING:  myClips.filter((c: any) => c.status === 'PENDING').length,
@@ -164,9 +194,12 @@ export default function DashboardPage() {
               <Image src={user.profileImage} alt={user.displayName} width={56} height={56}
                 className="rounded border-2 border-teal/40 flex-shrink-0" />
             )}
-            <div className="flex-1 min-w-0">
-              <h1 className="font-display text-2xl md:text-3xl font-700 text-white">{user.displayName}</h1>
-              <p className="text-white/30 font-mono text-xs mt-0.5">@{user.twitchLogin}</p>
+            <div className="flex-1 min-w-0 justify-between items-center">
+              <h1 className="font-display flex text-2xl md:text-3xl font-700 text-white  gap-2">{user.displayName} <div className={`inline-flex   gap-1  m-2 p-1 rounded border text-xs items-center justify-center ${role.cls}`}>
+  {role.icon}
+  {role.label}
+</div> </h1> 
+              <p className="text-white/30 font-mono text-xs mt-0.5">@{user.twitchLogin} </p> 
               {/* Linked platforms */}
               <div className="flex gap-2 mt-1.5 flex-wrap">
                 <span className="px-2 py-0.5 rounded-sm text-xs font-display tracking-wider border text-purple-400 border-purple-400/30 bg-purple-400/10">

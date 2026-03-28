@@ -203,7 +203,8 @@ export default function AdminPage() {
                   <div key={clip.id} className="sot-card rounded flex items-start gap-4 p-3 hover:border-teal/20 transition-colors">
                     <div className="w-28 flex-shrink-0 rounded overflow-hidden bg-sot-dark" style={{height:64}}>
                       {clip.thumbnailUrl
-                        ? <img src={clip.thumbnailUrl} alt={clip.title} className="w-full h-full object-cover" />
+                        ?
+                        <Image src={clip.thumbnailUrl} alt={clip.title} priority={false} width={500} height={500} objectFit='cover' className="w-full h-full object-cover"/>
                         : <div className="w-full h-full flex items-center justify-center text-xl">🎬</div>
                       }
                     </div>
@@ -283,8 +284,7 @@ export default function AdminPage() {
                     {/* Avatar */}
                     <div className="flex-shrink-0">
                       {u.profileImage ? (
-                        <img src={u.profileImage} alt={u.displayName}
-                          className="w-12 h-12 rounded border border-white/10 group-hover:border-teal/30 transition-colors" />
+                          <Image src={u.profileImage} alt={u.displayName} priority={false} objectFit='cover' width={300} height={300} className="w-12 h-12 rounded border border-white/10 group-hover:border-teal/30 transition-colors"  />
                       ) : (
                         <div className="w-12 h-12 rounded border border-white/10 bg-sot-dark flex items-center justify-center text-xl">🏴‍☠️</div>
                       )}
@@ -299,9 +299,6 @@ export default function AdminPage() {
                       <div className="flex gap-1 mt-1">
                         {u.youtubeChannelName && (
                           <span className="text-xs text-red-400/60 border border-red-400/20 px-1 py-0.5 rounded font-mono">YT</span>
-                        )}
-                        {u.medalUsername && (
-                          <span className="text-xs text-yellow-400/60 border border-yellow-400/20 px-1 py-0.5 rounded font-mono">🏅</span>
                         )}
                       </div>
                     </div>

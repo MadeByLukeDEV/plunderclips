@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
   if (!clip) return { title: 'Clip Not Found' };
   return {
-    title: clip.title,
+    title: `Plunderclips — ${clip.title}`,
     description: `${clip.title} — Sea of Thieves clip by ${clip.broadcasterName} on PlunderClips`,
     openGraph: {
       title: clip.title,

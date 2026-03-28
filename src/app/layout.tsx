@@ -6,6 +6,7 @@ import { QueryProvider } from '@/components/providers/QueryProvider';
 import Navbar from '@/components/layout/Navbar';
 import Link from 'next/link'
 
+
 const BASE_URL = process.env.NEXTAUTH_URL || 'https://plunderclips.gg';
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   description: 'The finest Sea of Thieves moments from the seven seas. Discover, submit and showcase the best Twitch clips from the SoT streaming community.',
   keywords: ['Sea of Thieves', 'SoT', 'Twitch clips', 'streaming', 'community', 'PlunderClips', 'gaming clips'],
   authors: [{ name: 'PlunderClips' }],
-  creator: 'PlunderClips',
+  creator: 'MadeByLuke',
 
   openGraph: {
     type: 'website',
