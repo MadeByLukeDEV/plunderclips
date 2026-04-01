@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `Plunderclips — ${clip.title}`,
     description: `${clip.title} — Sea of Thieves clip by ${clip.broadcasterName} on PlunderClips`,
     openGraph: {
-      title: clip.title,
+      title: `Plunderclips — ${clip.title}`,
       description: `Watch this Sea of Thieves moment by ${clip.broadcasterName}`,
       images: clip.thumbnailUrl ? [{ url: clip.thumbnailUrl, width: 1280, height: 720 }] : [],
       type: 'video.other',

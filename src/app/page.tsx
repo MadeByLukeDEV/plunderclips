@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ClipCard } from '@/components/clips/ClipCard';
 import { ClipGridSkeleton } from '@/components/ui/Skeletons';
 import { TAG_LABELS } from '@/components/ui/TagBadge';
-import { Search, RefreshCw, TrendingUp, Clock } from 'lucide-react';
+import { Search, RefreshCw, TrendingUp, Clock, Radio } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/components/providers/AuthProvider';
 
@@ -27,6 +27,14 @@ export default function HomePage() {
   const [searchInput, setSearchInput] = useState('');
   const [sort, setSort] = useState('newest');
 
+
+  const { data: liveData } = useQuery({
+    queryKey: ['live-streamers'],
+    queryFn: () => fetch('/api/live').then(r => r.json()),
+    refetchInterval: 60_000,
+  });
+
+  const liveUsers = liveData?.liveUsers || [];
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ['clips', page, tag, search, sort],
     queryFn: () => fetchClips(page, tag, search, sort),
@@ -54,7 +62,6 @@ export default function HomePage() {
           <p className="font-body text-white/50 text-base md:text-lg max-w-md mx-auto mb-10">
             The finest Sea of Thieves moments from the seven seas — battles, blunders, and brilliance.
           </p>
-          <div className='flex gap-5 justify-center'>
           {!user ? (
             <a href="/api/auth/login" className="btn-teal-solid px-8 py-3 rounded text-base inline-block">
               Join the Crew
@@ -64,9 +71,42 @@ export default function HomePage() {
               Submit a Clip
             </Link>
           )}
-            </div>
         </div>
       </div>
+
+
+      {/* Live Now section */}
+      {liveUsers.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 md:px-6 pt-8">
+          <div className="flex items-center gap-3 mb-4">
+            <Radio className="w-4 h-4 text-red-400 animate-pulse" />
+            <span className="font-display text-sm text-red-400 tracking-widest">LIVE NOW</span>
+            <div className="flex-1 h-px bg-red-500/10" />
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {liveUsers.map((u: any) => (
+              <Link key={u.id} href={`/streamers/${u.twitchLogin}`}
+                className="flex-shrink-0 sot-card rounded p-3 flex items-center gap-3 hover:border-red-500/30 transition-colors min-w-[200px] border border-red-500/10">
+                <div className="relative flex-shrink-0">
+                  {u.profileImage ? (
+                    <img src={u.profileImage} alt={u.displayName}
+                      className="w-10 h-10 rounded border border-red-500/30" />
+                  ) : (
+                    <div className="w-10 h-10 rounded bg-sot-dark border border-red-500/30 flex items-center justify-center">🏴‍☠️</div>
+                  )}
+                  <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-sot-bg animate-pulse block" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-display text-sm font-700 text-white truncate">{u.displayName}</p>
+                  {u.viewerCount != null && (
+                    <p className="text-white/30 text-xs font-mono">{u.viewerCount.toLocaleString()} viewers</p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-10">
         {/* Filters bar */}

@@ -10,7 +10,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   Shield, CheckCircle, XCircle, Clock, Users, Film,
-  AlertTriangle, Youtube, ExternalLink,
+  AlertTriangle, Radio,
 } from 'lucide-react';
 
 function DeclineModal({ clip, onConfirm, onCancel, loading }: {
@@ -18,11 +18,8 @@ function DeclineModal({ clip, onConfirm, onCancel, loading }: {
 }) {
   const [reason, setReason] = useState('');
   const presets = [
-    'Not Sea of Thieves content',
-    'Poor video quality',
-    'Already submitted',
-    'Inappropriate content',
-    'Not from a registered streamer',
+    'Not Sea of Thieves content', 'Poor video quality',
+    'Already submitted', 'Inappropriate content', 'Not from a registered streamer',
   ];
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -42,22 +39,19 @@ function DeclineModal({ clip, onConfirm, onCancel, loading }: {
           {presets.map(p => (
             <button key={p} onClick={() => setReason(p)}
               className={`px-2 py-1 rounded text-xs border font-body transition-all ${
-                reason === p ? 'border-red-500/50 bg-red-500/10 text-red-400' : 'border-white/10 text-white/30 hover:border-white/20 hover:text-white/50'
+                reason === p ? 'border-red-500/50 bg-red-500/10 text-red-400' : 'border-white/10 text-white/30 hover:border-white/20'
               }`}>{p}</button>
           ))}
         </div>
         <p className="font-display text-xs text-white/30 tracking-widest mb-2">CUSTOM REASON (OPTIONAL)</p>
         <textarea value={reason} onChange={e => setReason(e.target.value)}
-          placeholder="Add a reason for the submitter..."
-          rows={2}
-          className="w-full bg-sot-dark border border-white/10 text-white placeholder-white/20 rounded px-3 py-2 font-body text-sm focus:outline-none focus:border-red-500/40 transition-colors resize-none mb-5" />
+          placeholder="Add a reason..." rows={2}
+          className="w-full bg-sot-dark border border-white/10 text-white placeholder-white/20 rounded px-3 py-2 font-body text-sm focus:outline-none focus:border-red-500/40 resize-none mb-5" />
         <div className="flex gap-3">
           <button onClick={onCancel} disabled={loading}
-            className="flex-1 py-2.5 border border-white/10 text-white/50 font-display text-sm rounded tracking-wider hover:border-white/20 transition-all disabled:opacity-40">
-            Cancel
-          </button>
+            className="flex-1 py-2.5 border border-white/10 text-white/50 font-display text-sm rounded tracking-wider disabled:opacity-40">Cancel</button>
           <button onClick={() => onConfirm(reason)} disabled={loading}
-            className="flex-1 py-2.5 bg-red-500/20 border border-red-500/50 text-red-400 font-display text-sm rounded tracking-wider hover:bg-red-500/30 transition-all disabled:opacity-40 flex items-center justify-center gap-2">
+            className="flex-1 py-2.5 bg-red-500/20 border border-red-500/50 text-red-400 font-display text-sm rounded tracking-wider flex items-center justify-center gap-2 disabled:opacity-40">
             <XCircle className="w-3.5 h-3.5" />{loading ? 'Declining...' : 'Decline'}
           </button>
         </div>
@@ -65,6 +59,14 @@ function DeclineModal({ clip, onConfirm, onCancel, loading }: {
     </div>
   );
 }
+
+const ROLE_STYLES: Record<string, string> = {
+  USER:      'text-white/40 border-white/10',
+  MODERATOR: 'text-green-400 border-green-400/30',
+  PARTNER:   'text-purple-400 border-purple-400/30',
+  SUPPORTER: 'text-blue-400 border-blue-400/30',
+  ADMIN:     'text-red-400 border-red-400/30',
+};
 
 const PLATFORM_BADGE: Record<string, React.ReactNode> = {
   YOUTUBE: <span className="text-xs font-mono text-red-400 border border-red-400/30 bg-red-400/10 px-1.5 py-0.5 rounded">YT</span>,
@@ -99,11 +101,10 @@ export default function AdminPage() {
     enabled: !!canAccess && tab === 'users',
   });
 
-  const mutation = useMutation({
+  const clipMutation = useMutation({
     mutationFn: ({ id, status, reviewNotes }: { id: string; status: string; reviewNotes?: string }) =>
       fetch(`/api/admin/clips?id=${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, reviewNotes }),
       }).then(r => r.json()),
     onSuccess: (data) => {
@@ -115,6 +116,19 @@ export default function AdminPage() {
     onError: () => toast.error('Failed to update clip'),
   });
 
+  const userMutation = useMutation({
+    mutationFn: ({ id, ...data }: { id: string; role?: string; isLive?: boolean; streamTitle?: string }) =>
+      fetch(`/api/admin/users?id=${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      }).then(r => r.json()),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success('User updated');
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to update user'),
+  });
+
   if (loading) return <div className="max-w-6xl mx-auto px-6 py-12"><div className="skeleton h-8 w-48 rounded" /></div>;
 
   if (!canAccess) return (
@@ -124,16 +138,16 @@ export default function AdminPage() {
     </div>
   );
 
-  const CLIP_TABS = ['PENDING', 'APPROVED', 'DECLINED'];
+  const allowManualLive = usersData?.allowManualLive ?? false;
 
   return (
     <>
       {declineClip && (
         <DeclineModal
           clip={declineClip}
-          onConfirm={(reason) => mutation.mutate({ id: declineClip.id, status: 'DECLINED', reviewNotes: reason || undefined })}
+          onConfirm={(reason) => clipMutation.mutate({ id: declineClip.id, status: 'DECLINED', reviewNotes: reason || undefined })}
           onCancel={() => setDeclineClip(null)}
-          loading={mutation.isPending}
+          loading={clipMutation.isPending}
         />
       )}
 
@@ -167,25 +181,24 @@ export default function AdminPage() {
 
         {/* Main tabs */}
         <div className="flex gap-0 mb-6 border-b border-white/5">
-          <button onClick={() => setTab('clips')}
-            className={`flex items-center gap-2 px-5 py-2.5 font-display text-sm tracking-wider border-b-2 transition-all ${
-              tab === 'clips' ? 'border-teal text-teal' : 'border-transparent text-white/25 hover:text-white/50'
-            }`}>
-            <Film className="w-3.5 h-3.5" />Clips
-          </button>
-          <button onClick={() => setTab('users')}
-            className={`flex items-center gap-2 px-5 py-2.5 font-display text-sm tracking-wider border-b-2 transition-all ${
-              tab === 'users' ? 'border-teal text-teal' : 'border-transparent text-white/25 hover:text-white/50'
-            }`}>
-            <Users className="w-3.5 h-3.5" />Users
-          </button>
+          {[
+            { key: 'clips', label: 'Clips', icon: <Film className="w-3.5 h-3.5" /> },
+            { key: 'users', label: 'Users', icon: <Users className="w-3.5 h-3.5" /> },
+          ].map(t => (
+            <button key={t.key} onClick={() => setTab(t.key as any)}
+              className={`flex items-center gap-2 px-5 py-2.5 font-display text-sm tracking-wider border-b-2 transition-all ${
+                tab === t.key ? 'border-teal text-teal' : 'border-transparent text-white/25 hover:text-white/50'
+              }`}>
+              {t.icon}{t.label}
+            </button>
+          ))}
         </div>
 
         {/* ── CLIPS TAB ── */}
         {tab === 'clips' && (
           <>
             <div className="flex gap-0 mb-6 border-b border-white/5">
-              {CLIP_TABS.map(t => (
+              {['PENDING', 'APPROVED', 'DECLINED'].map(t => (
                 <button key={t} onClick={() => { setClipTab(t); setPage(1); }}
                   className={`px-5 py-2.5 font-display text-sm tracking-wider border-b-2 transition-all ${
                     clipTab === t ? 'border-teal text-teal' : 'border-transparent text-white/25 hover:text-white/50'
@@ -203,8 +216,7 @@ export default function AdminPage() {
                   <div key={clip.id} className="sot-card rounded flex items-start gap-4 p-3 hover:border-teal/20 transition-colors">
                     <div className="w-28 flex-shrink-0 rounded overflow-hidden bg-sot-dark" style={{height:64}}>
                       {clip.thumbnailUrl
-                        ?
-                        <Image src={clip.thumbnailUrl} alt={clip.title} priority={false} width={500} height={500} objectFit='cover' className="w-full h-full object-cover"/>
+                        ? <Image src={clip.thumbnailUrl} alt={clip.title} priority={false} width={500} height={500} className="w-full h-full object-cover" />
                         : <div className="w-full h-full flex items-center justify-center text-xl">🎬</div>
                       }
                     </div>
@@ -216,34 +228,29 @@ export default function AdminPage() {
                         </a>
                         {PLATFORM_BADGE[clip.platform]}
                       </div>
-                      <p className="text-white/25 text-xs font-mono mt-0.5">
-                        {clip.broadcasterName} · by {clip.submittedByName}
-                      </p>
+                      <p className="text-white/25 text-xs font-mono">{clip.broadcasterName} · by {clip.submittedByName}</p>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {clip.tags.map((t: any) => <TagBadge key={t.id} tag={t.tag} small />)}
                       </div>
                       {!clip.platformVerified && (
-                        <p className="text-xs text-yellow-400/70 font-body mt-1 flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3 flex-shrink-0" />
-                          Ownership unverified — manual review required
+                        <p className="text-xs text-yellow-400/70 mt-1 flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3 flex-shrink-0" />Ownership unverified — manual review required
                         </p>
                       )}
                       {clipTab === 'DECLINED' && clip.reviewNotes && (
-                        <p className="text-xs text-red-400/60 font-body mt-1 flex items-center gap-1">
-                          <XCircle className="w-3 h-3 flex-shrink-0" />{clip.reviewNotes}
-                        </p>
+                        <p className="text-xs text-red-400/60 mt-1">{clip.reviewNotes}</p>
                       )}
                     </div>
                     {clipTab === 'PENDING' && (
                       <div className="flex gap-2 flex-shrink-0">
-                        <button onClick={() => mutation.mutate({ id: clip.id, status: 'APPROVED' })}
-                          disabled={mutation.isPending}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-teal/10 border border-teal/30 text-teal font-display text-xs rounded tracking-wider hover:bg-teal/20 transition-all disabled:opacity-40">
+                        <button onClick={() => clipMutation.mutate({ id: clip.id, status: 'APPROVED' })}
+                          disabled={clipMutation.isPending}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-teal/10 border border-teal/30 text-teal font-display text-xs rounded tracking-wider hover:bg-teal/20 disabled:opacity-40">
                           <CheckCircle className="w-3.5 h-3.5" />Approve
                         </button>
                         <button onClick={() => setDeclineClip(clip)}
-                          disabled={mutation.isPending}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 border border-red-500/30 text-red-400 font-display text-xs rounded tracking-wider hover:bg-red-500/20 transition-all disabled:opacity-40">
+                          disabled={clipMutation.isPending}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 border border-red-500/30 text-red-400 font-display text-xs rounded tracking-wider hover:bg-red-500/20 disabled:opacity-40">
                           <XCircle className="w-3.5 h-3.5" />Decline
                         </button>
                       </div>
@@ -272,48 +279,87 @@ export default function AdminPage() {
         {tab === 'users' && (
           usersLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {Array.from({length:6}).map((_,i) => <div key={i} className="skeleton h-24 rounded" />)}
+              {Array.from({length:6}).map((_,i) => <div key={i} className="skeleton h-28 rounded" />)}
             </div>
           ) : (
             <>
-              <p className="text-white/20 text-xs font-mono mb-4">{usersData?.users?.length} registered streamers</p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-white/20 text-xs font-mono">{usersData?.users?.length} registered streamers</p>
+                {allowManualLive && (
+                  <span className="text-xs font-display tracking-wider text-yellow-400/60 border border-yellow-400/20 px-2 py-1 rounded">
+                    MANUAL LIVE OVERRIDE ENABLED
+                  </span>
+                )}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {usersData?.users?.map((u: any) => (
-                  <Link key={u.id} href={`/streamers/${u.twitchLogin}`}
-                    className="sot-card rounded p-4 flex items-center gap-3 hover:border-teal/20 transition-colors group">
-                    {/* Avatar */}
-                    <div className="flex-shrink-0">
-                      {u.profileImage ? (
-                          <Image src={u.profileImage} alt={u.displayName} priority={false} objectFit='cover' width={300} height={300} className="w-12 h-12 rounded border border-white/10 group-hover:border-teal/30 transition-colors"  />
-                      ) : (
-                        <div className="w-12 h-12 rounded border border-white/10 bg-sot-dark flex items-center justify-center text-xl">🏴‍☠️</div>
-                      )}
-                    </div>
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-display text-sm font-700 text-white truncate group-hover:text-teal transition-colors">
-                        {u.displayName}
-                      </p>
-                      <p className="text-white/30 text-xs font-mono truncate">@{u.twitchLogin}</p>
-                      {/* Linked platforms */}
-                      <div className="flex gap-1 mt-1">
-                        {u.youtubeChannelName && (
-                          <span className="text-xs text-red-400/60 border border-red-400/20 px-1 py-0.5 rounded font-mono">YT</span>
+                  <div key={u.id} className="sot-card rounded p-4 hover:border-teal/20 transition-colors">
+                    <div className="flex items-center gap-3 mb-3">
+                      {/* Avatar + live indicator */}
+                      <div className="relative flex-shrink-0">
+                        {u.profileImage ? (
+                          <Image src={u.profileImage} alt={u.displayName} priority={false} width={300} height={300} className="w-11 h-11 rounded border border-white/10" />
+                        ) : (
+                          <div className="w-11 h-11 rounded border border-white/10 bg-sot-dark flex items-center justify-center">🏴‍☠️</div>
+                        )}
+                        {u.isLive && (
+                          <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-sot-bg animate-pulse" />
                         )}
                       </div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <Link href={`/streamers/${u.twitchLogin}`}
+                          className="font-display text-sm font-700 text-white hover:text-teal transition-colors truncate block">
+                          {u.displayName}
+                        </Link>
+                        <p className="text-white/30 text-xs font-mono">@{u.twitchLogin}</p>
+                      </div>
+                      {/* Clip count */}
+                      <div className="text-right flex-shrink-0">
+                        <p className="font-display text-lg font-900 text-teal">{u._count.clips}</p>
+                        <p className="text-white/20 text-xs font-mono">clips</p>
+                      </div>
                     </div>
-                    {/* Clip counts */}
-                    <div className="text-right flex-shrink-0">
-                      <p className="font-display text-lg font-900 text-teal">{u._count.clips}</p>
-                      <p className="text-white/20 text-xs font-mono">submitted</p>
-                      {u.channelClipCount > 0 && (
-                        <>
-                          <p className="font-display text-sm font-700 text-white/40 mt-0.5">{u.channelClipCount}</p>
-                          <p className="text-white/20 text-xs font-mono">by others</p>
-                        </>
+
+                    {/* Live status info */}
+                    {u.isLive && (
+                      <div className="flex items-center gap-1.5 mb-3 px-2 py-1.5 bg-red-500/10 border border-red-500/20 rounded text-xs">
+                        <Radio className="w-3 h-3 text-red-400 animate-pulse flex-shrink-0" />
+                        <span className="text-red-400 font-display tracking-wider">LIVE</span>
+                        {u.viewerCount != null && (
+                          <span className="text-white/30 font-mono ml-auto">{u.viewerCount.toLocaleString()} viewers</span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Role selector */}
+                    <div className="flex items-center gap-2">
+                      <select
+                        defaultValue={u.role}
+                        onChange={(e) => userMutation.mutate({ id: u.id, role: e.target.value })}
+                        className={`flex-1 bg-sot-dark border rounded px-2 py-1.5 font-display text-xs tracking-wider focus:outline-none focus:border-teal/50 transition-colors ${ROLE_STYLES[u.role] || 'border-white/10 text-white/40'}`}
+                      >
+                        {['USER', 'MODERATOR', 'PARTNER', 'SUPPORTER', 'ADMIN'].map(r => (
+                          <option key={r} value={r} className="bg-sot-dark text-white">{r}</option>
+                        ))}
+                      </select>
+
+                      {/* Manual live toggle — only shown when env var is true */}
+                      {allowManualLive && ['PARTNER', 'ADMIN'].includes(u.role) && (
+                        <button
+                          onClick={() => userMutation.mutate({ id: u.id, isLive: !u.isLive })}
+                          disabled={userMutation.isPending}
+                          className={`px-2 py-1.5 rounded border font-display text-xs tracking-wider transition-all disabled:opacity-40 ${
+                            u.isLive
+                              ? 'border-red-500/50 bg-red-500/10 text-red-400 hover:bg-red-500/20'
+                              : 'border-white/10 text-white/20 hover:border-white/20'
+                          }`}
+                        >
+                          <Radio className="w-3 h-3" />
+                        </button>
                       )}
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </>

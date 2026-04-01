@@ -16,8 +16,15 @@ model User {
   profileImage       String?
   email              String?
   role               Role     @default(USER)
+  // Linked accounts
   youtubeChannelId   String?
   youtubeChannelName String?
+  // Live status (updated by Twitch EventSub webhooks)
+  isLive             Boolean  @default(false)
+  streamTitle        String?
+  viewerCount        Int?
+  streamGame         String?
+  liveUpdatedAt      DateTime?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   clips              Clip[]
@@ -77,9 +84,10 @@ model ClipTag {
 
 enum Role {
   USER
-  ADMIN
   MODERATOR
   PARTNER
+  SUPPORTER
+  ADMIN
 }
 
 enum ClipStatus {

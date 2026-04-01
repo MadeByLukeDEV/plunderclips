@@ -1,7 +1,10 @@
--- Initial migration for SoT Clips (updated schema)
+-- Initial migration for SoT Clips (Updated to match Prisma Schema)
 -- Run with: npm run db:migrate
 -- Or manually: mysql -u user -p sot_clips < prisma/migrations/init.sql
 
+-- =====================
+-- USERS
+-- =====================
 CREATE TABLE IF NOT EXISTS users (
   id VARCHAR(191) NOT NULL,
   twitch_id VARCHAR(191) NOT NULL,
@@ -9,9 +12,19 @@ CREATE TABLE IF NOT EXISTS users (
   display_name VARCHAR(191) NOT NULL,
   profile_image VARCHAR(191),
   email VARCHAR(191),
-  role ENUM('USER', 'ADMIN', 'MODERATOR') NOT NULL DEFAULT 'USER',
+  role ENUM('USER', 'MODERATOR', 'PARTNER', 'SUPPORTER', 'ADMIN') NOT NULL DEFAULT 'USER',
+  
+  -- Linked accounts
   youtube_channel_id VARCHAR(191),
   youtube_channel_name VARCHAR(191),
+  
+  -- Live status (updated by Twitch EventSub)
+  is_live BOOLEAN NOT NULL DEFAULT FALSE,
+  stream_title VARCHAR(191),
+  viewer_count INT,
+  stream_game VARCHAR(191),
+  live_updated_at DATETIME(3),
+  
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at DATETIME(3) NOT NULL,
 
@@ -32,7 +45,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 
   PRIMARY KEY (id),
   UNIQUE KEY sessions_token_key (token(255)),
-  KEY sessions_user_id_fkey (user_id),
+  INDEX sessions_user_id_idx (user_id),
 
   CONSTRAINT sessions_user_id_fkey 
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -53,7 +66,7 @@ CREATE TABLE IF NOT EXISTS clips (
   submitted_by VARCHAR(191) NOT NULL,
   submitted_by_name VARCHAR(191) NOT NULL,
   status ENUM('PENDING', 'APPROVED', 'DECLINED') NOT NULL DEFAULT 'PENDING',
-  platform ENUM('TWITCH','YOUTUBE','MEDAL') NOT NULL DEFAULT 'TWITCH',
+  platform ENUM('TWITCH', 'YOUTUBE', 'MEDAL') NOT NULL DEFAULT 'TWITCH',
   platform_verified BOOLEAN NOT NULL DEFAULT TRUE,
   game VARCHAR(191) NOT NULL DEFAULT 'Sea of Thieves',
   broadcaster_id VARCHAR(191) NOT NULL,
@@ -66,7 +79,7 @@ CREATE TABLE IF NOT EXISTS clips (
 
   PRIMARY KEY (id),
   UNIQUE KEY clips_twitch_clip_id_key (twitch_clip_id),
-  KEY clips_submitted_by_fkey (submitted_by),
+  INDEX clips_submitted_by_idx (submitted_by),
 
   CONSTRAINT clips_submitted_by_fkey 
     FOREIGN KEY (submitted_by) REFERENCES users(id) ON DELETE CASCADE
@@ -79,9 +92,9 @@ CREATE TABLE IF NOT EXISTS clip_tags (
   id VARCHAR(191) NOT NULL,
   clip_id VARCHAR(191) NOT NULL,
   tag ENUM(
-    'FUNNY','KILL','TUCK','HIGHLIGHT','PVP','PVE',
-    'SAILING','TREASURE','KEG',
-    'KRAKEN','MEGALODON','EPIC_FAIL','TEAM_PLAY','SOLO'
+    'FUNNY', 'KILL', 'TUCK', 'HIGHLIGHT', 'PVP', 'PVE', 
+    'SAILING', 'TREASURE', 'KEG', 'KRAKEN', 'MEGALODON', 
+    'EPIC_FAIL', 'TEAM_PLAY', 'SOLO'
   ) NOT NULL,
 
   PRIMARY KEY (id),

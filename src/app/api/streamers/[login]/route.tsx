@@ -1,3 +1,4 @@
+// src/app/api/streamers/[login]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
@@ -16,6 +17,11 @@ export async function GET(
       displayName: true,
       profileImage: true,
       role: true,
+      isLive: true,
+      streamTitle: true,
+      streamGame: true,
+      viewerCount: true,
+      liveUpdatedAt: true,
       createdAt: true,
     },
   });

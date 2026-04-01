@@ -4,8 +4,6 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import Navbar from '@/components/layout/Navbar';
-import Link from 'next/link'
-
 
 const BASE_URL = process.env.NEXTAUTH_URL || 'https://plunderclips.gg';
 
@@ -71,7 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   PLUNDERCLIPS — SAIL. PLUNDER. CLIP.
                 </p>
                 <div className="flex items-center justify-center gap-6 mb-3">
-                  <Link href="/privacy" className='text-xs text-white/20 hover:text-teal font-display tracking-widest transition-colors'>PRIVACY POLICY</Link>
+                  <a href="/datenschutz" className="text-xs text-white/20 hover:text-teal font-display tracking-widest transition-colors">PRIVACY POLICY</a>
                 </div>
                 <p className="text-xs text-white/10 font-body">Not affiliated with Rare or Xbox Game Studios</p>
               </footer>

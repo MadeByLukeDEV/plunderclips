@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { TAG_LABELS } from '@/components/ui/TagBadge';
 import toast from 'react-hot-toast';
 import { CheckCircle, Link as LinkIcon, Loader2, Eye, Clock, Youtube, Settings } from 'lucide-react';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const ALL_TAGS = Object.keys(TAG_LABELS);
 
@@ -15,7 +15,7 @@ type Platform = 'TWITCH' | 'YOUTUBE' | 'MEDAL' | null;
 
 function detectPlatform(url: string): Platform {
   if (/clips\.twitch\.tv|twitch\.tv\/.+\/clip\//i.test(url)) return 'TWITCH';
-  if (/youtube\.com\/(watch|shorts\/)|youtu\.be\//i.test(url)) return 'YOUTUBE';
+  if (/youtube\.com\/watch|youtu\.be\//i.test(url)) return 'YOUTUBE';
   if (/medal\.tv/i.test(url)) return 'MEDAL';
   return null;
 }
@@ -176,7 +176,7 @@ export default function SubmitPage() {
           <div className="sot-card rounded overflow-hidden border border-teal/20">
             <div className="relative aspect-video bg-sot-dark overflow-hidden">
               {preview.thumbnailUrl ? (
-                <Image src={preview.thumbnailUrl} alt={preview.title} priority={false} objectFit='cover' layout='fill'/>
+                <Image src={preview.thumbnailUrl} alt={preview.title} priority={false} layout="fill" objectFit="cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-4xl">🏴‍☠️</div>
               )}

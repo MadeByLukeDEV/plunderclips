@@ -17,6 +17,9 @@ const STATUS = {
   DECLINED: { icon: <XCircle className="w-3.5 h-3.5" />,      cls: 'text-red-400 border-red-400/30 bg-red-400/10' },
 };
 
+
+
+
 const ROLES = {
   USER: {
     label: 'Crew Member',
@@ -45,10 +48,9 @@ const ROLES = {
   }
 };
 
-
 const PLATFORM_BADGE: Record<string, React.ReactNode> = {
-  YOUTUBE: <span className="text-xs font-mono text-red-400"> <Youtube className="w-3.5 h-3.5" /></span>,
-  MEDAL:   <span className="text-xs font-mono text-yellow-400 "><Monitor className="w-3.5 h-3.5" /></span>,
+  YOUTUBE: <span className="text-xs font-mono text-red-400"><Youtube className="w-3.5 h-3.5" /></span>,
+  MEDAL: <span className="text-xs font-mono text-yellow-400"><Monitor className="w-3.5 h-3.5" /></span>,
   TWITCH:  null,
 };
 
@@ -97,7 +99,7 @@ function ClipRow({ clip, showStatus = true }: { clip: any; showStatus?: boolean 
     <div className="sot-card rounded flex items-center gap-3 p-3 hover:border-teal/20 transition-colors">
       <div className="w-20 h-12 md:w-24 md:h-14 rounded overflow-hidden flex-shrink-0 bg-sot-dark">
         {clip.thumbnailUrl
-          ?  <Image src={clip.thumbnailUrl} alt={clip.title} priority={false} objectFit='cover' height={300} width={300} />
+          ? <Image src={clip.thumbnailUrl} alt={clip.title} priority={false} objectFit="cover" height={300} width={300} className="w-full h-full object-cover" />
           : <div className="w-full h-full flex items-center justify-center text-lg">🎬</div>
         }
       </div>
@@ -173,7 +175,8 @@ export default function DashboardPage() {
 
   const myClips = myData?.clips || [];
   const channelClips = channelData?.clips || [];
-const role = ROLES[user.role as keyof typeof ROLES] ?? ROLES.USER;
+
+  const role = ROLES[user.role as keyof typeof ROLES] ?? ROLES.USER;
   const counts = {
     APPROVED: myClips.filter((c: any) => c.status === 'APPROVED').length,
     PENDING:  myClips.filter((c: any) => c.status === 'PENDING').length,
@@ -194,12 +197,15 @@ const role = ROLES[user.role as keyof typeof ROLES] ?? ROLES.USER;
               <Image src={user.profileImage} alt={user.displayName} width={56} height={56}
                 className="rounded border-2 border-teal/40 flex-shrink-0" />
             )}
-            <div className="flex-1 min-w-0 justify-between items-center">
-              <h1 className="font-display flex text-2xl md:text-3xl font-700 text-white  gap-2">{user.displayName} <div className={`inline-flex   gap-1  m-2 p-1 rounded border text-xs items-center justify-center ${role.cls}`}>
-  {role.icon}
-  {role.label}
-</div> </h1> 
-              <p className="text-white/30 font-mono text-xs mt-0.5">@{user.twitchLogin} </p> 
+            <div className="flex-1 min-w-0">
+              <h1 className="font-display flex text-2xl md:text-3xl font-700 text-white gap-2">
+              {user.displayName}
+              <div className={`inline-flex gap-1 m-2 p-1 rounded border text-xs items-center justify-center ${role.cls}`}>
+                {role.icon}
+                {role.label}
+              </div>
+            </h1>
+              <p className="text-white/30 font-mono text-xs mt-0.5">@{user.twitchLogin}</p>
               {/* Linked platforms */}
               <div className="flex gap-2 mt-1.5 flex-wrap">
                 <span className="px-2 py-0.5 rounded-sm text-xs font-display tracking-wider border text-purple-400 border-purple-400/30 bg-purple-400/10">
@@ -208,6 +214,11 @@ const role = ROLES[user.role as keyof typeof ROLES] ?? ROLES.USER;
                 {user.youtubeChannelId && (
                   <span className="px-2 py-0.5 rounded-sm text-xs font-display tracking-wider border text-red-400 border-red-400/30 bg-red-400/10">
                     YouTube
+                  </span>
+                )}
+                {user.medalUserId && (
+                  <span className="px-2 py-0.5 rounded-sm text-xs font-display tracking-wider border text-yellow-400 border-yellow-400/30 bg-yellow-400/10">
+                    Medal.tv
                   </span>
                 )}
               </div>
