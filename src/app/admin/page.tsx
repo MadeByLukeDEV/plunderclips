@@ -10,7 +10,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   Shield, CheckCircle, XCircle, Clock, Users, Film,
-  AlertTriangle, Radio,
+  AlertTriangle, Radio, Wifi, WifiOff, RefreshCw,
 } from 'lucide-react';
 
 function DeclineModal({ clip, onConfirm, onCancel, loading }: {
@@ -76,7 +76,7 @@ const PLATFORM_BADGE: Record<string, React.ReactNode> = {
 export default function AdminPage() {
   const { user, loading } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'clips' | 'users'>('clips');
+  const [tab, setTab] = useState<'clips' | 'users' | 'eventsub'>('clips');
   const [clipTab, setClipTab] = useState('PENDING');
   const [page, setPage] = useState(1);
   const [declineClip, setDeclineClip] = useState<any>(null);
@@ -99,6 +99,30 @@ export default function AdminPage() {
     queryKey: ['admin-users'],
     queryFn: () => fetch('/api/admin/users').then(r => r.json()),
     enabled: !!canAccess && tab === 'users',
+  });
+
+  const { data: eventsubData, isLoading: eventsubLoading, refetch: refetchEventsub } = useQuery({
+    queryKey: ['admin-eventsub'],
+    queryFn: () => fetch('/api/admin/eventsub').then(r => r.json()),
+    enabled: !!canAccess && tab === 'eventsub',
+  });
+
+  const resubscribeMutation = useMutation({
+    mutationFn: ({ userId, all }: { userId?: string; all?: boolean }) => {
+      if (all) {
+        return fetch('/api/admin/eventsub', { method: 'DELETE' }).then(r => r.json());
+      }
+      return fetch('/api/admin/eventsub', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      }).then(r => r.json());
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Done');
+      refetchEventsub();
+    },
+    onError: () => toast.error('Failed to resubscribe'),
   });
 
   const clipMutation = useMutation({
@@ -184,6 +208,7 @@ export default function AdminPage() {
           {[
             { key: 'clips', label: 'Clips', icon: <Film className="w-3.5 h-3.5" /> },
             { key: 'users', label: 'Users', icon: <Users className="w-3.5 h-3.5" /> },
+            { key: 'eventsub', label: 'EventSub', icon: <Wifi className="w-3.5 h-3.5" /> },
           ].map(t => (
             <button key={t.key} onClick={() => setTab(t.key as any)}
               className={`flex items-center gap-2 px-5 py-2.5 font-display text-sm tracking-wider border-b-2 transition-all ${
@@ -364,6 +389,121 @@ export default function AdminPage() {
               </div>
             </>
           )
+        )}
+
+        {/* ── EVENTSUB TAB ── */}
+        {tab === 'eventsub' && (
+          <div>
+            {/* Header + Fix All button */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-white/40 text-sm font-body">
+                  EventSub subscription status for all Partners and Admins.
+                </p>
+              </div>
+              <button
+                onClick={() => resubscribeMutation.mutate({ all: true })}
+                disabled={resubscribeMutation.isPending}
+                className="flex items-center gap-2 px-4 py-2 bg-teal/10 border border-teal/30 text-teal font-display text-xs rounded tracking-wider hover:bg-teal/20 transition-all disabled:opacity-40"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${resubscribeMutation.isPending ? 'animate-spin' : ''}`} />
+                Fix All Missing
+              </button>
+            </div>
+
+            {eventsubLoading ? (
+              <div className="space-y-2">
+                {Array.from({length:3}).map((_,i) => <div key={i} className="skeleton h-16 rounded" />)}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {eventsubData?.partners?.map((partner: any) => {
+                  const onlineStatus = partner.subscriptions.online?.status;
+                  const offlineStatus = partner.subscriptions.offline?.status;
+
+                  const SubBadge = ({ status, label }: { status: string | undefined; label: string }) => {
+                    if (!status) return (
+                      <span className="flex items-center gap-1 text-xs font-mono text-red-400 border border-red-400/20 bg-red-400/10 px-2 py-1 rounded">
+                        <WifiOff className="w-3 h-3" />{label}: Missing
+                      </span>
+                    );
+                    if (status === 'enabled') return (
+                      <span className="flex items-center gap-1 text-xs font-mono text-teal border border-teal/20 bg-teal/10 px-2 py-1 rounded">
+                        <Wifi className="w-3 h-3" />{label}: Active
+                      </span>
+                    );
+                    return (
+                      <span className="flex items-center gap-1 text-xs font-mono text-yellow-400 border border-yellow-400/20 bg-yellow-400/10 px-2 py-1 rounded">
+                        <WifiOff className="w-3 h-3" />{label}: {status}
+                      </span>
+                    );
+                  };
+
+                  return (
+                    <div key={partner.id}
+                      className={`sot-card rounded p-3 flex items-center gap-4 ${
+                        !partner.fullySubscribed ? 'border border-red-500/20' : ''
+                      }`}>
+                      {/* Avatar */}
+                      <div className="relative flex-shrink-0">
+                        {partner.profileImage ? (
+                          <Image src={partner.profileImage} alt={partner.displayName}
+                            width={40} height={40} className="w-10 h-10 rounded border border-white/10" />
+                        ) : (
+                          <div className="w-10 h-10 rounded border border-white/10 bg-sot-dark flex items-center justify-center">🏴‍☠️</div>
+                        )}
+                        {partner.isLive && (
+                          <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-sot-bg animate-pulse block" />
+                        )}
+                      </div>
+
+                      {/* Name + role */}
+                      <div className="flex-shrink-0 min-w-[120px]">
+                        <p className="font-display text-sm font-700 text-white">{partner.displayName}</p>
+                        <p className="text-white/30 text-xs font-mono">@{partner.twitchLogin}</p>
+                        <span className={`text-xs font-display tracking-wider ${
+                          partner.role === 'ADMIN' ? 'text-red-400' : 'text-purple-400'
+                        }`}>{partner.role}</span>
+                      </div>
+
+                      {/* Subscription badges */}
+                      <div className="flex flex-wrap gap-2 flex-1">
+                        <SubBadge status={onlineStatus} label="Online" />
+                        <SubBadge status={offlineStatus} label="Offline" />
+                      </div>
+
+                      {/* Resubscribe button */}
+                      <button
+                        onClick={() => resubscribeMutation.mutate({ userId: partner.id })}
+                        disabled={resubscribeMutation.isPending}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 font-display text-xs rounded tracking-wider transition-all disabled:opacity-40 flex-shrink-0 ${
+                          partner.fullySubscribed
+                            ? 'border border-white/10 text-white/20 hover:border-white/20 hover:text-white/40'
+                            : 'border border-teal/30 bg-teal/10 text-teal hover:bg-teal/20'
+                        }`}
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        {partner.fullySubscribed ? 'Resync' : 'Fix'}
+                      </button>
+                    </div>
+                  );
+                })}
+
+                {eventsubData?.partners?.length === 0 && (
+                  <div className="text-center py-16 text-white/20 font-display text-2xl">
+                    NO PARTNERS OR ADMINS
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Footer info */}
+            {eventsubData && (
+              <p className="text-white/20 text-xs font-mono mt-4 text-right">
+                {eventsubData.totalSubs} total active subscriptions on your Twitch app
+              </p>
+            )}
+          </div>
         )}
       </div>
     </>
