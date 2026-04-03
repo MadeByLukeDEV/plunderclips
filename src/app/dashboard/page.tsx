@@ -1,7 +1,7 @@
 // src/app/dashboard/page.tsx
 'use client';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ClipGridSkeleton } from '@/components/ui/Skeletons';
 import { TagBadge } from '@/components/ui/TagBadge';
 import Image from 'next/image';
@@ -16,7 +16,6 @@ const STATUS = {
   PENDING:  { icon: <Clock className="w-3.5 h-3.5" />,        cls: 'text-yellow-400 border-yellow-400/30 bg-yellow-400/10' },
   DECLINED: { icon: <XCircle className="w-3.5 h-3.5" />,      cls: 'text-red-400 border-red-400/30 bg-red-400/10' },
 };
-
 
 
 
@@ -93,7 +92,7 @@ function DeleteAccountModal({ onConfirm, onCancel, loading }: {
   );
 }
 
-function ClipRow({ clip, showStatus = true }: { clip: any; showStatus?: boolean }) {
+function ClipRow({ clip, showStatus = true, onDelete }: { clip: any; showStatus?: boolean; onDelete: (id: string) => void }) {
   const s = STATUS[clip.status as keyof typeof STATUS];
   return (
     <div className="sot-card rounded flex items-center gap-3 p-3 hover:border-teal/20 transition-colors">
@@ -105,10 +104,12 @@ function ClipRow({ clip, showStatus = true }: { clip: any; showStatus?: boolean 
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <p className="font-display text-sm font-600 text-white truncate">{clip.title}</p>
+          <Link href={`/clips/${clip.id}`} className="font-display text-sm font-600 text-white hover:text-teal truncate">{clip.title}</Link>
           {PLATFORM_BADGE[clip.platform]}
         </div>
-        <p className="text-white/30 text-xs font-mono">{clip.broadcasterName}</p>
+        <Link href={`/streamers/${clip.broadcasterName}`} className="text-white/30 text-xs font-mono hover:text-teal">
+          {clip.broadcasterName}
+        </Link>
         <div className="flex flex-wrap gap-1 mt-1">
           {clip.tags.slice(0, 2).map((t: any) => <TagBadge key={t.id} tag={t.tag} small />)}
         </div>
@@ -128,6 +129,13 @@ function ClipRow({ clip, showStatus = true }: { clip: any; showStatus?: boolean 
           {s.icon}<span className="hidden sm:inline">{clip.status}</span>
         </div>
       )}
+       <button 
+          onClick={() => onDelete(clip.id)}
+          className="p-2 text-white/20 hover:text-red-400 hover:bg-red-500/10 rounded transition-all"
+          title="Delete Clip"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
     </div>
   );
 }
@@ -135,6 +143,9 @@ function ClipRow({ clip, showStatus = true }: { clip: any; showStatus?: boolean 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteClipId, setDeleteClipId] = useState<string | null>(null);
+  const [deletingClip, setDeletingClip] = useState(false);
+  const qc = useQueryClient();
   const [deleting, setDeleting] = useState(false);
   const [tab, setTab] = useState<'mine' | 'channel'>('mine');
 
@@ -164,6 +175,22 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDeleteClip = async (clipId: string) => {
+    setDeletingClip(true);
+    try {
+      const res = await fetch(`/api/clips/${clipId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
+      toast.success('Clip deleted');
+      qc.invalidateQueries({ queryKey: ['admin-clips'] });
+      qc.invalidateQueries({ queryKey: ['admin-stats'] });
+    } catch {
+      toast.error('Failed to delete clip');
+    } finally {
+      setDeletingClip(false);
+      setDeleteClipId(null);
+    }
+  };
+
   if (loading) return <div className="max-w-2xl mx-auto px-4 py-12"><ClipGridSkeleton count={4} /></div>;
 
   if (!user) return (
@@ -185,6 +212,34 @@ export default function DashboardPage() {
 
   return (
     <>
+      {deleteClipId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setDeleteClipId(null)} />
+          <div className="relative sot-card rounded-lg p-6 w-full max-w-sm border border-red-500/30">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <h3 className="font-display text-base font-700 text-white tracking-wide">Delete Clip</h3>
+                <p className="text-xs text-white/30 mt-0.5">This cannot be undone</p>
+              </div>
+            </div>
+            <p className="text-sm text-white/50 mb-5">Are you sure you want to permanently delete this clip?</p>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteClipId(null)} disabled={deletingClip}
+                className="flex-1 py-2.5 border border-white/10 text-white/50 font-display text-sm rounded tracking-wider hover:border-white/20 disabled:opacity-40">
+                Cancel
+              </button>
+              <button onClick={() => handleDeleteClip(deleteClipId)} disabled={deletingClip}
+                className="flex-1 py-2.5 bg-red-500/20 border border-red-500/50 text-red-400 font-display text-sm rounded tracking-wider hover:bg-red-500/30 disabled:opacity-40 flex items-center justify-center gap-2">
+                <Trash2 className="w-3.5 h-3.5" />{deletingClip ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showDeleteModal && (
         <DeleteAccountModal onConfirm={handleDeleteAccount} onCancel={() => setShowDeleteModal(false)} loading={deleting} />
       )}
@@ -279,7 +334,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {myClips.map((clip: any) => <ClipRow key={clip.id} clip={clip} />)}
+              {myClips.map((clip: any) => <ClipRow key={clip.id} clip={clip} onDelete={setDeleteClipId} />)}
             </div>
           )
         )}
@@ -294,7 +349,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {channelClips.map((clip: any) => <ClipRow key={clip.id} clip={clip} showStatus={false} />)}
+              {channelClips.map((clip: any) => <ClipRow key={clip.id} clip={clip} showStatus={false} onDelete={setDeleteClipId} />)}
             </div>
           )
         )}

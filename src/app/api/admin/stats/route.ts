@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAdmin } from '@/lib/middleware-auth';
+import { requireStaff } from '@/lib/middleware-auth';
 
 export async function GET(request: NextRequest) {
-  const { user, error } = await requireAdmin(request);
+  const { user, error } = await requireStaff(request);
   if (error || !user) {
     return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
   }

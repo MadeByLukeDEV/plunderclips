@@ -1,7 +1,7 @@
 // src/app/api/admin/eventsub/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAdmin } from '@/lib/middleware-auth';
+import { requireStaff } from '@/lib/middleware-auth';
 import { subscribeToLiveEvents, unsubscribeFromLiveEvents } from '@/lib/eventsub';
 
 const LIVE_ROLES = ['PARTNER', 'ADMIN'];
@@ -41,7 +41,7 @@ async function fetchAllEventSubSubscriptions(token: string): Promise<any[]> {
 
 // GET — fetch subscription status for all Partners/Admins
 export async function GET(request: NextRequest) {
-  const { user, error } = await requireAdmin(request);
+  const { user, error } = await requireStaff(request);
   if (error || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   // Get all Partner/Admin users from DB
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
 
 // POST — resubscribe a specific user (delete all + recreate)
 export async function POST(request: NextRequest) {
-  const { user, error } = await requireAdmin(request);
+  const { user, error } = await requireStaff(request);
   if (error || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { userId } = await request.json();
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
 
 // DELETE — resubscribe ALL partners that are missing or failed
 export async function DELETE(request: NextRequest) {
-  const { user, error } = await requireAdmin(request);
+  const { user, error } = await requireStaff(request);
   if (error || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const partners = await prisma.user.findMany({

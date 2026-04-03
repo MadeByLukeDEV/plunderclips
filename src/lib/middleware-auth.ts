@@ -23,6 +23,24 @@ export async function requireAuth(request: NextRequest) {
 export async function requireAdmin(request: NextRequest) {
   const user = await getCurrentUser(request);
   if (!user) return { user: null, error: 'Unauthorized' };
+  if (user.role !== 'ADMIN') {
+    return { user: null, error: 'Forbidden' };
+  }
+  return { user, error: null };
+}
+
+export async function requireModerator(request: NextRequest) {
+  const user = await getCurrentUser(request);
+  if (!user) return { user: null, error: 'Unauthorized' };
+  if (user.role !== 'MODERATOR') {
+    return { user: null, error: 'Forbidden' };
+  }
+  return { user, error: null };
+}
+
+export async function requireStaff(request: NextRequest) {
+  const user = await getCurrentUser(request);
+  if (!user) return { user: null, error: 'Unauthorized' };
   if (user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
     return { user: null, error: 'Forbidden' };
   }

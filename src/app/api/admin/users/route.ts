@@ -1,7 +1,7 @@
 // src/app/api/admin/users/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAdmin } from '@/lib/middleware-auth';
+import { requireStaff, requireAdmin } from '@/lib/middleware-auth';
 import { subscribeToLiveEvents, unsubscribeFromLiveEvents } from '@/lib/eventsub';
 import { Role } from '@prisma/client';
 
@@ -9,7 +9,7 @@ const LIVE_ROLES: Role[] = ['PARTNER', 'ADMIN'];
 const ALLOW_MANUAL_LIVE = process.env.ALLOW_MANUAL_LIVE_OVERRIDE === 'true';
 
 export async function GET(request: NextRequest) {
-  const { user, error } = await requireAdmin(request);
+  const { user, error } = await requireStaff(request);
   if (error || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const users = await prisma.user.findMany({
