@@ -80,7 +80,7 @@ export default async function ClipPage({ params }: Props) {
           )}
           <a href={clip.twitchUrl} target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-1 hover:text-teal transition-colors ml-auto">
-            <ExternalLink className="w-3.5 h-3.5" />View on Twitch
+            <ExternalLink className="w-3.5 h-3.5" />View on {clip.platform === 'TWITCH' ? 'Twitch' : 'YouTube'}
           </a>
         </div>
 

@@ -4,6 +4,50 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || process.env.NEXTAUTH_URL
   .split(',')
   .map(o => o.trim());
 
+// --- RATE LIMIT CONFIG ---
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX = 60; // max requests per window per IP
+
+type RateLimitEntry = {
+  count: number;
+  lastReset: number;
+};
+
+const rateLimitMap = new Map<string, RateLimitEntry>();
+
+function getClientIP(request: NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0] ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  );
+}
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry) {
+    rateLimitMap.set(ip, { count: 1, lastReset: now });
+    return true;
+  }
+
+  if (now - entry.lastReset > RATE_LIMIT_WINDOW) {
+    // reset window
+    entry.count = 1;
+    entry.lastReset = now;
+    return true;
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return false;
+  }
+
+  entry.count++;
+  return true;
+}
+
+// --- CORS ---
 export function corsHeaders(origin: string | null) {
   const isAllowed = origin && ALLOWED_ORIGINS.some(allowed => origin === allowed || allowed === '*');
 
@@ -17,6 +61,21 @@ export function corsHeaders(origin: string | null) {
 
 export function handleCors(request: NextRequest): NextResponse | null {
   const origin = request.headers.get('origin');
+  const ip = getClientIP(request);
+
+  // --- RATE LIMIT CHECK ---
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders(origin),
+          'Retry-After': '60',
+        },
+      }
+    );
+  }
 
   if (request.method === 'OPTIONS') {
     return new NextResponse(null, {
