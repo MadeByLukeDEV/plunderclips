@@ -15,7 +15,7 @@ type Platform = 'TWITCH' | 'YOUTUBE' | 'MEDAL' | null;
 
 function detectPlatform(url: string): Platform {
   if (/clips\.twitch\.tv|twitch\.tv\/.+\/clip\//i.test(url)) return 'TWITCH';
-  if (/youtube\.com\/watch|youtu\.be\//i.test(url)) return 'YOUTUBE';
+  if (/youtube\.com\/(watch|shorts\/)|youtu\.be\//i.test(url)) return 'YOUTUBE';
   if (/medal\.tv/i.test(url)) return 'MEDAL';
   return null;
 }

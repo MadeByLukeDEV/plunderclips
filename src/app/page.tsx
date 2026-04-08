@@ -171,12 +171,11 @@ function TrendingRow({ clips }: { clips: any[] }) {
     </div>
   );
 }
-
+  
 // ─── Rising Creators ──────────────────────────────────────────────────────────
 function RisingCreators({ streamers }: { streamers: any[] }) {
   const visible = streamers.filter(s => s.approvedClips > 0).slice(0, 6);
-  if (visible.length === 0) return null;
-
+  if (visible.length === 0) return null
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
       {visible.map(streamer => (
@@ -196,11 +195,8 @@ function RisingCreators({ streamers }: { streamers: any[] }) {
           <p className="font-display text-sm font-700 text-white group-hover:text-teal transition-colors truncate">
             {streamer.displayName}
           </p>
-          <p className="text-white/30 text-xs font-mono mt-0.5">
-            {streamer.approvedClips} clip{streamer.approvedClips !== 1 ? 's' : ''}
-          </p>
-          {streamer.role === 'PARTNER' && (
-            <span className="text-xs text-purple-400/70 font-display tracking-wider">Partner</span>
+          {streamer.role === 'PARTNER' && streamer.role === 'ADMIN' && (
+            <span className={`text-xs font-display tracking-wider `}>{streamer.role}</span>
           )}
         </Link>
       ))}
