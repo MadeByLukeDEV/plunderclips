@@ -34,8 +34,11 @@ export default function StreamerPage() {
       if (!r.ok) throw new Error('Not found');
       return r.json();
     }),
-    // Refetch every 60s to keep live status fresh
-    refetchInterval: 60_000,
+    // Only poll when live — saves unnecessary requests
+    refetchInterval: (query) => {
+      const data = query.state.data as any;
+      return data?.user?.isLive ? 60_000 : false;
+    },
   });
 
   const clips: any[] = data?.clips || [];
