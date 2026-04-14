@@ -61,7 +61,6 @@ export async function fetchTwitchClip(clipId: string): Promise<TwitchClipData | 
     });
 
     const data = await res.json();
-    console.log('Twitch clip API response:', JSON.stringify(data));
     if (!data.data || data.data.length === 0) return null;
     return data.data[0];
   } catch (err) {
@@ -71,7 +70,6 @@ export async function fetchTwitchClip(clipId: string): Promise<TwitchClipData | 
 }
 
 export function isSeaOfThievesClip(clip: TwitchClipData): boolean {
-  console.log(`Clip game_id: "${clip.game_id}" — known SoT IDs: [${[...SEA_OF_THIEVES_GAME_IDS].join(', ')}] — match: ${SEA_OF_THIEVES_GAME_IDS.has(clip.game_id)}`);
   return SEA_OF_THIEVES_GAME_IDS.has(clip.game_id);
 }
 

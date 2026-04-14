@@ -78,6 +78,18 @@ export async function POST(request: NextRequest) {
   const platform = detectPlatform(clipUrl);
   const origin = request.headers.get('origin');
 
+  // Rate limit — max 10 submissions per user per hour
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const recentCount = await prisma.clip.count({
+    where: { submittedBy: user.id, createdAt: { gte: oneHourAgo } },
+  });
+  if (recentCount >= 20) {
+    return withCors(
+      NextResponse.json({ error: 'You have submitted too many clips recently. Please wait before submitting again.' }, { status: 429 }),
+      origin
+    );
+  }
+
   if (!platform) {
     return withCors(
       NextResponse.json({ error: 'Unsupported URL. Please submit a Twitch clip, YouTube video, or Medal.tv clip.' }, { status: 400 }),

@@ -176,7 +176,10 @@ export default function SubmitPage() {
           <div className="sot-card rounded overflow-hidden border border-teal/20">
             <div className="relative aspect-video bg-sot-dark overflow-hidden">
               {preview.thumbnailUrl ? (
-                <Image src={preview.thumbnailUrl} alt={preview.title} priority={false} layout="fill" objectFit="cover" />
+                <Image src={preview.thumbnailUrl} alt={preview.title} priority={false} fill style={{objectFit: "cover"}} sizes="(max-width: 639px) calc(100vw - 32px),
+       (max-width: 1023px) calc(50vw - 24px),
+       (max-width: 1279px) calc(33vw - 24px),
+       calc(25vw - 24px)" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-4xl">🏴‍☠️</div>
               )}

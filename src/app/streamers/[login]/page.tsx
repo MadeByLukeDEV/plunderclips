@@ -121,7 +121,10 @@ export default function StreamerPage() {
           {/* Avatar */}
           <div className="relative flex-shrink-0">
             {user.profileImage ? (
-              <Image src={user.profileImage} alt={user.displayName} width={80} height={80}
+              <Image src={user.profileImage} alt={user.displayName} width={80} height={80} sizes="(max-width: 639px) calc(100vw - 32px),
+       (max-width: 1023px) calc(50vw - 24px),
+       (max-width: 1279px) calc(33vw - 24px),
+       calc(25vw - 24px)"
                 className={`rounded border-2 ${isLive ? 'border-red-500/50' : 'border-teal/40'}`} />
             ) : (
               <div className="w-20 h-20 rounded border-2 border-teal/20 bg-sot-dark flex items-center justify-center text-3xl">🏴‍☠️</div>

@@ -14,8 +14,12 @@ function CreatorCard({ creator, rank }: { creator: any; rank: number }) {
       }`}>
       {creator.latestThumbnail && (
         <div className="absolute inset-0">
-          <Image src={creator.latestThumbnail} alt="" fill
-            className="object-cover opacity-10 group-hover:opacity-15 transition-opacity" />
+          <Image src={creator.latestThumbnail} alt="" fill style={{objectFit: "cover"}}
+            className="object-cover opacity-10 group-hover:opacity-15 transition-opacity" 
+            sizes="(max-width: 639px) calc(100vw - 32px),
+       (max-width: 1023px) calc(50vw - 24px),
+       (max-width: 1279px) calc(33vw - 24px),
+       calc(25vw - 24px)"/>
           <div className="absolute inset-0 bg-gradient-to-t from-sot-card via-sot-card/90 to-sot-card/60" />
         </div>
       )}
@@ -35,7 +39,10 @@ function CreatorCard({ creator, rank }: { creator: any; rank: number }) {
             isTop ? 'w-14 h-14 border-teal/40' : 'w-10 h-10 border-white/10'
           }`}>
             {creator.profileImage ? (
-              <Image src={creator.profileImage} alt={creator.displayName} fill className="object-cover" />
+              <Image src={creator.profileImage} alt={creator.displayName} fill sizes="(max-width: 639px) calc(100vw - 32px),
+       (max-width: 1023px) calc(50vw - 24px),
+       (max-width: 1279px) calc(33vw - 24px),
+       calc(25vw - 24px)" style={{objectFit: "cover"}}/>
             ) : (
               <div className="w-full h-full bg-sot-dark flex items-center justify-center text-lg">🏴‍☠️</div>
             )}

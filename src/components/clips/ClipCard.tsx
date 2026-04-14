@@ -63,9 +63,12 @@ export function ClipCard({ clip }: { clip: Clip }) {
         ) : (
           <div className="absolute inset-0">
             {clip.thumbnailUrl ? (
-              <Image src={clip.thumbnailUrl} alt={clip.title} fill
+              <Image src={clip.thumbnailUrl} alt={clip.title} fill style={{objectFit: "cover"}}
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />
+                sizes="(max-width: 639px) calc(100vw - 32px),
+       (max-width: 1023px) calc(50vw - 24px),
+       (max-width: 1279px) calc(33vw - 24px),
+       calc(25vw - 24px)" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-sot-dark text-4xl">🏴‍☠️</div>
             )}
