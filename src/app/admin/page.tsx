@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import {
   Shield, CheckCircle, XCircle, Clock, Users, Film,
-  AlertTriangle, Radio, Wifi, WifiOff, RefreshCw, Trash2,
+  AlertTriangle, Radio, Wifi, WifiOff, RefreshCw, Trash2, Search,
 } from 'lucide-react';
 
 // ─── Decline Modal ────────────────────────────────────────────────────────────
@@ -99,9 +99,8 @@ function DeleteClipModal({ onConfirm, onCancel, loading }: {
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ROLE_STYLES: Record<string, string> = {
   USER:      'text-white/40 border-white/10',
-  MODERATOR: 'text-green-400 border-green-400/30',
+  MODERATOR: 'text-blue-400 border-blue-400/30',
   PARTNER:   'text-purple-400 border-purple-400/30',
-  SUPPORTER: 'text-blue-400 border-blue-400/30',
   ADMIN:     'text-red-400 border-red-400/30',
 };
 
@@ -120,6 +119,7 @@ export default function AdminPage() {
   const [page, setPage] = useState(1);
   const [declineClip, setDeclineClip] = useState<any>(null);
   const [deleteClipId, setDeleteClipId] = useState<string | null>(null);
+  const [userSearch, setUserSearch] = useState('');
   const [deletingClip, setDeletingClip] = useState(false);
 
   const canAccess = user && (user.role === 'ADMIN' || user.role === 'MODERATOR');
@@ -163,8 +163,8 @@ export default function AdminPage() {
     onError: () => toast.error('Failed to update clip'),
   });
 
-const userMutation = useMutation({
-    mutationFn: ({ id, ...data }: { id: string; role?: string; isLive?: boolean; streamTitle?: string }) =>
+  const userMutation = useMutation({
+    mutationFn: ({ id, ...data }: { id: string; role?: string; isLive?: boolean }) =>
       fetch(`/api/admin/users?id=${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -173,7 +173,7 @@ const userMutation = useMutation({
       qc.invalidateQueries({ queryKey: ['admin-users'] });
       toast.success('User updated');
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to update user'),
+    onError: () => toast.error('Failed to update user'),
   });
 
   const resubscribeMutation = useMutation({
@@ -310,7 +310,10 @@ const userMutation = useMutation({
                     {/* Mobile: full-width thumbnail */}
                     <div className="relative w-full aspect-video md:hidden bg-sot-dark">
                       {clip.thumbnailUrl
-                        ? <Image src={clip.thumbnailUrl} alt={clip.title} fill style={{objectFit: "cover"}} sizes="100vw"  priority={false} className="object-cover" />
+                        ? <Image src={clip.thumbnailUrl} alt={clip.title} fill priority={false} className="object-cover" sizes="(max-width: 639px) calc(100vw - 32px),
+       (max-width: 1023px) calc(50vw - 24px),
+       (max-width: 1279px) calc(33vw - 24px),
+       calc(25vw - 24px)" />
                         : <div className="w-full h-full flex items-center justify-center text-2xl">🎬</div>
                       }
                       <div className="absolute top-2 left-2">{PLATFORM_BADGE[clip.platform]}</div>
@@ -326,9 +329,12 @@ const userMutation = useMutation({
                     {/* Content row */}
                     <div className="flex items-start gap-3 p-3">
                       {/* Desktop thumbnail */}
-                      <div className="hidden md:block w-28 flex-shrink-0 rounded overflow-hidden bg-sot-dark" style={{ height: 64 }} >
+                      <div className="hidden md:block w-28 flex-shrink-0 rounded overflow-hidden bg-sot-dark" style={{ height: 64 }}>
                         {clip.thumbnailUrl
-                          ? <Image src={clip.thumbnailUrl} alt={clip.title} priority={false} width={500} height={500} sizes="100vw" className="w-full h-full object-cover" />
+                          ? <Image src={clip.thumbnailUrl} alt={clip.title} priority={false} width={500} height={500} sizes="(max-width: 639px) calc(100vw - 32px),
+       (max-width: 1023px) calc(50vw - 24px),
+       (max-width: 1279px) calc(33vw - 24px),
+       calc(25vw - 24px)" className="w-full h-full object-cover" />
                           : <div className="w-full h-full flex items-center justify-center text-xl">🎬</div>
                         }
                       </div>
@@ -440,96 +446,184 @@ const userMutation = useMutation({
         {/* ── USERS TAB ────────────────────────────────────────────────────────── */}
         {tab === 'users' && (
           usersLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton h-28 rounded" />)}
+            <div className="space-y-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="sot-card rounded p-3 flex items-center gap-4">
+                  <div className="skeleton w-9 h-9 rounded flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="skeleton h-3.5 w-32 rounded" />
+                    <div className="skeleton h-3 w-20 rounded" />
+                  </div>
+                  <div className="skeleton h-3 w-16 rounded hidden md:block" />
+                  <div className="skeleton h-7 w-28 rounded" />
+                </div>
+              ))}
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-white/20 text-xs font-mono">{usersData?.users?.length} registered streamers</p>
-                {allowManualLive && (
-                  <span className="text-xs font-display tracking-wider text-yellow-400/60 border border-yellow-400/20 px-2 py-1 rounded">
-                    MANUAL LIVE OVERRIDE ENABLED
-                  </span>
-                )}
+              {/* Search + meta bar */}
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-5">
+                <div className="relative w-full sm:w-80">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                  <input
+                    type="text"
+                    placeholder="Search name or @username..."
+                    value={userSearch}
+                    onChange={e => setUserSearch(e.target.value)}
+                    className="w-full bg-sot-card border border-white/10 text-white placeholder-white/25 rounded pl-9 pr-4 py-2 font-body text-sm focus:outline-none focus:border-teal/50 transition-colors"
+                  />
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <p className="text-white/20 text-xs font-mono">
+                    {usersData?.users?.filter((u: any) =>
+                      !userSearch ||
+                      u.displayName.toLowerCase().includes(userSearch.toLowerCase()) ||
+                      u.twitchLogin.toLowerCase().includes(userSearch.toLowerCase())
+                    ).length} / {usersData?.users?.length} streamers
+                  </p>
+                  {allowManualLive && (
+                    <span className="text-xs font-display tracking-wider text-yellow-400/60 border border-yellow-400/20 px-2 py-1 rounded">
+                      LIVE OVERRIDE
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {usersData?.users?.map((u: any) => (
-                  <div key={u.id} className="sot-card rounded p-4 hover:border-teal/20 transition-colors">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="relative flex-shrink-0">
-                        {u.profileImage ? (
-                          <Image src={u.profileImage} alt={u.displayName} priority={false} width={44} height={44} sizes="(max-width: 639px) calc(100vw - 32px),
+
+              {/* Column headers — desktop only */}
+              <div className="hidden md:grid grid-cols-[auto_1fr_100px_160px_40px] gap-4 px-4 pb-2 mb-1 border-b border-white/5">
+                <div className="w-9" />
+                <span className="font-display text-xs tracking-widest text-white/20">STREAMER</span>
+                <span className="font-display text-xs tracking-widest text-white/20">CLIPS</span>
+                <span className="font-display text-xs tracking-widest text-white/20">ROLE</span>
+                <div />
+              </div>
+
+              {/* User rows */}
+              <div className="space-y-1">
+                {usersData?.users
+                  ?.filter((u: any) =>
+                    !userSearch ||
+                    u.displayName.toLowerCase().includes(userSearch.toLowerCase()) ||
+                    u.twitchLogin.toLowerCase().includes(userSearch.toLowerCase())
+                  )
+                  .map((u: any) => (
+                    <div key={u.id}
+                      className="sot-card rounded p-3 md:p-0 flex flex-col md:grid md:grid-cols-[auto_1fr_100px_160px_40px] md:gap-4 md:items-center hover:border-white/10 transition-colors group">
+
+                      {/* Avatar */}
+                      <div className="hidden md:flex items-center justify-center pl-4">
+                        <div className="relative flex-shrink-0">
+                          {u.profileImage ? (
+                            <Image src={u.profileImage} alt={u.displayName} width={36} height={36} sizes="(max-width: 639px) calc(100vw - 32px),
        (max-width: 1023px) calc(50vw - 24px),
        (max-width: 1279px) calc(33vw - 24px),
        calc(25vw - 24px)"
-                            className="w-11 h-11 rounded border border-white/10" />
+                              className="w-9 h-9 rounded-full border border-white/10 group-hover:border-teal/30 transition-colors"
+                              style={{ objectFit: 'cover' }} />
+                          ) : (
+                            <div className="w-9 h-9 rounded-full border border-white/10 bg-sot-dark flex items-center justify-center text-sm">🏴‍☠️</div>
+                          )}
+                          {u.isLive && (
+                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-sot-bg block" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Name + handle — mobile has avatar inline */}
+                      <div className="flex items-center gap-3 md:py-3">
+                        {/* Mobile avatar */}
+                        <div className="md:hidden relative flex-shrink-0">
+                          {u.profileImage ? (
+                            <Image src={u.profileImage} alt={u.displayName} width={36} height={36}sizes="(max-width: 639px) calc(100vw - 32px),
+       (max-width: 1023px) calc(50vw - 24px),
+       (max-width: 1279px) calc(33vw - 24px),
+       calc(25vw - 24px)"
+                              className="w-9 h-9 rounded-full border border-white/10"
+                              style={{ objectFit: 'cover' }} />
+                          ) : (
+                            <div className="w-9 h-9 rounded-full border border-white/10 bg-sot-dark flex items-center justify-center text-sm">🏴‍☠️</div>
+                          )}
+                          {u.isLive && (
+                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-sot-bg block" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Link href={`/streamers/${u.twitchLogin}`}
+                              className="font-display text-sm font-700 text-white hover:text-teal transition-colors">
+                              {u.displayName}
+                            </Link>
+                            {u.isLive && (
+                              <span className="flex items-center gap-1 text-xs text-red-400 font-mono">
+                                <Radio className="w-2.5 h-2.5 animate-pulse" />
+                                {u.viewerCount != null ? u.viewerCount.toLocaleString() : 'LIVE'}
+                              </span>
+                            )}
+                            {u.youtubeChannelName && (
+                              <span className="text-xs text-red-400/40 border border-red-400/15 px-1 py-0.5 rounded font-mono">YT</span>
+                            )}
+                          </div>
+                          <p className="text-white/25 text-xs font-mono">@{u.twitchLogin}</p>
+                        </div>
+                      </div>
+
+                      {/* Clips */}
+                      <div className="flex md:flex-col items-center md:items-start gap-2 md:gap-0 mt-2 md:mt-0">
+                        <span className="font-display text-sm font-700 text-teal">{u._count.clips}</span>
+                        {u.channelClipCount > 0 ? (
+                          <span className="text-white/20 text-xs font-mono md:mt-0.5">
+                            +{u.channelClipCount} <span className="hidden md:inline">by others</span>
+                          </span>
                         ) : (
-                          <div className="w-11 h-11 rounded border border-white/10 bg-sot-dark flex items-center justify-center">🏴‍☠️</div>
-                        )}
-                        {u.isLive && (
-                          <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-sot-bg animate-pulse block" />
+                          <span className="text-white/15 text-xs font-mono md:mt-0.5 hidden md:block">—</span>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <Link href={`/streamers/${u.twitchLogin}`}
-                          className="font-display text-sm font-700 text-white hover:text-teal transition-colors truncate block">
-                          {u.displayName}
-                        </Link>
-                        <p className="text-white/30 text-xs font-mono">@{u.twitchLogin}</p>
-                        {u.youtubeChannelName && (
-                          <span className="text-xs text-red-400/60 border border-red-400/20 px-1 py-0.5 rounded font-mono">YT</span>
-                        )}
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="font-display text-lg font-900 text-teal">{u._count.clips}</p>
-                        <p className="text-white/20 text-xs font-mono">submitted</p>
-                        {u.channelClipCount > 0 && (
-                          <>
-                            <p className="font-display text-sm font-700 text-white/40 mt-0.5">{u.channelClipCount}</p>
-                            <p className="text-white/20 text-xs font-mono">by others</p>
-                          </>
-                        )}
-                      </div>
-                    </div>
 
-                    {u.isLive && (
-                      <div className="flex items-center gap-1.5 mb-3 px-2 py-1.5 bg-red-500/10 border border-red-500/20 rounded text-xs">
-                        <Radio className="w-3 h-3 text-red-400 animate-pulse flex-shrink-0" />
-                        <span className="text-red-400 font-display tracking-wider">LIVE</span>
-                        {u.viewerCount != null && (
-                          <span className="text-white/30 font-mono ml-auto">{u.viewerCount.toLocaleString()} viewers</span>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-2">
-                      <select
-                        defaultValue={u.role}
-                        onChange={e => userMutation.mutate({ id: u.id, role: e.target.value })}
-                        className={`flex-1 bg-sot-dark border rounded px-2 py-1.5 font-display text-xs tracking-wider focus:outline-none focus:border-teal/50 transition-colors ${ROLE_STYLES[u.role] || 'border-white/10 text-white/40'}`}
-                      >
-                        {['USER', 'MODERATOR', 'PARTNER', 'SUPPORTER', 'ADMIN'].map(r => (
-                          <option key={r} value={r} className="bg-sot-dark text-white">{r}</option>
-                        ))}
-                      </select>
-                      {allowManualLive && ['PARTNER', 'ADMIN'].includes(u.role) && (
-                        <button
-                          onClick={() => userMutation.mutate({ id: u.id, isLive: !u.isLive })}
-                          disabled={userMutation.isPending}
-                          className={`px-2 py-1.5 rounded border font-display text-xs tracking-wider transition-all disabled:opacity-40 ${
-                            u.isLive
-                              ? 'border-red-500/50 bg-red-500/10 text-red-400 hover:bg-red-500/20'
-                              : 'border-white/10 text-white/20 hover:border-white/20'
-                          }`}
+                      {/* Role select */}
+                      <div className="mt-2 md:mt-0">
+                        <select
+                          defaultValue={u.role}
+                          onChange={e => userMutation.mutate({ id: u.id, role: e.target.value })}
+                          className={`w-full bg-sot-dark border rounded px-2.5 py-1.5 font-display text-xs tracking-wider focus:outline-none focus:border-teal/50 transition-colors cursor-pointer ${ROLE_STYLES[u.role] || 'border-white/10 text-white/40'}`}
                         >
-                          <Radio className="w-3 h-3" />
-                        </button>
-                      )}
+                          {['USER', 'MODERATOR', 'SUPPORTER', 'PARTNER', 'ADMIN'].map(r => (
+                            <option key={r} value={r} className="bg-sot-dark text-white">{r}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Live toggle */}
+                      <div className="hidden md:flex justify-center pr-4">
+                        {allowManualLive && ['PARTNER', 'ADMIN'].includes(u.role) ? (
+                          <button
+                            onClick={() => userMutation.mutate({ id: u.id, isLive: !u.isLive })}
+                            disabled={userMutation.isPending}
+                            title={u.isLive ? 'Mark offline' : 'Mark live'}
+                            className={`w-8 h-8 rounded border flex items-center justify-center transition-all disabled:opacity-40 ${
+                              u.isLive
+                                ? 'border-red-500/50 bg-red-500/10 text-red-400 hover:bg-red-500/20'
+                                : 'border-white/10 text-white/15 hover:border-white/20 hover:text-white/30'
+                            }`}
+                          >
+                            <Radio className="w-3.5 h-3.5" />
+                          </button>
+                        ) : (
+                          <div className="w-8" />
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
+
+              {/* Empty search state */}
+              {userSearch && usersData?.users?.filter((u: any) =>
+                u.displayName.toLowerCase().includes(userSearch.toLowerCase()) ||
+                u.twitchLogin.toLowerCase().includes(userSearch.toLowerCase())
+              ).length === 0 && (
+                <div className="text-center py-12 text-white/20 font-display text-xl tracking-wide">
+                  No streamers match "{userSearch}"
+                </div>
+              )}
             </>
           )
         )}
