@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { usePathname } from 'next/navigation';
-import { LogOut, Shield, Swords, LayoutDashboard, Compass, Youtube, Coffee } from 'lucide-react';
+import { LogOut, Shield, Swords, LayoutDashboard, Compass, Youtube, Coffee, User } from 'lucide-react';
 
 export default function Navbar() {
   const { user, loading } = useAuth();
@@ -30,6 +30,9 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-8">
           <Link href="/" className={`nav-link ${active('/')}`}>
             <Compass className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Explore
+          </Link>
+          <Link href="/streamers" className={`nav-link ${active('/streamers')}`}>
+            <User className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />Streamers
           </Link>
           {user && (
             <>

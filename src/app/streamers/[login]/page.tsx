@@ -186,7 +186,9 @@ export default async function StreamerPage({ params }: Props) {
       <StreamerJsonLd user={user} stats={stats} pageUrl={pageUrl} base={base} />
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
-
+        <Link href="../" className="flex items-center gap-2 text-xs font-mono text-white/25 mb-6">
+          <ArrowLeft className="w-4 h-4" />Back to Explore
+        </Link>
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-mono text-white/25 mb-6">
           <Link href="/" className="hover:text-teal transition-colors">PlunderClips</Link>
