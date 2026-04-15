@@ -77,26 +77,35 @@ export function RisingCreatorsSection({ creators, cachedAt }: {
   creators: any[]; cachedAt: string;
 }) {
   if (creators.length === 0) return null;
-  const minutesAgo = Math.floor((Date.now() - new Date(cachedAt).getTime()) / 60000);
 
-  return (
-    <section>
-      <SectionHeader
-        icon={<Flame className="w-5 h-5" />}
-        label="Rising Creators"
-        sub="Momentum-based — who's climbing the ranks right now"
-      />
-      <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
-        {creators.slice(0, 3).map((c, i) => <CreatorCard key={c.id} creator={c} rank={i + 1} />)}
+const diffMs = Date.now() - new Date(cachedAt).getTime();
+const totalMin = Math.floor(diffMs / 60000);
+const h = Math.floor(totalMin / 60);
+const m = totalMin % 60;
+
+// Format string: "2h 5m ago", "15m ago", or "just now"
+const timeDisplay = h > 0 
+  ? `${h}h ${m}m ago` 
+  : m === 0 ? 'just now' : `${m}m ago`;
+
+return (
+  <section>
+    <SectionHeader
+      icon={<Flame className="w-5 h-5" />}
+      label="Rising Creators"
+      sub="Momentum-based — who's climbing the ranks right now"
+    />
+    <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
+      {creators.slice(0, 3).map((c, i) => <CreatorCard key={c.id} creator={c} rank={i + 1} />)}
+    </div>
+    {creators.slice(3).length > 0 && (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {creators.slice(3).map((c, i) => <CreatorCard key={c.id} creator={c} rank={i + 4} />)}
       </div>
-      {creators.slice(3).length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {creators.slice(3).map((c, i) => <CreatorCard key={c.id} creator={c} rank={i + 4} />)}
-        </div>
-      )}
-      <p className="text-white/15 text-xs font-mono mt-3 text-right">
-        Updated {minutesAgo === 0 ? 'just now' : `${minutesAgo}m ago`} · refreshes every 6h
-      </p>
-    </section>
-  );
+    )}
+    <p className="text-white/15 text-xs font-mono mt-3 text-right">
+      Updated {timeDisplay} · refreshes every 6h
+    </p>
+  </section>
+);
 }

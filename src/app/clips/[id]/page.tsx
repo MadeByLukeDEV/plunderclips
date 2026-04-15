@@ -219,9 +219,6 @@ export default async function ClipPage({ params }: Props) {
 
         {/* Breadcrumb — visible + semantic */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-mono text-white/25 mb-6">
-        <Link href="/" className="btn-teal px-6 py-2 rounded text-sm inline-flex items-center gap-2">
-        <ArrowLeft className="w-4 h-4" />Back to Explore
-      </Link>
           <Link href="/" className="hover:text-teal transition-colors">PlunderClips</Link>
           <span>/</span>
           <Link href={`/streamers/${clip.broadcasterName.toLowerCase()}`} className="hover:text-teal transition-colors">
