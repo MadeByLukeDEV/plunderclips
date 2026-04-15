@@ -120,7 +120,7 @@ export default function SubmitPage() {
   );
 
   return (
-    <div className="max-w-xl mx-auto px-4 md:px-6 py-12">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-12">
       <div className="mb-10">
         <p className="font-display text-xs tracking-[0.3em] text-teal mb-2">NEW SUBMISSION</p>
         <h1 className="font-display text-5xl font-900 text-white">Submit a Clip</h1>
@@ -164,6 +164,32 @@ export default function SubmitPage() {
         {/* Platform hint for unlinked accounts */}
         <PlatformHint platform={platform} user={user} />
 
+
+        {/* Tags */}
+        <div>
+          <label className="block font-display text-xs tracking-widest text-white/50 mb-2">
+            TAGS <span className="text-white/20">(up to 5)</span>
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {ALL_TAGS.map(t => (
+              <button key={t} type="button" onClick={() => toggleTag(t)}
+                className={`px-2.5 py-1 rounded-sm text-xs font-mono border transition-all tag-${t} ${
+                  tags.includes(t) ? 'opacity-100 scale-105' : 'opacity-30 hover:opacity-70'
+                }`}>
+                {TAG_LABELS[t]}
+              </button>
+            ))}
+          </div>
+          {tags.length > 0 && <p className="mt-2 text-xs text-white/25 font-mono">{tags.length}/5 selected</p>}
+        </div>
+
+        
+
+        <button onClick={handleSubmit} disabled={submitting || !url || !tags.length || !platform}
+          className="btn-teal-solid w-full py-4 rounded text-lg disabled:opacity-30">
+          {submitting ? 'Submitting...' : 'Submit Clip'}
+        </button>
+
         {/* Live preview */}
         {previewLoading && (
           <div className="sot-card rounded p-4 flex items-center gap-3 text-white/30 text-sm">
@@ -200,29 +226,6 @@ export default function SubmitPage() {
             </div>
           </div>
         )}
-
-        {/* Tags */}
-        <div>
-          <label className="block font-display text-xs tracking-widest text-white/50 mb-2">
-            TAGS <span className="text-white/20">(up to 5)</span>
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {ALL_TAGS.map(t => (
-              <button key={t} type="button" onClick={() => toggleTag(t)}
-                className={`px-2.5 py-1 rounded-sm text-xs font-mono border transition-all tag-${t} ${
-                  tags.includes(t) ? 'opacity-100 scale-105' : 'opacity-30 hover:opacity-70'
-                }`}>
-                {TAG_LABELS[t]}
-              </button>
-            ))}
-          </div>
-          {tags.length > 0 && <p className="mt-2 text-xs text-white/25 font-mono">{tags.length}/5 selected</p>}
-        </div>
-
-        <button onClick={handleSubmit} disabled={submitting || !url || !tags.length || !platform}
-          className="btn-teal-solid w-full py-4 rounded text-lg disabled:opacity-30">
-          {submitting ? 'Submitting...' : 'Submit Clip'}
-        </button>
       </div>
     </div>
   );

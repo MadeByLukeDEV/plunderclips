@@ -86,7 +86,7 @@ export function RisingCreatorsSection({ creators, cachedAt }: {
         label="Rising Creators"
         sub="Momentum-based — who's climbing the ranks right now"
       />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
         {creators.slice(0, 3).map((c, i) => <CreatorCard key={c.id} creator={c} rank={i + 1} />)}
       </div>
       {creators.slice(3).length > 0 && (

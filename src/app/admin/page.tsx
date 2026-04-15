@@ -207,7 +207,7 @@ export default function AdminPage() {
     }
   };
 
-  if (loading) return <div className="max-w-6xl mx-auto px-6 py-12"><div className="skeleton h-8 w-48 rounded" /></div>;
+  if (loading) return <div className="max-w-7xl mx-auto px-6 py-12"><div className="skeleton h-8 w-48 rounded" /></div>;
 
   if (!canAccess) return (
     <div className="text-center py-24">
@@ -237,7 +237,7 @@ export default function AdminPage() {
         />
       )}
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-12">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-12">
         {/* Header */}
         <div className="mb-8">
           <p className="font-display text-xs tracking-[0.3em] text-teal mb-2">MODERATION</p>

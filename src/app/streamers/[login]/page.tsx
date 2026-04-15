@@ -61,7 +61,7 @@ export default function StreamerPage() {
   );
 
   if (isLoading) return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-12">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-12">
       <div className="skeleton h-6 w-32 rounded mb-8" />
       <div className="flex items-center gap-5 mb-10">
         <div className="skeleton w-20 h-20 rounded" />
@@ -79,7 +79,7 @@ export default function StreamerPage() {
   const roleBadge = ROLE_BADGE[user.role] || ROLE_BADGE.USER;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
       <Link href="/"
         className="inline-flex items-center gap-2 text-white/30 hover:text-teal font-display text-xs tracking-widest mb-8 transition-colors">
         <ArrowLeft className="w-3.5 h-3.5" />BACK TO EXPLORE

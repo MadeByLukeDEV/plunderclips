@@ -247,7 +247,7 @@ export default function DashboardPage() {
         <DeleteAccountModal onConfirm={handleDeleteAccount} onCancel={() => setShowDeleteModal(false)} loading={deleting} />
       )}
 
-      <div className="max-w-2xl mx-auto px-4 md:px-6 py-8 md:py-12">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
         {/* Profile card */}
         <div className="sot-card rounded p-4 md:p-6 mb-6">
           <div className="flex items-center gap-4 mb-4">
