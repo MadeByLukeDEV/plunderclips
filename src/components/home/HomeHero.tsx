@@ -16,8 +16,8 @@ export function HomeHero({ featuredClip }: { featuredClip: any | null }) {
       {featuredClip?.thumbnailUrl && (
         <>
           <div className="absolute inset-0">
-            <Image src={featuredClip.thumbnailUrl} alt={featuredClip.title} fill style={{objectFit: "cover"}}
-              className="object-cover opacity-20" priority sizes="(max-width: 639px) calc(100vw - 32px),
+            <Image src={featuredClip.thumbnailUrl} alt={featuredClip.title} fill loading="lazy" style={{objectFit: "cover"}}
+              className="object-cover opacity-20" sizes="(max-width: 639px) calc(100vw - 32px),
        (max-width: 1023px) calc(50vw - 24px),
        (max-width: 1279px) calc(33vw - 24px),
        calc(25vw - 24px)" />
@@ -66,7 +66,7 @@ export function HomeHero({ featuredClip }: { featuredClip: any | null }) {
                         sizes="(max-width: 639px) calc(100vw - 32px),
        (max-width: 1023px) calc(50vw - 24px),
        (max-width: 1279px) calc(33vw - 24px),
-       calc(25vw - 24px)" priority />
+       calc(25vw - 24px)" loading="lazy" />
                     ) : (
                       <div className="absolute inset-0 bg-sot-dark flex items-center justify-center text-5xl">🏴‍☠️</div>
                     )}

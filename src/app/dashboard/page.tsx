@@ -98,7 +98,7 @@ function ClipRow({ clip, showStatus = true, onDelete }: { clip: any; showStatus?
     <div className="sot-card rounded flex items-center gap-3 p-3 hover:border-teal/20 transition-colors">
       <div className="w-20 h-12 md:w-24 md:h-14 rounded overflow-hidden flex-shrink-0 bg-sot-dark">
         {clip.thumbnailUrl
-          ? <Image src={clip.thumbnailUrl} alt={clip.title} priority={false} objectFit="cover" height={300} width={300} sizes="(max-width: 639px) calc(100vw - 32px),
+          ? <Image src={clip.thumbnailUrl} alt={clip.title} loading="lazy" style={{ objectFit: 'cover' }} height={300} width={300} sizes="(max-width: 639px) calc(100vw - 32px),
        (max-width: 1023px) calc(50vw - 24px),
        (max-width: 1279px) calc(33vw - 24px),
        calc(25vw - 24px)" className="w-full h-full object-cover" />
@@ -252,7 +252,7 @@ export default function DashboardPage() {
         <div className="sot-card rounded p-4 md:p-6 mb-6">
           <div className="flex items-center gap-4 mb-4">
             {user.profileImage && (
-              <Image src={user.profileImage} alt={user.displayName} width={56} height={56} sizes="(max-width: 639px) calc(100vw - 32px),
+              <Image src={user.profileImage} alt={user.displayName} priority width={56} height={56} sizes="(max-width: 639px) calc(100vw - 32px),
        (max-width: 1023px) calc(50vw - 24px),
        (max-width: 1279px) calc(33vw - 24px),
        calc(25vw - 24px)"

@@ -2,6 +2,9 @@
 const nextConfig = {
   // Image optimization — whitelist all external domains used
   images: {
+    // loader: "custom",
+    // loaderFile: "./src/lib/imageLoader.ts",
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     remotePatterns: [
       // Twitch profile images + clip thumbnails
       {

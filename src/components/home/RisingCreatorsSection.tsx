@@ -19,7 +19,7 @@ function CreatorCard({ creator, rank }: { creator: any; rank: number }) {
             sizes="(max-width: 639px) calc(100vw - 32px),
        (max-width: 1023px) calc(50vw - 24px),
        (max-width: 1279px) calc(33vw - 24px),
-       calc(25vw - 24px)"/>
+       calc(25vw - 24px)" loading="lazy"/>
           <div className="absolute inset-0 bg-gradient-to-t from-sot-card via-sot-card/90 to-sot-card/60" />
         </div>
       )}
@@ -42,7 +42,7 @@ function CreatorCard({ creator, rank }: { creator: any; rank: number }) {
               <Image src={creator.profileImage} alt={creator.displayName} fill sizes="(max-width: 639px) calc(100vw - 32px),
        (max-width: 1023px) calc(50vw - 24px),
        (max-width: 1279px) calc(33vw - 24px),
-       calc(25vw - 24px)" style={{objectFit: "cover"}}/>
+       calc(25vw - 24px)" style={{objectFit: "cover"}} loading="lazy"/>
             ) : (
               <div className="w-full h-full bg-sot-dark flex items-center justify-center text-lg">🏴‍☠️</div>
             )}

@@ -59,7 +59,7 @@ export default async function StreamersPage() {
               <div className="relative w-14 h-14 mx-auto mb-3 rounded-full overflow-hidden border-2 border-white/10 group-hover:border-teal/30 transition-colors">
                 {s.profileImage ? (
                   <Image src={s.profileImage} alt={`${s.displayName} profile picture`}
-                    fill style={{ objectFit: 'cover' }} sizes="56px" />
+                    fill style={{ objectFit: 'cover' }} sizes="56px" priority/>
                 ) : (
                   <div className="w-full h-full bg-sot-dark flex items-center justify-center text-xl">🏴‍☠️</div>
                 )}

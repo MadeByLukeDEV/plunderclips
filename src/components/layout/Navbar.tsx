@@ -59,7 +59,7 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               <div className="hidden md:flex items-center gap-2">
                 {user.profileImage && (
-                  <Image src={user.profileImage} alt={user.displayName} width={28} height={28}
+                  <Image src={user.profileImage} alt={user.displayName} priority width={28} height={28}
                     className="rounded-full border border-teal/40" />
                 )}
                 <span className="font-display text-sm text-white/80 tracking-wide">{user.displayName}</span>

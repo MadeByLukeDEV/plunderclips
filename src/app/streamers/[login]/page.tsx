@@ -229,7 +229,7 @@ export default async function StreamerPage({ params }: Props) {
                 <Image src={user.profileImage} alt={`${user.displayName} profile picture`}
                   width={80} height={80}
                   className={`rounded border-2 ${isLive ? 'border-red-500/50' : 'border-teal/40'}`}
-                  style={{ objectFit: 'cover' }} />
+                  style={{ objectFit: 'cover' }} priority />
               ) : (
                 <div className="w-20 h-20 rounded border-2 border-teal/20 bg-sot-dark flex items-center justify-center text-3xl">🏴‍☠️</div>
               )}

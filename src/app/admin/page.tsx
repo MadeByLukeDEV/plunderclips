@@ -310,7 +310,7 @@ export default function AdminPage() {
                     {/* Mobile: full-width thumbnail */}
                     <div className="relative w-full aspect-video md:hidden bg-sot-dark">
                       {clip.thumbnailUrl
-                        ? <Image src={clip.thumbnailUrl} alt={clip.title} fill priority={false} className="object-cover" sizes="(max-width: 639px) calc(100vw - 32px),
+                        ? <Image src={clip.thumbnailUrl} alt={clip.title} fill loading="lazy" className="object-cover" sizes="(max-width: 639px) calc(100vw - 32px),
        (max-width: 1023px) calc(50vw - 24px),
        (max-width: 1279px) calc(33vw - 24px),
        calc(25vw - 24px)" />
@@ -331,7 +331,7 @@ export default function AdminPage() {
                       {/* Desktop thumbnail */}
                       <div className="hidden md:block w-28 flex-shrink-0 rounded overflow-hidden bg-sot-dark" style={{ height: 64 }}>
                         {clip.thumbnailUrl
-                          ? <Image src={clip.thumbnailUrl} alt={clip.title} priority={false} width={500} height={500} sizes="(max-width: 639px) calc(100vw - 32px),
+                          ? <Image src={clip.thumbnailUrl} alt={clip.title} priority width={500} height={500} sizes="(max-width: 639px) calc(100vw - 32px),
        (max-width: 1023px) calc(50vw - 24px),
        (max-width: 1279px) calc(33vw - 24px),
        calc(25vw - 24px)" className="w-full h-full object-cover" />
@@ -514,7 +514,7 @@ export default function AdminPage() {
                       <div className="hidden md:flex items-center justify-center pl-4">
                         <div className="relative flex-shrink-0">
                           {u.profileImage ? (
-                            <Image src={u.profileImage} alt={u.displayName} width={36} height={36} sizes="(max-width: 639px) calc(100vw - 32px),
+                            <Image src={u.profileImage} alt={u.displayName} loading="lazy" width={36} height={36} sizes="(max-width: 639px) calc(100vw - 32px),
        (max-width: 1023px) calc(50vw - 24px),
        (max-width: 1279px) calc(33vw - 24px),
        calc(25vw - 24px)"
@@ -534,7 +534,7 @@ export default function AdminPage() {
                         {/* Mobile avatar */}
                         <div className="md:hidden relative flex-shrink-0">
                           {u.profileImage ? (
-                            <Image src={u.profileImage} alt={u.displayName} width={36} height={36}sizes="(max-width: 639px) calc(100vw - 32px),
+                            <Image src={u.profileImage} alt={u.displayName} priority width={36} height={36}sizes="(max-width: 639px) calc(100vw - 32px),
        (max-width: 1023px) calc(50vw - 24px),
        (max-width: 1279px) calc(33vw - 24px),
        calc(25vw - 24px)"
@@ -678,7 +678,7 @@ export default function AdminPage() {
                       className={`sot-card rounded p-3 flex items-center gap-4 ${!partner.fullySubscribed ? 'border border-red-500/20' : ''}`}>
                       <div className="relative flex-shrink-0">
                         {partner.profileImage ? (
-                          <Image src={partner.profileImage} alt={partner.displayName} width={40} height={40} sizes="(max-width: 639px) calc(100vw - 32px),
+                          <Image src={partner.profileImage} alt={partner.displayName} loading="lazy" width={40} height={40} sizes="(max-width: 639px) calc(100vw - 32px),
        (max-width: 1023px) calc(50vw - 24px),
        (max-width: 1279px) calc(33vw - 24px),
        calc(25vw - 24px)"

@@ -63,7 +63,7 @@ export function ClipCard({ clip }: { clip: Clip }) {
         ) : (
           <div className="absolute inset-0">
             {clip.thumbnailUrl ? (
-              <Image src={clip.thumbnailUrl} alt={clip.title} fill style={{objectFit: "cover"}}
+              <Image src={clip.thumbnailUrl} alt={clip.title} fill loading="lazy" style={{objectFit: "cover"}}
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 639px) calc(100vw - 32px),
        (max-width: 1023px) calc(50vw - 24px),
