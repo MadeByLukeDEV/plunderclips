@@ -16,11 +16,8 @@ export function HomeHero({ featuredClip }: { featuredClip: any | null }) {
       {featuredClip?.thumbnailUrl && (
         <>
           <div className="absolute inset-0">
-            <Image src={featuredClip.thumbnailUrl} alt={featuredClip.title} fill loading="lazy" style={{objectFit: "cover"}}
-              className="object-cover opacity-20" sizes="(max-width: 639px) calc(100vw - 32px),
-       (max-width: 1023px) calc(50vw - 24px),
-       (max-width: 1279px) calc(33vw - 24px),
-       calc(25vw - 24px)" />
+            <Image src={featuredClip.thumbnailUrl} alt={featuredClip.title} fill
+              className="object-cover opacity-20" priority sizes="100vw" />
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-sot-bg via-sot-bg/80 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-sot-bg via-transparent to-sot-bg/60" />
@@ -29,7 +26,7 @@ export function HomeHero({ featuredClip }: { featuredClip: any | null }) {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(0,229,192,0.07),transparent_60%)]" />
 
       <div className="relative max-w-7xl mx-auto px-4 md:px-6 w-full py-16 md:py-20">
-        <div className="grid lg:grid-cols-2 gap-10 items-center">
+        <div className="grid md:grid-cols-2 gap-10 items-center">
           <div>
             <p className="font-display text-xs tracking-[0.4em] text-teal mb-4 opacity-80">SEA OF THIEVES COMMUNITY</p>
             <h1 className="font-display text-5xl md:text-8xl font-900 text-white leading-none mb-4">
@@ -61,12 +58,11 @@ export function HomeHero({ featuredClip }: { featuredClip: any | null }) {
                 ) : (
                   <div className="absolute inset-0 cursor-pointer group" onClick={() => setPlaying(true)}>
                     {featuredClip.thumbnailUrl ? (
-                      <Image src={featuredClip.thumbnailUrl} alt={featuredClip.title} fill style={{objectFit: "cover"}}
-                        className="object-cover group-hover:scale-105 transition-transform duration-700"
-                        sizes="(max-width: 639px) calc(100vw - 32px),
-       (max-width: 1023px) calc(50vw - 24px),
-       (max-width: 1279px) calc(33vw - 24px),
-       calc(25vw - 24px)" loading="lazy" />
+                      <Image src={featuredClip.thumbnailUrl} alt={featuredClip.title} fill
+                        className="object-cover will-change-transform group-hover:scale-105 transition-transform duration-700"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        priority
+                        fetchPriority="high" />
                     ) : (
                       <div className="absolute inset-0 bg-sot-dark flex items-center justify-center text-5xl">🏴‍☠️</div>
                     )}

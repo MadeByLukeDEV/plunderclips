@@ -4,12 +4,15 @@ import { HomeHero } from '@/components/home/HomeHero';
 import { LiveSection } from '@/components/home/LiveSection';
 import { TrendingSection } from '@/components/home/TrendingSection';
 import { RisingCreatorsSection } from '@/components/home/RisingCreatorsSection';
-import { ExploreSection } from '@/components/home/ExploreSection';
-import {
-  HeroSkeleton,
-  TrendingSkeleton,
-  RisingCreatorsSkeleton,
-} from '@/components/home/HomeSkeleton';
+import { TrendingSkeleton, RisingCreatorsSkeleton } from '@/components/home/HomeSkeleton';
+import dynamic from 'next/dynamic';
+
+// Lazy load explore section — it's always below the fold
+// Reduces initial JS bundle significantly
+const ExploreSection = dynamic(
+  () => import('@/components/home/ExploreSection').then(m => ({ default: m.ExploreSection })),
+  { ssr: true, loading: () => <div className="skeleton h-96 rounded" /> }
+);
 
 // Fetch on the server — runs at request time, result cached by Next.js
 async function getFeaturedClip() {

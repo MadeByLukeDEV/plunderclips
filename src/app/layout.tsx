@@ -1,13 +1,30 @@
 import type { Metadata } from 'next';
-import './globals.css'
+import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import Navbar from '@/components/layout/Navbar';
-import Link from 'next/link';
+import { Barlow_Condensed, Barlow } from 'next/font/google';
+
+// Load fonts via next/font — zero render blocking, automatic self-hosting
+const barlowCondensed = Barlow_Condensed({
+  subsets: ['latin'],
+  weight: ['400', '600', '700', '900'],
+  variable: '--font-barlow-condensed',
+  display: 'swap',
+  preload: true,
+});
+
+const barlow = Barlow({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-barlow',
+  display: 'swap',
+  preload: true,
+});
 
 const BASE_URL = process.env.NEXTAUTH_URL || 'https://plunderclips.gg';
-const GOOGLE_VERIFICATION_ID = process.env.GOOGLE_VERIFICATION_ID || '';
+
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
@@ -58,16 +75,20 @@ export const metadata: Metadata = {
   alternates: {
     canonical: BASE_URL,
   },
-
-  // Verification — add your Google Search Console verification token here
-  verification: {
-    google: GOOGLE_VERIFICATION_ID,
-  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang="en" className={`${barlowCondensed.variable} ${barlow.variable}`}>
+      <head>
+        {/* Preconnect to image CDNs — browser starts DNS+TLS early */}
+        <link rel="preconnect" href="https://static-cdn.jtvnw.net" />
+        <link rel="preconnect" href="https://i.ytimg.com" />
+        {/* dns-prefetch as fallback for older browsers */}
+        <link rel="dns-prefetch" href="https://static-cdn.jtvnw.net" />
+        <link rel="dns-prefetch" href="https://i.ytimg.com" />
+        <link rel="dns-prefetch" href="https://clips.twitch.tv" />
+      </head>
       <body>
         <QueryProvider>
           <AuthProvider>
@@ -79,7 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   PLUNDERCLIPS — SAIL. PLUNDER. CLIP.
                 </p>
                 <div className="flex items-center justify-center gap-6 mb-3">
-                  <Link href="/privacy" className="text-xs text-white/20 hover:text-teal font-display tracking-widest transition-colors">PRIVACY POLICY</Link>
+                  <a href="/datenschutz" className="text-xs text-white/20 hover:text-teal font-display tracking-widest transition-colors">PRIVACY POLICY</a>
                 </div>
                 <p className="text-xs text-white/10 font-body">Not affiliated with Rare or Xbox Game Studios</p>
               </footer>
@@ -91,7 +112,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             background: '#161b20',
             color: '#d4dde6',
             border: '1px solid rgba(0,229,192,0.2)',
-            fontFamily: 'Barlow Condensed, sans-serif',
+            fontFamily: 'var(--font-barlow-condensed), sans-serif',
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
           },
