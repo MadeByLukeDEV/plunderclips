@@ -11,6 +11,7 @@ import {
   extractMedalClipId,
 } from '@/lib/platforms';
 import { z } from 'zod';
+import { getTwitchClipThumbnail } from '@/lib/images';
 import { Tag, Platform } from '@prisma/client';
 
 const submitSchema = z.object({
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
         twitchUrl: clipData.url,
         embedUrl: buildEmbedUrl(clipId, new URL(appUrl).hostname),
         title: clipData.title,
-        thumbnailUrl: clipData.thumbnail_url,
+        thumbnailUrl: getTwitchClipThumbnail(clipData.thumbnail_url, 640, 360),
         viewCount: clipData.view_count,
         duration: clipData.duration,
         submittedBy: user.id,

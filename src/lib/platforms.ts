@@ -1,4 +1,5 @@
 // src/lib/platforms.ts
+import { getYouTubeChannelAvatar } from '@/lib/images';
 
 // ─── Platform Detection ───────────────────────────────────────────────────────
 
@@ -70,7 +71,7 @@ export async function fetchYouTubeChannel(url: string): Promise<YouTubeChannelIn
     if (channel) return {
       channelId: channel.id,
       channelName: channel.snippet.title,
-      thumbnailUrl: channel.snippet.thumbnails?.default?.url,
+      thumbnailUrl: getYouTubeChannelAvatar(channel.snippet.thumbnails?.high?.url || channel.snippet.thumbnails?.default?.url || ''),
     };
   }
 
@@ -83,7 +84,7 @@ export async function fetchYouTubeChannel(url: string): Promise<YouTubeChannelIn
     if (channel) return {
       channelId: channel.id,
       channelName: channel.snippet.title,
-      thumbnailUrl: channel.snippet.thumbnails?.default?.url,
+      thumbnailUrl: getYouTubeChannelAvatar(channel.snippet.thumbnails?.high?.url || channel.snippet.thumbnails?.default?.url || ''),
     };
   }
 
@@ -119,10 +120,9 @@ export async function fetchYouTubeVideo(videoId: string): Promise<YouTubeVideoIn
     title: video.snippet.title,
     channelId: video.snippet.channelId,
     channelName: video.snippet.channelTitle,
-    thumbnailUrl:
-      video.snippet.thumbnails?.maxres?.url ||
-      video.snippet.thumbnails?.high?.url ||
-      video.snippet.thumbnails?.default?.url || '',
+    // Store hqdefault — always available, 480x360, good for cards
+    // Hero/featured components can request maxres via getYouTubeThumbnail(videoId, 'hero')
+    thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
     categoryId: video.snippet.categoryId,
     tags: video.snippet.tags || [],
     description: video.snippet.description || '',

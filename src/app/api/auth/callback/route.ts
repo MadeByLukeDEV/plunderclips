@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createSession } from '@/lib/auth';
+import { getTwitchProfileImage } from '@/lib/images';
 import { getTwitchUser } from '@/lib/twitch';
 
 export async function GET(request: NextRequest) {
@@ -53,14 +54,14 @@ export async function GET(request: NextRequest) {
       update: {
         twitchLogin: twitchUser.login.toLowerCase(),
         displayName: twitchUser.display_name,
-        profileImage: twitchUser.profile_image_url,
+        profileImage: getTwitchProfileImage(twitchUser.profile_image_url, 150),
         email: twitchUser.email,
       },
       create: {
         twitchId: twitchUser.id,
         twitchLogin: twitchUser.login.toLowerCase(),
         displayName: twitchUser.display_name,
-        profileImage: twitchUser.profile_image_url,
+        profileImage: getTwitchProfileImage(twitchUser.profile_image_url, 150),
         email: twitchUser.email,
         role: 'USER',
       },
