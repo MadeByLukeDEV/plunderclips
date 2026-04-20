@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
   const recentCount = await prisma.clip.count({
     where: { submittedBy: user.id, createdAt: { gte: oneHourAgo } },
   });
-  if (recentCount >= 20) {
+  if (recentCount >= 10) {
     return withCors(
       NextResponse.json({ error: 'You have submitted too many clips recently. Please wait before submitting again.' }, { status: 429 }),
       origin

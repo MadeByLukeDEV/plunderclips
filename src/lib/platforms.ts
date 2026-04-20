@@ -91,6 +91,7 @@ export async function fetchYouTubeChannel(url: string): Promise<YouTubeChannelIn
 }
 
 export interface YouTubeVideoInfo {
+  viewCount: number;
   videoId: string;
   title: string;
   channelId: string;
@@ -107,7 +108,7 @@ export async function fetchYouTubeVideo(videoId: string): Promise<YouTubeVideoIn
   if (!apiKey) throw new Error('YOUTUBE_API_KEY not set');
 
   const res = await fetch(
-    `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${apiKey}`
+    `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoId}&key=${apiKey}`
   );
   const data = await res.json();
   const video = data.items?.[0];
@@ -126,6 +127,7 @@ export async function fetchYouTubeVideo(videoId: string): Promise<YouTubeVideoIn
     tags: video.snippet.tags || [],
     description: video.snippet.description || '',
     duration: video.contentDetails.duration,
+    viewCount: parseInt(video.statistics?.viewCount || '0', 10),
   };
 }
 
