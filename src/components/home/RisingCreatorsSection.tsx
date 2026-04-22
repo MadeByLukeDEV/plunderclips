@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Eye, Flame } from 'lucide-react';
 import { SectionHeader } from './SectionHeader';
+import { useState, useEffect } from 'react';
 
 function CreatorCard({ creator, rank }: { creator: any; rank: number }) {
   const isTop = rank === 1;
@@ -14,12 +15,8 @@ function CreatorCard({ creator, rank }: { creator: any; rank: number }) {
       }`}>
       {creator.latestThumbnail && (
         <div className="absolute inset-0">
-          <Image src={creator.latestThumbnail} alt="" fill style={{objectFit: "cover"}}
-            className="object-cover opacity-10 group-hover:opacity-15 transition-opacity" 
-            sizes="(max-width: 639px) calc(100vw - 32px),
-       (max-width: 1023px) calc(50vw - 24px),
-       (max-width: 1279px) calc(33vw - 24px),
-       calc(25vw - 24px)" loading="lazy"/>
+          <Image src={creator.latestThumbnail} alt="" fill
+            className="object-cover opacity-10 group-hover:opacity-15 transition-opacity" />
           <div className="absolute inset-0 bg-gradient-to-t from-sot-card via-sot-card/90 to-sot-card/60" />
         </div>
       )}
@@ -39,10 +36,7 @@ function CreatorCard({ creator, rank }: { creator: any; rank: number }) {
             isTop ? 'w-14 h-14 border-teal/40' : 'w-10 h-10 border-white/10'
           }`}>
             {creator.profileImage ? (
-              <Image src={creator.profileImage} alt={creator.displayName} fill sizes="(max-width: 639px) calc(100vw - 32px),
-       (max-width: 1023px) calc(50vw - 24px),
-       (max-width: 1279px) calc(33vw - 24px),
-       calc(25vw - 24px)" style={{objectFit: "cover"}} loading="lazy"/>
+              <Image src={creator.profileImage} alt={creator.displayName} fill className="object-cover" />
             ) : (
               <div className="w-full h-full bg-sot-dark flex items-center justify-center text-lg">🏴‍☠️</div>
             )}
@@ -65,7 +59,7 @@ function CreatorCard({ creator, rank }: { creator: any; rank: number }) {
         )}
         {creator.last7Views > 0 && (
           <div className="flex items-center gap-1 text-xs text-white/20 font-mono mt-1">
-            <Eye className="w-3 h-3" />{creator.last7Views.toLocaleString()} views this week
+            <Eye className="w-3 h-3" />{creator.last7Views.toLocaleString('en-US')} views this week
           </div>
         )}
       </div>
@@ -76,36 +70,32 @@ function CreatorCard({ creator, rank }: { creator: any; rank: number }) {
 export function RisingCreatorsSection({ creators, cachedAt }: {
   creators: any[]; cachedAt: string;
 }) {
+  const [minutesAgo, setMinutesAgo] = useState<number | null>(null);
+
+  useEffect(() => {
+    setMinutesAgo(Math.floor((Date.now() - new Date(cachedAt).getTime()) / 60000));
+  }, [cachedAt]);
+
   if (creators.length === 0) return null;
 
-const diffMs = Date.now() - new Date(cachedAt).getTime();
-const totalMin = Math.floor(diffMs / 60000);
-const h = Math.floor(totalMin / 60);
-const m = totalMin % 60;
-
-// Format string: "2h 5m ago", "15m ago", or "just now"
-const timeDisplay = h > 0 
-  ? `${h}h ${m}m ago` 
-  : m === 0 ? 'just now' : `${m}m ago`;
-
-return (
-  <section>
-    <SectionHeader
-      icon={<Flame className="w-5 h-5" />}
-      label="Rising Creators"
-      sub="Momentum-based — who's climbing the ranks right now"
-    />
-    <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
-      {creators.slice(0, 3).map((c, i) => <CreatorCard key={c.id} creator={c} rank={i + 1} />)}
-    </div>
-    {creators.slice(3).length > 0 && (
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {creators.slice(3).map((c, i) => <CreatorCard key={c.id} creator={c} rank={i + 4} />)}
+  return (
+    <section>
+      <SectionHeader
+        icon={<Flame className="w-5 h-5" />}
+        label="Rising Creators"
+        sub="Momentum-based — who's climbing the ranks right now"
+      />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+        {creators.slice(0, 3).map((c, i) => <CreatorCard key={c.id} creator={c} rank={i + 1} />)}
       </div>
-    )}
-    <p className="text-white/15 text-xs font-mono mt-3 text-right">
-      Updated {timeDisplay} · refreshes every 6h
-    </p>
-  </section>
-);
+      {creators.slice(3).length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {creators.slice(3).map((c, i) => <CreatorCard key={c.id} creator={c} rank={i + 4} />)}
+        </div>
+      )}
+      <p className="text-white/15 text-xs font-mono mt-3 text-right">
+        Updated {minutesAgo === null ? '…' : minutesAgo === 0 ? 'just now' : `${minutesAgo}m ago`} · refreshes every 6h
+      </p>
+    </section>
+  );
 }

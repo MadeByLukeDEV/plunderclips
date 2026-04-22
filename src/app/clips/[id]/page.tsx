@@ -39,7 +39,7 @@ function buildDescription(clip: {
     .slice(0, 3)
     .map(t => TAG_READABLE[t.tag] || t.tag)
     .join(', ');
-  const views = clip.viewCount > 0 ? ` · ${clip.viewCount.toLocaleString()} views` : '';
+  const views = clip.viewCount > 0 ? ` · ${clip.viewCount.toLocaleString('en-US')} views` : '';
   return `Watch ${clip.broadcasterName}'s Sea of Thieves clip "${clip.title}" on PlunderClips${views}. Tagged: ${tagWords || 'Sea of Thieves'}. Discover the finest SoT moments from the seven seas.`;
 }
 
@@ -254,7 +254,7 @@ export default async function ClipPage({ params }: Props) {
             </Link>
             {clip.viewCount > 0 && (
               <span className="flex items-center gap-1.5">
-                <Eye className="w-3.5 h-3.5" />{clip.viewCount.toLocaleString()} views
+                <Eye className="w-3.5 h-3.5" />{clip.viewCount.toLocaleString('en-US')} views
               </span>
             )}
             {clip.duration && (
@@ -264,7 +264,7 @@ export default async function ClipPage({ params }: Props) {
             )}
             <a href={clip.twitchUrl} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1 hover:text-teal transition-colors ml-auto">
-              <ExternalLink className="w-3.5 h-3.5" />View on ${clip.platform === 'YOUTUBE' ? 'YouTube' : clip.platform === 'TWITCH' ? 'Twitch' : 'MedalTV'}
+              <ExternalLink className="w-3.5 h-3.5" />View on {clip.platform === 'YOUTUBE' ? 'YouTube' : clip.platform === 'TWITCH' ? 'Twitch' : 'MedalTV'}
             </a>
           </div>
 
@@ -281,7 +281,8 @@ export default async function ClipPage({ params }: Props) {
         {/* SEO text block — gives Google something to read, helps thin content */}
         <div className="sot-card rounded p-5 mb-8 text-white/30 text-sm font-body leading-relaxed">
           <p>
-            <strong className="text-white/50">{clip.title}</strong> is a Sea of Thieves {primaryTag.toLowerCase()} from <Link href={`/streamers/${clip.broadcasterName.toLowerCase()}`}
+            <strong className="text-white/50">{clip.title}</strong> is a Sea of Thieves {primaryTag.toLowerCase()} clip
+            from <Link href={`/streamers/${clip.broadcasterName.toLowerCase()}`}
               className="text-teal/70 hover:text-teal transition-colors">{clip.broadcasterName}</Link> shared
             on PlunderClips — a community platform for Sea of Thieves streamers to showcase their best moments.
             {clip.tags.length > 1 && (

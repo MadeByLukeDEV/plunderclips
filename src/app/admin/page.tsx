@@ -310,10 +310,7 @@ export default function AdminPage() {
                     {/* Mobile: full-width thumbnail */}
                     <div className="relative w-full aspect-video md:hidden bg-sot-dark">
                       {clip.thumbnailUrl
-                        ? <Image src={clip.thumbnailUrl} alt={clip.title} fill loading="lazy" className="object-cover" sizes="(max-width: 639px) calc(100vw - 32px),
-       (max-width: 1023px) calc(50vw - 24px),
-       (max-width: 1279px) calc(33vw - 24px),
-       calc(25vw - 24px)" />
+                        ? <Image src={clip.thumbnailUrl} alt={clip.title} fill priority={false} className="object-cover" />
                         : <div className="w-full h-full flex items-center justify-center text-2xl">🎬</div>
                       }
                       <div className="absolute top-2 left-2">{PLATFORM_BADGE[clip.platform]}</div>
@@ -331,10 +328,7 @@ export default function AdminPage() {
                       {/* Desktop thumbnail */}
                       <div className="hidden md:block w-28 flex-shrink-0 rounded overflow-hidden bg-sot-dark" style={{ height: 64 }}>
                         {clip.thumbnailUrl
-                          ? <Image src={clip.thumbnailUrl} alt={clip.title} priority width={500} height={500} sizes="(max-width: 639px) calc(100vw - 32px),
-       (max-width: 1023px) calc(50vw - 24px),
-       (max-width: 1279px) calc(33vw - 24px),
-       calc(25vw - 24px)" className="w-full h-full object-cover" />
+                          ? <Image src={clip.thumbnailUrl} alt={clip.title} priority={false} width={500} height={500} className="w-full h-full object-cover" />
                           : <div className="w-full h-full flex items-center justify-center text-xl">🎬</div>
                         }
                       </div>
@@ -514,10 +508,7 @@ export default function AdminPage() {
                       <div className="hidden md:flex items-center justify-center pl-4">
                         <div className="relative flex-shrink-0">
                           {u.profileImage ? (
-                            <Image src={u.profileImage} alt={u.displayName} loading="lazy" width={36} height={36} sizes="(max-width: 639px) calc(100vw - 32px),
-       (max-width: 1023px) calc(50vw - 24px),
-       (max-width: 1279px) calc(33vw - 24px),
-       calc(25vw - 24px)"
+                            <Image src={u.profileImage} alt={u.displayName} width={36} height={36}
                               className="w-9 h-9 rounded-full border border-white/10 group-hover:border-teal/30 transition-colors"
                               style={{ objectFit: 'cover' }} />
                           ) : (
@@ -534,10 +525,7 @@ export default function AdminPage() {
                         {/* Mobile avatar */}
                         <div className="md:hidden relative flex-shrink-0">
                           {u.profileImage ? (
-                            <Image src={u.profileImage} alt={u.displayName} priority width={36} height={36}sizes="(max-width: 639px) calc(100vw - 32px),
-       (max-width: 1023px) calc(50vw - 24px),
-       (max-width: 1279px) calc(33vw - 24px),
-       calc(25vw - 24px)"
+                            <Image src={u.profileImage} alt={u.displayName} width={36} height={36}
                               className="w-9 h-9 rounded-full border border-white/10"
                               style={{ objectFit: 'cover' }} />
                           ) : (
@@ -556,7 +544,7 @@ export default function AdminPage() {
                             {u.isLive && (
                               <span className="flex items-center gap-1 text-xs text-red-400 font-mono">
                                 <Radio className="w-2.5 h-2.5 animate-pulse" />
-                                {u.viewerCount != null ? u.viewerCount.toLocaleString() : 'LIVE'}
+                                {u.viewerCount != null ? u.viewerCount.toLocaleString('en-US') : 'LIVE'}
                               </span>
                             )}
                             {u.youtubeChannelName && (
@@ -678,10 +666,7 @@ export default function AdminPage() {
                       className={`sot-card rounded p-3 flex items-center gap-4 ${!partner.fullySubscribed ? 'border border-red-500/20' : ''}`}>
                       <div className="relative flex-shrink-0">
                         {partner.profileImage ? (
-                          <Image src={partner.profileImage} alt={partner.displayName} loading="lazy" width={40} height={40} sizes="(max-width: 639px) calc(100vw - 32px),
-       (max-width: 1023px) calc(50vw - 24px),
-       (max-width: 1279px) calc(33vw - 24px),
-       calc(25vw - 24px)"
+                          <Image src={partner.profileImage} alt={partner.displayName} width={40} height={40}
                             className="w-10 h-10 rounded border border-white/10" />
                         ) : (
                           <div className="w-10 h-10 rounded border border-white/10 bg-sot-dark flex items-center justify-center">🏴‍☠️</div>

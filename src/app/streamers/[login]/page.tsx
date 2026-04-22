@@ -94,7 +94,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .join(', ');
 
   const title = `${user.displayName} Sea of Thieves Clips | PlunderClips`;
-  const description = `Watch ${stats.totalClips} Sea of Thieves clip${stats.totalClips !== 1 ? 's' : ''} from ${user.displayName} on PlunderClips — ${stats.totalViews.toLocaleString()} total views${tagText ? `. Known for ${tagText}` : ''}. Discover ${user.displayName}'s best SoT moments.`;
+  const description = `Watch ${stats.totalClips} Sea of Thieves clip${stats.totalClips !== 1 ? 's' : ''} from ${user.displayName} on PlunderClips — ${stats.totalViews.toLocaleString('en-US')} total views${tagText ? `. Known for ${tagText}` : ''}. Discover ${user.displayName}'s best SoT moments.`;
+
   return {
     title,
     description,
@@ -186,7 +187,7 @@ export default async function StreamerPage({ params }: Props) {
       <StreamerJsonLd user={user} stats={stats} pageUrl={pageUrl} base={base} />
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
-        <Link href="../" className="flex items-center gap-2 text-xs font-mono text-white/25 mb-6">
+<Link href="../" className="flex items-center gap-2 text-xs font-mono text-white/25 mb-6">
           <ArrowLeft className="w-4 h-4" />Back to Explore
         </Link>
         {/* Breadcrumb */}
@@ -205,7 +206,7 @@ export default async function StreamerPage({ params }: Props) {
               <Radio className="w-4 h-4 text-red-400 animate-pulse" />
               <span className="font-display text-sm text-red-400 tracking-widest">LIVE NOW</span>
               {user.viewerCount != null && (
-                <span className="text-white/30 font-mono text-xs ml-1">{user.viewerCount.toLocaleString()} viewers</span>
+                <span className="text-white/30 font-mono text-xs ml-1">{user.viewerCount.toLocaleString('en-US')} viewers</span>
               )}
               {user.streamGame && <span className="text-white/20 font-mono text-xs">· {user.streamGame}</span>}
             </div>
@@ -229,7 +230,7 @@ export default async function StreamerPage({ params }: Props) {
                 <Image src={user.profileImage} alt={`${user.displayName} profile picture`}
                   width={80} height={80}
                   className={`rounded border-2 ${isLive ? 'border-red-500/50' : 'border-teal/40'}`}
-                  style={{ objectFit: 'cover' }} priority />
+                  style={{ objectFit: 'cover' }} />
               ) : (
                 <div className="w-20 h-20 rounded border-2 border-teal/20 bg-sot-dark flex items-center justify-center text-3xl">🏴‍☠️</div>
               )}
@@ -270,7 +271,7 @@ export default async function StreamerPage({ params }: Props) {
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
             { label: 'Clips',        value: stats.totalClips,                  icon: <Film className="w-4 h-4" />,       cls: 'text-teal' },
-            { label: 'Total Views',  value: stats.totalViews.toLocaleString(), icon: <Eye className="w-4 h-4" />,        cls: 'text-white/60' },
+            { label: 'Total Views',  value: stats.totalViews.toLocaleString('en-US'), icon: <Eye className="w-4 h-4" />,        cls: 'text-white/60' },
             { label: 'Top Tag',      value: stats.topTags[0] ?? '—',           icon: <TrendingUp className="w-4 h-4" />, cls: 'text-white/60', small: true },
           ].map(s => (
             <div key={s.label} className="stat-card rounded p-4 text-center">
@@ -287,7 +288,7 @@ export default async function StreamerPage({ params }: Props) {
             <p>
               <strong className="text-white/60">{user.displayName}</strong> is a Sea of Thieves streamer
               on PlunderClips with <strong className="text-white/50">{stats.totalClips} approved clip{stats.totalClips !== 1 ? 's' : ''}</strong> and{' '}
-              <strong className="text-white/50">{stats.totalViews.toLocaleString()} total views</strong>.
+              <strong className="text-white/50">{stats.totalViews.toLocaleString('en-US')} total views</strong>.
               {tagText && (
                 <> Known for {tagText} content,{' '}
                   {user.displayName}'s collection covers some of the finest Sea of Thieves moments

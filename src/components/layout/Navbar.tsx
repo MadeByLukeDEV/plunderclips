@@ -77,27 +77,31 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile bottom tab bar — only when logged in */}
-      {user && (
-        <div className="flex md:hidden border-t border-white/5 bg-sot-bg/95">
-          {[
-            { href: '/', icon: <Compass className="w-4 h-4" />, label: 'Explore' },
-            { href: '/submit', icon: <Swords className="w-4 h-4" />, label: 'Submit' },
-            { href: '/dashboard', icon: <LayoutDashboard className="w-4 h-4" />, label: 'Dashboard' },
-            ...(user.role === 'ADMIN' || user.role === 'MODERATOR'
-              ? [{ href: '/admin', icon: <Shield className="w-4 h-4" />, label: 'Admin' }]
-              : []),
-          ].map(item => (
-            <Link key={item.href} href={item.href}
-              className={`flex-1 flex flex-col items-center py-2.5 gap-1 text-xs font-display tracking-wider transition-colors ${
-                path === item.href ? 'text-teal' : 'text-white/30 hover:text-white/60'
-              }`}>
-              {item.icon}
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </div>
-      )}
+     {/* Mobile bottom tab bar — always visible */}
+<div className="flex md:hidden border-t border-white/5 bg-sot-bg/95">
+  {[
+    { href: '/', icon: <Compass className="w-4 h-4" />, label: 'Explore' },
+    { href: '/streamers', icon: <User className="w-4 h-4" />, label: 'Streamers' }, // always visible
+    ...(user ? [
+      { href: '/submit', icon: <Swords className="w-4 h-4" />, label: 'Submit' },
+      { href: '/dashboard', icon: <LayoutDashboard className="w-4 h-4" />, label: 'Dashboard' },
+      ...(user.role === 'ADMIN' || user.role === 'MODERATOR'
+        ? [{ href: '/admin', icon: <Shield className="w-4 h-4" />, label: 'Admin' }]
+        : []),
+    ] : []),
+  ].map(item => (
+    <Link
+      key={item.href}
+      href={item.href}
+      className={`flex-1 flex flex-col items-center py-2.5 gap-1 text-xs font-display tracking-wider transition-colors ${
+        path === item.href ? 'text-teal' : 'text-white/30 hover:text-white/60'
+      }`}
+    >
+      {item.icon}
+      <span>{item.label}</span>
+    </Link>
+  ))}
+</div>
     </nav>
   );
 }

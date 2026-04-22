@@ -39,7 +39,7 @@ export default async function StreamersPage() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-12">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
       <div className="mb-10">
         <p className="font-display text-xs tracking-[0.3em] text-teal mb-2">COMMUNITY</p>
         <h1 className="font-display text-5xl font-900 text-white">Sea of Thieves Streamers</h1>
@@ -59,7 +59,7 @@ export default async function StreamersPage() {
               <div className="relative w-14 h-14 mx-auto mb-3 rounded-full overflow-hidden border-2 border-white/10 group-hover:border-teal/30 transition-colors">
                 {s.profileImage ? (
                   <Image src={s.profileImage} alt={`${s.displayName} profile picture`}
-                    fill style={{ objectFit: 'cover' }} sizes="56px" priority/>
+                    fill style={{ objectFit: 'cover' }} sizes="56px" />
                 ) : (
                   <div className="w-full h-full bg-sot-dark flex items-center justify-center text-xl">🏴‍☠️</div>
                 )}
@@ -78,7 +78,7 @@ export default async function StreamersPage() {
                 {s.isLive && (
                   <span className="flex items-center gap-0.5 text-xs text-red-400 font-mono">
                     <Radio className="w-2.5 h-2.5 animate-pulse" />
-                    {s.viewerCount != null ? s.viewerCount.toLocaleString() : 'LIVE'}
+                    {s.viewerCount != null ? s.viewerCount.toLocaleString('en-US') : 'LIVE'}
                   </span>
                 )}
               </div>

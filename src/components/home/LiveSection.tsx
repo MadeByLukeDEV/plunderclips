@@ -29,11 +29,8 @@ export function LiveSection() {
             className="flex-shrink-0 sot-card rounded p-3 flex items-center gap-3 hover:border-red-500/30 transition-colors min-w-[200px] border border-red-500/10">
             <div className="relative flex-shrink-0">
               {u.profileImage ? (
-                <Image src={u.profileImage} alt={u.displayName} sizes="(max-width: 639px) calc(100vw - 32px),
-       (max-width: 1023px) calc(50vw - 24px),
-       (max-width: 1279px) calc(33vw - 24px),
-       calc(25vw - 24px)" width={40} height={40}
-                  className="w-10 h-10 rounded border border-red-500/30" loading="lazy"/>
+                <Image src={u.profileImage} alt={u.displayName} width={40} height={40}
+                  className="w-10 h-10 rounded border border-red-500/30" />
               ) : (
                 <div className="w-10 h-10 rounded bg-sot-dark border border-red-500/30 flex items-center justify-center">🏴‍☠️</div>
               )}
@@ -42,7 +39,7 @@ export function LiveSection() {
             <div className="min-w-0">
               <p className="font-display text-sm font-700 text-white truncate">{u.displayName}</p>
               {u.viewerCount != null && (
-                <p className="text-white/30 text-xs font-mono">{u.viewerCount.toLocaleString()} viewers</p>
+                <p className="text-white/30 text-xs font-mono">{u.viewerCount.toLocaleString('en-US')} viewers</p>
               )}
             </div>
           </Link>
