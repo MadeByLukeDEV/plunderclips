@@ -1,8 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── REMOVE any @import Google Fonts line that was here ── */
+/* next/font in layout.tsx now handles Barlow + Barlow Condensed */
+/* with zero render blocking and automatic self-hosting          */
 
 :root {
   --teal:       #00e5c0;
@@ -13,7 +15,7 @@
   --bg-card:    #161b20;
   --bg-card2:   #1c2228;
   --border:     rgba(0,229,192,0.15);
-  --border-mid: rgba(0,229,192,0.3);
+  --border-mid: rgba(46, 187, 163, 0.3);
   --text:       #d4dde6;
   --text-dim:   #7a8a96;
 }
@@ -24,7 +26,8 @@ html { scroll-behavior: smooth; }
 body {
   background-color: var(--bg-deep);
   color: var(--text);
-  font-family: 'Barlow', sans-serif;
+  /* Use CSS variable from next/font — falls back to system sans-serif */
+  font-family: var(--font-barlow), sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -49,11 +52,20 @@ body::after {
 /* Selection */
 ::selection { background: rgba(0,229,192,0.25); color: var(--teal); }
 
-/* Typography */
+/* ── Typography ─────────────────────────────────────────────────────────────── */
+
+/* Display font — Barlow Condensed via next/font CSS variable */
 .font-display, h1, h2, h3 {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: var(--font-barlow-condensed), sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+}
+
+/* Body font — Barlow via next/font CSS variable */
+.font-body {
+  font-family: var(--font-barlow), sans-serif;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .teal-heading {
@@ -61,7 +73,7 @@ body::after {
   text-shadow: 0 0 40px rgba(0,229,192,0.4), 0 0 80px rgba(0,229,192,0.15);
 }
 
-/* Skeleton */
+/* ── Skeleton ───────────────────────────────────────────────────────────────── */
 .skeleton {
   background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card2) 50%, var(--bg-card) 75%);
   background-size: 200% 100%;
@@ -72,7 +84,7 @@ body::after {
   100% { background-position:  200% 0; }
 }
 
-/* Clip card */
+/* ── Clip card ──────────────────────────────────────────────────────────────── */
 .clip-card {
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   border: 1px solid var(--border);
@@ -83,12 +95,12 @@ body::after {
   box-shadow: 0 16px 48px rgba(0,0,0,0.6), 0 0 24px rgba(0,229,192,0.12);
 }
 
-/* Buttons */
+/* ── Buttons ────────────────────────────────────────────────────────────────── */
 .btn-teal {
   background: transparent;
   border: 1px solid var(--teal);
   color: var(--teal);
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: var(--font-barlow-condensed), sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 700;
@@ -102,7 +114,7 @@ body::after {
 .btn-teal-solid {
   background: var(--teal);
   color: var(--bg-deep);
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: var(--font-barlow-condensed), sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 800;
@@ -113,6 +125,7 @@ body::after {
   box-shadow: 0 0 30px rgba(0,229,192,0.5);
 }
 
+/* ── Cards ──────────────────────────────────────────────────────────────────── */
 .sot-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -124,7 +137,6 @@ body::after {
   opacity: 0.4;
 }
 
-/* Stat card */
 .stat-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -136,11 +148,11 @@ body::after {
   box-shadow: 0 0 20px rgba(0,229,192,0.1);
 }
 
-/* Nav links */
+/* ── Nav ────────────────────────────────────────────────────────────────────── */
 .nav-link {
   position: relative;
   color: var(--text-dim);
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: var(--font-barlow-condensed), sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 600;
@@ -158,18 +170,18 @@ body::after {
 .nav-link:hover { color: var(--teal); }
 .nav-link:hover::after { width: 100%; }
 
-/* Tags */
-.tag-FUNNY      { background: rgba(250,204,21,0.12);  color: #fde047; border-color: rgba(250,204,21,0.3); }
-.tag-KILL       { background: rgba(239,68,68,0.12);   color: #f87171; border-color: rgba(239,68,68,0.3); }
-.tag-TUCK       { background: rgba(0,229,192,0.12);   color: #00e5c0; border-color: rgba(0,229,192,0.3); }
-.tag-HIGHLIGHT  { background: rgba(250,204,21,0.12);  color: #fde047; border-color: rgba(250,204,21,0.3); }
-.tag-PVP        { background: rgba(239,68,68,0.12);   color: #f87171; border-color: rgba(239,68,68,0.3); }
-.tag-PVE        { background: rgba(96,165,250,0.12);  color: #93c5fd; border-color: rgba(96,165,250,0.3); }
-.tag-SAILING    { background: rgba(0,229,192,0.12);   color: #00e5c0; border-color: rgba(0,229,192,0.3); }
-.tag-TREASURE   { background: rgba(250,204,21,0.12);  color: #fde047; border-color: rgba(250,204,21,0.3); }
-.tag-KRAKEN     { background: rgba(139,92,246,0.12);  color: #c4b5fd; border-color: rgba(139,92,246,0.3); }
-.tag-MEGALODON  { background: rgba(239, 246, 255, 0.12);  color: #ffb7d8; border-color: rgba(147,197,253,0.3); }
-.tag-KEG { background: rgba(212, 212, 212, 0.12);   color: #ffd4d4; border-color: rgba(239,68,68,0.3); }
-.tag-EPIC_FAIL  { background: rgba(251,146,60,0.12);  color: #fb923c; border-color: rgba(251,146,60,0.3); }
-.tag-TEAM_PLAY  { background: rgba(0,229,192,0.12);   color: #00e5c0; border-color: rgba(0,229,192,0.3); }
-.tag-SOLO       { background: rgba(250,204,21,0.12);  color: #fde047; border-color: rgba(250,204,21,0.3); }
+/* ── Tags ───────────────────────────────────────────────────────────────────── */
+.tag-FUNNY      { background: rgba(250,204,21,0.12);      color: #fde047; border-color: rgba(250,204,21,0.3); }
+.tag-KILL       { background: rgba(239,68,68,0.12);       color: #f87171; border-color: rgba(239,68,68,0.3); }
+.tag-TUCK       { background: rgba(0,229,192,0.12);       color: #00e5c0; border-color: rgba(0,229,192,0.3); }
+.tag-HIGHLIGHT  { background: rgba(250,204,21,0.12);      color: #fde047; border-color: rgba(250,204,21,0.3); }
+.tag-PVP        { background: rgba(239,68,68,0.12);       color: #f87171; border-color: rgba(239,68,68,0.3); }
+.tag-PVE        { background: rgba(96,165,250,0.12);      color: #93c5fd; border-color: rgba(96,165,250,0.3); }
+.tag-SAILING    { background: rgba(0,229,192,0.12);       color: #00e5c0; border-color: rgba(0,229,192,0.3); }
+.tag-TREASURE   { background: rgba(250,204,21,0.12);      color: #fde047; border-color: rgba(250,204,21,0.3); }
+.tag-KRAKEN     { background: rgba(139,92,246,0.12);      color: #c4b5fd; border-color: rgba(139,92,246,0.3); }
+.tag-MEGALODON  { background: rgba(239,246,255,0.12);     color: #ffb7d8; border-color: rgba(147,197,253,0.3); }
+.tag-KEG        { background: rgba(212,212,212,0.12);     color: #ffd4d4; border-color: rgba(239,68,68,0.3); }
+.tag-EPIC_FAIL  { background: rgba(251,146,60,0.12);      color: #fb923c; border-color: rgba(251,146,60,0.3); }
+.tag-TEAM_PLAY  { background: rgba(0,229,192,0.12);       color: #00e5c0; border-color: rgba(0,229,192,0.3); }
+.tag-SOLO       { background: rgba(250,204,21,0.12);      color: #fde047; border-color: rgba(250,204,21,0.3); }
