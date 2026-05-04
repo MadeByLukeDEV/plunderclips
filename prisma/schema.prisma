@@ -1,4 +1,10 @@
 // prisma/schema.prisma
+// ─────────────────────────────────────────────────────────────────────────────
+// Modular Monolith Schema
+// Modules: users · sessions · clips · clip_media · clip_moderation · clip_tags
+//          streamer_links · live_status · progress · challenges
+// ─────────────────────────────────────────────────────────────────────────────
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,30 +14,40 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id                 String   @id @default(cuid())
-  twitchId           String   @unique
-  twitchLogin        String   @unique
-  displayName        String
-  profileImage       String?
-  email              String?
-  role               Role     @default(USER)
-  // Linked accounts
-  youtubeChannelId   String?
-  youtubeChannelName String?
-  // Live status (updated by Twitch EventSub webhooks)
-  isLive             Boolean  @default(false)
-  streamTitle        String?
-  viewerCount        Int?
-  streamGame         String?
-  liveUpdatedAt      DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  clips              Clip[]
-  sessions           Session[]
+// ══════════════════════════════════════════════════════════════════════════════
+// MODULE: users
+// Core identity only — no live status, no linked accounts (those are separate)
+// ══════════════════════════════════════════════════════════════════════════════
 
+model User {
+  id           String   @id @default(cuid())
+  twitchId     String   @unique
+  twitchLogin  String   @unique
+  displayName  String
+  profileImage String?
+  email        String?
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  sessions      Session[]
+  clips         Clip[]
+  linkedAccount UserLinkedAccount?
+  liveStatus    UserLiveStatus?
+  progress      UserProgress?
+  challenges    UserChallenge[]
+
+  // Indexes — queried constantly in auth + webhook routes
+  @@index([twitchId])
+  @@index([twitchLogin])
+  @@index([role])               // live_route, admin, eventsub — WHERE role IN (...)
   @@map("users")
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODULE: sessions
+// ══════════════════════════════════════════════════════════════════════════════
 
 model Session {
   id        String   @id @default(cuid())
@@ -41,46 +57,191 @@ model Session {
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([expiresAt])          // useful for cleanup queries
   @@map("sessions")
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// MODULE: streamer_links
+// Linked third-party accounts — separated from User core
+// Previously: youtubeChannelId, youtubeChannelName, medalUserId, medalUsername
+// ══════════════════════════════════════════════════════════════════════════════
+
+model UserLinkedAccount {
+  userId             String  @id
+  youtubeChannelId   String?
+  youtubeChannelName String?
+  medalUserId        String?
+  medalUsername      String?
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Index for ownership checks on clip submission
+  @@index([youtubeChannelId])
+  @@map("user_linked_accounts")
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODULE: live_status
+// Updated by Twitch EventSub — high write frequency, separated to avoid
+// locking the users table during cron updates
+// ══════════════════════════════════════════════════════════════════════════════
+
+model UserLiveStatus {
+  userId        String    @id
+  isLive        Boolean   @default(false)
+  streamTitle   String?
+  viewerCount   Int?
+  streamGame    String?
+  liveUpdatedAt DateTime?
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Composite index — live_route and cron both do WHERE isLive = true AND role IN (...)
+  // role lives on User so we index isLive here and join
+  @@index([isLive])
+  @@map("user_live_status")
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODULE: clips (core)
+// Identity + submission only — stats and moderation are separate tables
+// ══════════════════════════════════════════════════════════════════════════════
+
 model Clip {
-  id               String     @id @default(cuid())
-  twitchClipId     String     @unique
-  twitchUrl        String
+  id               String   @id @default(cuid())
+  platformClipId   String   @unique  // yt_VIDEO_ID / medal_ID / twitch clip ID
+  sourceUrl        String
   embedUrl         String
   title            String
   thumbnailUrl     String?
-  viewCount        Int        @default(0)
   duration         Float?
+  platform         Platform @default(TWITCH)
+  platformVerified Boolean  @default(true)
+  game             String   @default("Sea of Thieves")
   submittedBy      String
-  submittedByName  String
-  status           ClipStatus @default(PENDING)
-  platform         Platform   @default(TWITCH)
-  platformVerified Boolean    @default(true)
-  tags             ClipTag[]
-  game             String     @default("Sea of Thieves")
+  submittedByName  String   // denormalised — display without join
   broadcasterId    String
-  broadcasterName  String
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-  reviewedAt       DateTime?
-  reviewedBy       String?
-  reviewNotes      String?
-  user             User       @relation(fields: [submittedBy], references: [id], onDelete: Cascade)
+  broadcasterName  String   // denormalised — broadcaster may not be registered
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
+  // Relations
+  user       User           @relation(fields: [submittedBy], references: [id], onDelete: Cascade)
+  stats      ClipStats?
+  moderation ClipModeration?
+  tags       ClipTag[]
+
+  // ── Indexes based on actual WHERE patterns found in audit ─────────────────
+  @@index([submittedBy])                    // mine_route, delete, rate-limit check
+  @@index([broadcasterName])                // streamer page, channel_route, sitemap
+  @@index([platform])                       // cron YouTube update, fix-thumbnails
+  @@index([createdAt])                      // trending, featured, rising, sort
+  @@index([broadcasterName, createdAt])     // rising_route — per broadcaster recent clips
   @@map("clips")
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// MODULE: clip_stats
+// Separated from clips — updated by cron every 5 min (YouTube) without
+// touching the core clip row. viewCount kept here AND denormalised on Clip
+// for orderBy performance (Prisma can't orderBy relation field on findMany)
+// ══════════════════════════════════════════════════════════════════════════════
+
+model ClipStats {
+  clipId    String @id
+  viewCount Int    @default(0)
+  clip      Clip   @relation(fields: [clipId], references: [id], onDelete: Cascade)
+
+  @@index([viewCount])          // popular sort — orderBy viewCount desc
+  @@map("clip_stats")
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODULE: clip_moderation
+// Separated from clips — only written by admins/mods, not on every clip fetch
+// ══════════════════════════════════════════════════════════════════════════════
+
+model ClipModeration {
+  clipId      String     @id
+  status      ClipStatus @default(PENDING)
+  reviewedBy  String?
+  reviewNotes String?
+  reviewedAt  DateTime?
+  createdAt        DateTime @default(now())
+  clip        Clip       @relation(fields: [clipId], references: [id], onDelete: Cascade)
+
+  @@index([status])             // admin panel filters — WHERE status = PENDING
+  @@index([status, createdAt])  // compound — status filter + date sort together
+  @@map("clip_moderation")
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODULE: clip_tags
+// ══════════════════════════════════════════════════════════════════════════════
+
 model ClipTag {
-  id     String @id @default(cuid())
   clipId String
   tag    Tag
   clip   Clip   @relation(fields: [clipId], references: [id], onDelete: Cascade)
 
-  @@unique([clipId, tag])
+  @@id([clipId, tag])
+  @@index([tag])                // tag filter on explore page — WHERE tag = X
   @@map("clip_tags")
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODULE: progress (future — weekly challenges + XP levels)
+// Schema defined now so it's part of the modular foundation
+// ══════════════════════════════════════════════════════════════════════════════
+
+model UserProgress {
+  userId    String   @id
+  xp        Int      @default(0)
+  level     Int      @default(1)
+  class     String   @default("Deckhand")
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([xp])                 // leaderboard queries
+  @@map("user_progress")
+}
+
+model Challenge {
+  id          String          @id @default(cuid())
+  title       String
+  description String
+  xpReward    Int
+  type        ChallengeType
+  target      Int
+  weekStart   DateTime
+  weekEnd     DateTime
+  active      Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  entries     UserChallenge[]
+
+  @@index([weekStart, weekEnd]) // current week lookup
+  @@index([active])
+  @@map("challenges")
+}
+
+model UserChallenge {
+  id          String     @id @default(cuid())
+  userId      String
+  challengeId String
+  progress    Int        @default(0)
+  completedAt DateTime?
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge   Challenge  @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId])
+  @@index([userId])
+  @@index([challengeId])
+  @@map("user_challenges")
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ENUMS
+// ══════════════════════════════════════════════════════════════════════════════
 
 enum Role {
   USER
@@ -111,10 +272,19 @@ enum Tag {
   PVE
   SAILING
   TREASURE
-  KEG
+  SIREN
   KRAKEN
+  BOSS_FIGHT
   MEGALODON
   EPIC_FAIL
   TEAM_PLAY
   SOLO
+}
+
+enum ChallengeType {
+  SUBMIT_CLIPS
+  GET_APPROVED
+  REACH_VIEWS
+  UPLOAD_STREAK
+  FIRST_CLIP
 }
