@@ -1,5 +1,6 @@
+// src/app/api/auth/delete-account/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/middleware-auth';
+import { requireAuth } from '@/modules/auth/auth.middleware';
 import { prisma } from '@/lib/prisma';
 
 export async function DELETE(request: NextRequest) {
@@ -9,18 +10,39 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
+    // Delete in correct FK order to avoid constraint violations
+    // 1. Clip relations first
     const userClips = await prisma.clip.findMany({
-      where: { submittedBy: user.id },
+      where:  { submittedBy: user.id },
       select: { id: true },
     });
     const clipIds = userClips.map(c => c.id);
 
     if (clipIds.length > 0) {
-      await prisma.clipTag.deleteMany({ where: { clipId: { in: clipIds } } });
-      await prisma.clip.deleteMany({ where: { id: { in: clipIds } } });
+      await prisma.clipTag.deleteMany({
+        where: { clipId: { in: clipIds } },
+      });
+      await prisma.clipStats.deleteMany({
+        where: { clipId: { in: clipIds } },
+      });
+      await prisma.clipModeration.deleteMany({
+        where: { clipId: { in: clipIds } },
+      });
+      await prisma.clip.deleteMany({
+        where: { id: { in: clipIds } },
+      });
     }
 
-    await prisma.session.deleteMany({ where: { userId: user.id } });
+    // 2. User relations — new schema tables
+    await Promise.all([
+      prisma.session.deleteMany({        where: { userId: user.id } }),
+      prisma.userLiveStatus.deleteMany({ where: { userId: user.id } }),
+      prisma.userLinkedAccount.deleteMany({ where: { userId: user.id } }),
+      prisma.userProgress.deleteMany({   where: { userId: user.id } }),
+      prisma.userChallenge.deleteMany({  where: { userId: user.id } }),
+    ]);
+
+    // 3. Core user last
     await prisma.user.delete({ where: { id: user.id } });
 
     const response = NextResponse.json({ success: true });

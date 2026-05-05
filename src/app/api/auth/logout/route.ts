@@ -1,15 +1,14 @@
+// src/app/api/auth/logout/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { validateSession, deleteSession } from '@/lib/auth';
+import { validateSession, deleteSession } from '@/modules/auth/auth.service';
 
 export async function POST(request: NextRequest) {
-  const token = request.cookies.get('auth-token')?.value;
+  const token  = request.cookies.get('auth-token')?.value;
   const appUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
   if (token) {
     const result = await validateSession(token);
-    if (result) {
-      await deleteSession(result.session.id);
-    }
+    if (result) await deleteSession(result.session.id);
   }
 
   const response = NextResponse.redirect(`${appUrl}/`);
@@ -17,6 +16,7 @@ export async function POST(request: NextRequest) {
   return response;
 }
 
+// Support GET for direct link navigation
 export async function GET(request: NextRequest) {
   return POST(request);
 }
