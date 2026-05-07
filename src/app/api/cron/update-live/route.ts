@@ -1,15 +1,12 @@
 // src/app/api/cron/update-live/route.ts
 // Runs every 5 minutes — keeps live streamer status and viewer counts fresh
 import { NextRequest, NextResponse } from 'next/server';
-import { refreshLiveStatuses } from '@/modules/streamers/streamers.service';
-
-const CRON_SECRET = process.env.CRON_SECRET;
+import { verifyCronRequest } from '@/modules/cron/cron.middleware';
+import { refreshLiveStatuses } from '@/modules/cron/cron.service';
 
 export async function POST(request: NextRequest) {
-  const auth = request.headers.get('authorization');
-  if (!CRON_SECRET || auth !== `Bearer ${CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = verifyCronRequest(request);
+  if (denied) return denied;
 
   try {
     const result = await refreshLiveStatuses();
@@ -21,14 +18,5 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  if (!CRON_SECRET || searchParams.get('secret') !== CRON_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  return POST(
-    new NextRequest(request.url, {
-      method: 'POST',
-      headers: { authorization: `Bearer ${CRON_SECRET}` },
-    }),
-  );
+  return POST(request);
 }

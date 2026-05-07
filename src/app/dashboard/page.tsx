@@ -93,7 +93,8 @@ function DeleteAccountModal({ onConfirm, onCancel, loading }: {
 }
 
 function ClipRow({ clip, showStatus = true, onDelete }: { clip: any; showStatus?: boolean; onDelete: (id: string) => void }) {
-  const s = STATUS[clip.status as keyof typeof STATUS];
+  const clipStatus = clip.moderation?.status ?? clip.status ?? 'PENDING';
+  const s = STATUS[clipStatus as keyof typeof STATUS];
   return (
     <div className="sot-card rounded flex items-center gap-3 p-3 hover:border-teal/20 transition-colors">
       <div className="w-20 h-12 md:w-24 md:h-14 rounded overflow-hidden flex-shrink-0 bg-sot-dark">
@@ -114,11 +115,11 @@ function ClipRow({ clip, showStatus = true, onDelete }: { clip: any; showStatus?
           {clip.broadcasterName}
         </Link>
         <div className="flex flex-wrap gap-1 mt-1">
-          {clip.tags.slice(0, 2).map((t: any) => <TagBadge key={t.id} tag={t.tag} small />)}
+          {clip.tags.slice(0, 2).map((t: any) => <TagBadge key={t.tag} tag={t.tag} small />)}
         </div>
-        {clip.status === 'DECLINED' && clip.reviewNotes && (
+        {clipStatus === 'DECLINED' && (clip.moderation?.reviewNotes ?? clip.reviewNotes) && (
           <p className="text-xs text-red-400/60 font-body mt-1 flex items-center gap-1">
-            <span className="flex-shrink-0">→</span>Reason: {clip.reviewNotes}
+            <span className="flex-shrink-0">→</span>Reason: {clip.moderation?.reviewNotes ?? clip.reviewNotes}
           </p>
         )}
         {!clip.platformVerified && clip.status === 'PENDING' && (
@@ -129,7 +130,7 @@ function ClipRow({ clip, showStatus = true, onDelete }: { clip: any; showStatus?
       </div>
       {showStatus && s && (
         <div className={`flex items-center gap-1 px-2 py-1 rounded-sm text-xs font-display tracking-wider border flex-shrink-0 ${s.cls}`}>
-          {s.icon}<span className="hidden sm:inline">{clip.status}</span>
+          {s.icon}<span className="hidden sm:inline">{clipStatus}</span>
         </div>
       )}
        <button 
@@ -207,10 +208,11 @@ export default function DashboardPage() {
   const channelClips = channelData?.clips || [];
 
   const role = ROLES[user.role as keyof typeof ROLES] ?? ROLES.USER;
+  const getStatus = (c: any) => c.moderation?.status ?? c.status ?? 'PENDING';
   const counts = {
-    APPROVED: myClips.filter((c: any) => c.status === 'APPROVED').length,
-    PENDING:  myClips.filter((c: any) => c.status === 'PENDING').length,
-    DECLINED: myClips.filter((c: any) => c.status === 'DECLINED').length,
+    APPROVED: myClips.filter((c: any) => getStatus(c) === 'APPROVED').length,
+    PENDING:  myClips.filter((c: any) => getStatus(c) === 'PENDING').length,
+    DECLINED: myClips.filter((c: any) => getStatus(c) === 'DECLINED').length,
   };
 
   return (

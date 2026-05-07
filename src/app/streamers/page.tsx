@@ -1,9 +1,10 @@
 // src/app/streamers/page.tsx — SERVER COMPONENT
-import { prisma } from '@/lib/prisma';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Radio } from 'lucide-react';
+import { getAllStreamers } from '@/modules/streamers/streamers.service';
+import type { StreamerListItemDTO } from '@/modules/streamers/streamers.types';
 
 export const metadata: Metadata = {
   title: 'Sea of Thieves Streamers | PlunderClips',
@@ -11,7 +12,6 @@ export const metadata: Metadata = {
   alternates: { canonical: `${process.env.NEXTAUTH_URL || 'https://plunderclips.gg'}/streamers` },
 };
 
-const ROLE_ORDER: Record<string, number> = { ADMIN: 0, PARTNER: 1, MODERATOR: 2, SUPPORTER: 3, USER: 4 };
 const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
   ADMIN:     { label: 'Captain',    cls: 'text-red-400 border-red-400/30' },
   PARTNER:   { label: 'Partner',    cls: 'text-purple-400 border-purple-400/30' },
@@ -21,22 +21,8 @@ const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
 };
 
 export default async function StreamersPage() {
-  const streamers = await prisma.user.findMany({
-    select: {
-      id: true, twitchLogin: true, displayName: true,
-      profileImage: true, role: true, isLive: true, viewerCount: true,
-      _count: { select: { clips: true } },
-    },
-  });
-
-  // Sort: live first → role → clip count
-  streamers.sort((a, b) => {
-    if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
-    const roleA = ROLE_ORDER[a.role] ?? 99;
-    const roleB = ROLE_ORDER[b.role] ?? 99;
-    if (roleA !== roleB) return roleA - roleB;
-    return b._count.clips - a._count.clips;
-  });
+  // Pre-sorted: live first → role → approved clip count
+  const streamers = await getAllStreamers();
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
@@ -51,7 +37,7 @@ export default async function StreamersPage() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-        {streamers.map(s => {
+        {streamers.map((s: StreamerListItemDTO) => {
           const badge = ROLE_BADGE[s.role] || ROLE_BADGE.USER;
           return (
             <Link key={s.id} href={`/streamers/${s.twitchLogin}`}
@@ -82,9 +68,9 @@ export default async function StreamersPage() {
                   </span>
                 )}
               </div>
-              {s._count.clips > 0 && (
+              {s.approvedClips > 0 && (
                 <p className="text-white/20 text-xs font-mono mt-1.5">
-                  {s._count.clips} clip{s._count.clips !== 1 ? 's' : ''}
+                  {s.approvedClips} clip{s.approvedClips !== 1 ? 's' : ''}
                 </p>
               )}
             </Link>
@@ -92,11 +78,10 @@ export default async function StreamersPage() {
         })}
       </div>
 
-      {/* SEO footer text */}
       <div className="mt-12 pt-8 border-t border-white/5">
         <p className="text-white/20 text-xs font-body leading-relaxed max-w-2xl">
           PlunderClips is a community platform for Sea of Thieves streamers to share and showcase their
-          best Twitch clips. All streamers listed here have registered on PlunderClips and consented to
+          best clips. All streamers listed here have registered on PlunderClips and consented to
           their clips being featured. Discover {streamers.length} registered Sea of Thieves content creators.
         </p>
       </div>

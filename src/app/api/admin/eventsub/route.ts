@@ -8,7 +8,7 @@ import {
   fetchAllEventSubSubscriptions,
   getTwitchAppToken,
 } from '@/modules/platform/twitch.service';
-import { LIVE_ROLES } from '@/modules/streamers/streamers.helpers';
+import { LIVE_ROLES } from '@/modules/live/live.service';
 
 // GET — subscription status for all Partners/Admins
 export async function GET(request: NextRequest) {

@@ -85,7 +85,7 @@ export function HomeHero({ featuredClip }: { featuredClip: any | null }) {
                     <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
                       <div className="flex gap-1.5 mb-1.5 flex-wrap">
                         {featuredClip.tags?.slice(0, 3).map((t: any) => (
-                          <TagBadge key={t.id} tag={t.tag} small />
+                          <TagBadge key={t.tag} tag={t.tag} small />
                         ))}
                       </div>
                       <p className="font-display text-xs md:text-base font-700 text-white line-clamp-1 md:line-clamp-2 leading-snug mb-1">

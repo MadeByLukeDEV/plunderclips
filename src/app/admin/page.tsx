@@ -336,7 +336,7 @@ export default function AdminPage() {
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <a href={clip.twitchUrl} target="_blank" rel="noopener noreferrer"
+                          <a href={clip.sourceUrl ?? clip.twitchUrl} target="_blank" rel="noopener noreferrer"
                             className="font-display text-sm font-600 text-white hover:text-teal transition-colors truncate">
                             {clip.title}
                           </a>
@@ -346,15 +346,15 @@ export default function AdminPage() {
                           {clip.broadcasterName} · by {clip.submittedByName}
                         </p>
                         <div className="flex flex-wrap gap-1">
-                          {clip.tags.map((t: any) => <TagBadge key={t.id} tag={t.tag} small />)}
+                          {clip.tags.map((t: any) => <TagBadge key={t.tag} tag={t.tag} small />)}
                         </div>
                         {!clip.platformVerified && (
                           <p className="hidden md:flex text-xs text-yellow-400/70 mt-1 items-center gap-1">
                             <AlertTriangle className="w-3 h-3 flex-shrink-0" />Ownership unverified — manual review required
                           </p>
                         )}
-                        {clipTab === 'DECLINED' && clip.reviewNotes && (
-                          <p className="text-xs text-red-400/60 mt-1">{clip.reviewNotes}</p>
+                        {clipTab === 'DECLINED' && (clip.moderation?.reviewNotes ?? clip.reviewNotes) && (
+                          <p className="text-xs text-red-400/60 mt-1">{clip.moderation?.reviewNotes ?? clip.reviewNotes}</p>
                         )}
                       </div>
 

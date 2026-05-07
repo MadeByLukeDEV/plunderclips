@@ -3,21 +3,17 @@
 
 import { prisma } from '@/lib/prisma';
 import type { Role } from '@prisma/client';
-import {
-  subscribeToLiveEvents,
-  unsubscribeFromLiveEvents,
-  fetchLiveStreams,
-} from '@/modules/platform/twitch.service';
+import { subscribeToLiveEvents, unsubscribeFromLiveEvents } from '@/modules/platform/twitch.service';
+import { LIVE_ROLES } from '@/modules/live/live.service';
 import { clipSelect, toClipDTO } from '@/modules/clips/clips.helpers';
 import type { ClipDTO } from '@/modules/clips/clips.types';
-import type { StreamerListItemDTO, StreamerProfileDTO, LiveStreamerDTO, StreamerStatsDTO, LiveStatusInput } from './streamers.types';
+import type { StreamerListItemDTO, StreamerProfileDTO, StreamerStatsDTO } from './streamers.types';
 import {
   streamerProfileSelect,
   streamerListSelect,
   toStreamerProfileDTO,
   toStreamerListItemDTO,
   sortStreamers,
-  LIVE_ROLES,
 } from './streamers.helpers';
 
 // ── Error ─────────────────────────────────────────────────────────────────────
@@ -97,143 +93,6 @@ export async function getStreamer(login: string): Promise<{
       topTags,
     },
   };
-}
-
-export async function getLiveStreamers(): Promise<LiveStreamerDTO[]> {
-  const liveStatuses = await prisma.userLiveStatus.findMany({
-    where: {
-      isLive: true,
-      user: { role: { in: LIVE_ROLES } },
-    },
-    select: {
-      viewerCount: true,
-      streamTitle: true,
-      streamGame: true,
-      liveUpdatedAt: true,
-      user: {
-        select: {
-          id: true,
-          twitchLogin: true,
-          displayName: true,
-          profileImage: true,
-          role: true,
-        },
-      },
-    },
-    orderBy: { viewerCount: 'desc' },
-  });
-
-  return liveStatuses.map((ls) => ({
-    id: ls.user.id,
-    twitchLogin: ls.user.twitchLogin,
-    displayName: ls.user.displayName,
-    profileImage: ls.user.profileImage ?? null,
-    role: ls.user.role,
-    streamTitle: ls.streamTitle ?? null,
-    streamGame: ls.streamGame ?? null,
-    viewerCount: ls.viewerCount ?? null,
-    liveUpdatedAt: ls.liveUpdatedAt ?? null,
-  }));
-}
-
-// ── Live status mutations ─────────────────────────────────────────────────────
-
-export async function setLiveStatus(twitchId: string, input: LiveStatusInput): Promise<void> {
-  const user = await prisma.user.findUnique({
-    where: { twitchId },
-    select: { id: true, role: true },
-  });
-  if (!user || !LIVE_ROLES.includes(user.role)) return;
-
-  await prisma.userLiveStatus.upsert({
-    where: { userId: user.id },
-    update: {
-      isLive: true,
-      streamTitle: input.streamTitle ?? null,
-      streamGame: input.streamGame ?? null,
-      viewerCount: input.viewerCount ?? null,
-      liveUpdatedAt: new Date(),
-    },
-    create: {
-      userId: user.id,
-      isLive: true,
-      streamTitle: input.streamTitle ?? null,
-      streamGame: input.streamGame ?? null,
-      viewerCount: input.viewerCount ?? null,
-      liveUpdatedAt: new Date(),
-    },
-  });
-}
-
-export async function clearLiveStatus(twitchId: string): Promise<void> {
-  const user = await prisma.user.findUnique({
-    where: { twitchId },
-    select: { id: true },
-  });
-  if (!user) return;
-
-  await prisma.userLiveStatus.update({
-    where: { userId: user.id },
-    data: {
-      isLive: false,
-      streamTitle: null,
-      streamGame: null,
-      viewerCount: null,
-      liveUpdatedAt: new Date(),
-    },
-  });
-}
-
-// ── Cron refresh ──────────────────────────────────────────────────────────────
-
-export async function refreshLiveStatuses(): Promise<{ updated: number; fixed: number }> {
-  const liveUsers = await prisma.user.findMany({
-    where: {
-      role: { in: LIVE_ROLES },
-      liveStatus: { isLive: true },
-    },
-    select: { id: true, twitchId: true },
-  });
-
-  if (liveUsers.length === 0) return { updated: 0, fixed: 0 };
-
-  const streams = await fetchLiveStreams(liveUsers.map((u) => u.twitchId));
-  const streamMap = new Map(streams.map((s) => [s.user_id, s]));
-
-  let updated = 0;
-  let fixed = 0;
-
-  for (const user of liveUsers) {
-    const stream = streamMap.get(user.twitchId);
-
-    if (stream) {
-      await prisma.userLiveStatus.update({
-        where: { userId: user.id },
-        data: {
-          viewerCount: stream.viewer_count ?? 0,
-          streamTitle: stream.title || null,
-          streamGame: stream.game_name || null,
-          liveUpdatedAt: new Date(),
-        },
-      });
-      updated++;
-    } else {
-      // Still marked live but not in Twitch stream list — fix stale status
-      await prisma.userLiveStatus.update({
-        where: { userId: user.id },
-        data: {
-          isLive: false,
-          viewerCount: null,
-          streamTitle: null,
-          streamGame: null,
-          liveUpdatedAt: new Date(),
-        },
-      });
-      fixed++;
-    }
-  }
-
-  return { updated, fixed };
 }
 
 // ── Admin: role management ────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 // src/modules/streamers/streamers.helpers.ts
 
 import type { Prisma, Role } from '@prisma/client';
-import type { StreamerProfileDTO, StreamerListItemDTO, LiveStreamerDTO } from './streamers.types';
+import type { StreamerProfileDTO, StreamerListItemDTO } from './streamers.types';
 
 // ── Select constants ──────────────────────────────────────────────────────────
 
@@ -32,7 +32,7 @@ export const streamerListSelect = {
   profileImage: true,
   role: true,
   liveStatus: {
-    select: { isLive: true, viewerCount: true },
+    select: { isLive: true, viewerCount: true, streamTitle: true },
   },
 } satisfies Prisma.UserSelect;
 
@@ -68,6 +68,7 @@ export function toStreamerListItemDTO(
     profileImage: user.profileImage ?? null,
     role: user.role,
     isLive: user.liveStatus?.isLive ?? false,
+    viewerCount: user.liveStatus?.viewerCount ?? null,
     approvedClips,
   };
 }
@@ -93,7 +94,3 @@ export function sortStreamers<T extends { isLive: boolean; role: Role; approvedC
   return b.approvedClips - a.approvedClips;
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-// Only these roles get EventSub live tracking
-export const LIVE_ROLES: Role[] = ['PARTNER', 'ADMIN'];

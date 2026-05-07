@@ -30,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // All approved clips
   const clips = await prisma.clip.findMany({
-    where: { status: 'APPROVED' },
+    where: { moderation: { status: 'APPROVED' } },
     select: { id: true, updatedAt: true },
     orderBy: { createdAt: 'desc' },
   });

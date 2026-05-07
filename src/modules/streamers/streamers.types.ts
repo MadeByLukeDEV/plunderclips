@@ -12,6 +12,7 @@ export interface StreamerListItemDTO {
   profileImage: string | null;
   role: Role;
   isLive: boolean;
+  viewerCount: number | null;
   approvedClips: number;
 }
 
@@ -30,19 +31,6 @@ export interface StreamerProfileDTO {
   createdAt: Date;
 }
 
-// Slim entry for the live-streamers section
-export interface LiveStreamerDTO {
-  id: string;
-  twitchLogin: string;
-  displayName: string;
-  profileImage: string | null;
-  role: Role;
-  streamTitle: string | null;
-  streamGame: string | null;
-  viewerCount: number | null;
-  liveUpdatedAt: Date | null;
-}
-
 // Aggregated stats shown on a streamer's profile page
 export interface StreamerStatsDTO {
   totalClips: number;
@@ -50,11 +38,3 @@ export interface StreamerStatsDTO {
   topTags: string[];
 }
 
-// ── Input types ───────────────────────────────────────────────────────────────
-
-// Payload when marking a streamer as live (webhook + manual override)
-export interface LiveStatusInput {
-  streamTitle?: string | null;
-  streamGame?: string | null;
-  viewerCount?: number | null;
-}

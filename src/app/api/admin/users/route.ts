@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireStaff, requireAdmin } from '@/modules/auth/auth.middleware';
 import { updateStreamerRole } from '@/modules/streamers/streamers.service';
-import { LIVE_ROLES } from '@/modules/streamers/streamers.helpers';
+import { LIVE_ROLES } from '@/modules/live/live.service';
 import { Role } from '@prisma/client';
 
 const ALLOW_MANUAL_LIVE = process.env.ALLOW_MANUAL_LIVE_OVERRIDE === 'true';

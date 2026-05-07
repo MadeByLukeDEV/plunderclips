@@ -5,15 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { TagBadge } from '@/components/ui/TagBadge';
 import { Eye, Clock, ExternalLink, Youtube, Monitor } from 'lucide-react';
-
-interface ClipTag { id: string; tag: string; }
-interface Clip {
-  id: string; twitchClipId: string; twitchUrl: string; embedUrl: string;
-  title: string; thumbnailUrl: string | null; viewCount: number; duration: number | null;
-  submittedByName: string; broadcasterName: string; status: string;
-  platform: 'TWITCH' | 'YOUTUBE' | 'MEDAL';
-  tags: ClipTag[]; createdAt: string;
-}
+import type { ClipDTO } from '@/modules/clips/clips.types';
 
 // Platform badge — top-left of thumbnail
 function PlatformBadge({ platform }: { platform: string }) {
@@ -35,7 +27,7 @@ const PLATFORM_LABELS: Record<string, string> = {
   TWITCH: 'Twitch', YOUTUBE: 'YouTube', MEDAL: 'Medal',
 };
 
-export function ClipCard({ clip }: { clip: Clip }) {
+export function ClipCard({ clip }: { clip: ClipDTO }) {
   const [open, setOpen] = useState(false);
 
   // Fix hydration — always use explicit locale
@@ -120,7 +112,7 @@ export function ClipCard({ clip }: { clip: Clip }) {
         {/* Tags */}
         {clip.tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {clip.tags.slice(0, 3).map(t => <TagBadge key={t.id} tag={t.tag} small />)}
+            {clip.tags.slice(0, 3).map(t => <TagBadge key={t.tag} tag={t.tag} small />)}
           </div>
         )}
         </div>
@@ -128,7 +120,7 @@ export function ClipCard({ clip }: { clip: Clip }) {
         {/* Footer — submitted by + external link */}
         <div className="flex items-center justify-between text-xs text-white/25 mt-auto pt-1 border-t border-white/5 min-h-10">
           <span className="font-body truncate max-w-[60%]">by {clip.submittedByName}</span>
-          <a href={clip.twitchUrl} target="_blank" rel="noopener noreferrer"
+          <a href={clip.sourceUrl} target="_blank" rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
             className="flex items-center gap-1 hover:text-teal transition-colors flex-shrink-0 font-display tracking-wider">
             <ExternalLink className="w-3 h-3" />

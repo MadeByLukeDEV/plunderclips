@@ -24,7 +24,8 @@ export async function GET() {
   const users = await prisma.user.findMany({
     select: {
       id: true, twitchLogin: true, displayName: true,
-      profileImage: true, role: true, isLive: true, createdAt: true,
+      profileImage: true, role: true, createdAt: true,
+      liveStatus: { select: { isLive: true } },
     },
   });
 
@@ -33,19 +34,19 @@ export async function GET() {
   const [allRecentClips, latestClipPerBroadcaster, totalClipCounts] = await Promise.all([
     // All approved clips from last 30 days for all users
     prisma.clip.findMany({
-      where: { status: 'APPROVED', createdAt: { gte: day30 } },
+      where: { moderation: { status: 'APPROVED' }, createdAt: { gte: day30 } },
       select: {
         broadcasterName: true,
-        viewCount: true,
         createdAt: true,
         thumbnailUrl: true,
         id: true,
+        stats: { select: { viewCount: true } },
       },
       orderBy: { createdAt: 'desc' },
     }),
     // Latest clip per broadcaster (for thumbnail)
     prisma.clip.findMany({
-      where: { status: 'APPROVED' },
+      where: { moderation: { status: 'APPROVED' } },
       select: { broadcasterName: true, thumbnailUrl: true, id: true, createdAt: true },
       orderBy: { createdAt: 'desc' },
       distinct: ['broadcasterName'],
@@ -53,7 +54,7 @@ export async function GET() {
     // Total clip count per broadcaster
     prisma.clip.groupBy({
       by: ['broadcasterName'],
-      where: { status: 'APPROVED' },
+      where: { moderation: { status: 'APPROVED' } },
       _count: { id: true },
     }),
   ]);
@@ -85,8 +86,8 @@ export async function GET() {
     const totalClips  = totalCountMap.get(login) || 0;
     const latestClip  = latestClipMap.get(login) || null;
 
-    const last7Views  = last7Clips.reduce((s, c) => s + (c.viewCount || 0), 0);
-    const prev7Views  = prev7Clips.reduce((s, c) => s + (c.viewCount || 0), 0);
+    const last7Views  = last7Clips.reduce((s, c) => s + (c.stats?.viewCount ?? 0), 0);
+    const prev7Views  = prev7Clips.reduce((s, c) => s + (c.stats?.viewCount ?? 0), 0);
 
     const viewGrowthPct = prev7Views === 0
       ? (last7Views > 0 ? 100 : 0)
@@ -126,7 +127,7 @@ export async function GET() {
       displayName: user.displayName,
       profileImage: user.profileImage,
       role: user.role,
-      isLive: user.isLive,
+      isLive: user.liveStatus?.isLive ?? false,
       momentumScore,
       badge,
       growthLabel,

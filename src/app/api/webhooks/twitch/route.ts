@@ -1,7 +1,7 @@
 // src/app/api/webhooks/twitch/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyTwitchSignature, fetchLiveStreams } from '@/modules/platform/twitch.service';
-import { setLiveStatus, clearLiveStatus } from '@/modules/streamers/streamers.service';
+import { setLiveStatus, clearLiveStatus } from '@/modules/live/live.service';
 
 // Twitch requires the raw body for signature verification
 export const runtime = 'nodejs';

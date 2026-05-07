@@ -11,9 +11,19 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
   const { id } = await params;
 
   const clip = await prisma.clip.findUnique({
-    where: { id, status: 'APPROVED' },
-    select: { title: true, broadcasterName: true, thumbnailUrl: true, viewCount: true },
+    where: { id },
+    select: {
+      title: true,
+      broadcasterName: true,
+      thumbnailUrl: true,
+      moderation: { select: { status: true } },
+      stats: { select: { viewCount: true } },
+    },
   });
+
+  if (clip?.moderation?.status !== 'APPROVED') {
+    return new ImageResponse(<div style={{ background: '#0c0e10', width: '1200px', height: '630px' }} />, { ...size });
+  }
 
   return new ImageResponse(
     (
@@ -96,11 +106,11 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
             <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '18px' }}>
               {clip?.broadcasterName || 'PlunderClips'}
             </span>
-            {clip?.viewCount && clip.viewCount > 0 && (
+            {clip?.stats?.viewCount && clip.stats.viewCount > 0 && (
               <>
                 <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
                 <span style={{ color: '#00e5c0', fontSize: '18px' }}>
-                  {clip.viewCount.toLocaleString()} views
+                  {clip.stats!.viewCount!.toLocaleString()} views
                 </span>
               </>
             )}

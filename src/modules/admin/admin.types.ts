@@ -25,7 +25,3 @@ export interface FixThumbnailsResult {
   message: string;
 }
 
-export interface RefreshCountResult {
-  updated: number;
-  total: number;
-}
