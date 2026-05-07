@@ -1,12 +1,9 @@
 // src/app/api/clips/preview/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/middleware-auth';
-import { fetchTwitchClip, extractClipId } from '@/lib/twitch';
-import {
-  detectPlatform,
-  extractYouTubeVideoId, fetchYouTubeVideo,
-  extractMedalClipId,
-} from '@/lib/platforms';
+import { requireAuth } from '@/modules/auth/auth.middleware';
+import { fetchTwitchClip, extractClipId } from '@/modules/platform/twitch.service';
+import { detectPlatform, extractMedalClipId } from '@/lib/platforms';
+import { extractYouTubeVideoId, fetchYouTubeVideo } from '@/modules/platform/youtube.service';
 
 export async function GET(request: NextRequest) {
   const { user, error } = await requireAuth(request);
@@ -19,12 +16,11 @@ export async function GET(request: NextRequest) {
   if (!platform) {
     return NextResponse.json(
       { error: 'Unsupported platform. Use Twitch, YouTube, or Medal.tv URLs.' },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   try {
-    // ── TWITCH ──────────────────────────────────────────────────────────────
     if (platform === 'TWITCH') {
       const clipId = extractClipId(url);
       if (!clipId) return NextResponse.json({ error: 'Invalid Twitch clip URL' }, { status: 400 });
@@ -40,7 +36,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // ── YOUTUBE ─────────────────────────────────────────────────────────────
     if (platform === 'YOUTUBE') {
       const videoId = extractYouTubeVideoId(url);
       if (!videoId) return NextResponse.json({ error: 'Invalid YouTube URL' }, { status: 400 });
@@ -56,14 +51,12 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // ── MEDAL ───────────────────────────────────────────────────────────────
-    // No Medal API available — return a basic preview from the URL only
     if (platform === 'MEDAL') {
       const clipId = extractMedalClipId(url);
       if (!clipId) return NextResponse.json({ error: 'Invalid Medal.tv clip URL' }, { status: 400 });
       return NextResponse.json({
         platform: 'MEDAL',
-        title: `Medal.tv clip`,
+        title: 'Medal.tv clip',
         channelName: 'Medal.tv',
         thumbnailUrl: null,
         duration: null,

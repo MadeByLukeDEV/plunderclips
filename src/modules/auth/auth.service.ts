@@ -87,3 +87,10 @@ export async function deleteSession(sessionId: string): Promise<void> {
 export async function deleteAllUserSessions(userId: string): Promise<void> {
   await prisma.session.deleteMany({ where: { userId } });
 }
+
+// ── User ──────────────────────────────────────────────────────────────────────
+
+// Deletes the user and all related data via DB cascade (onDelete: Cascade)
+export async function deleteUser(userId: string): Promise<void> {
+  await prisma.user.delete({ where: { id: userId } });
+}

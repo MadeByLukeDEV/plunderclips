@@ -1,79 +1,52 @@
+// src/app/api/admin/clips/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { requireStaff } from '@/lib/middleware-auth';
-import { z } from 'zod';
+import { requireStaff } from '@/modules/auth/auth.middleware';
+import { reviewClipSchema } from '@/modules/clips/clips.schema';
+import { getClipsForModeration, reviewClip, ClipServiceError } from '@/modules/clips/clips.service';
+import type { PaginationInput } from '@/modules/clips/clips.types';
 import { ClipStatus } from '@prisma/client';
-
-const reviewSchema = z.object({
-  status: z.nativeEnum(ClipStatus),
-  reviewNotes: z.string().optional(),
-});
 
 export async function GET(request: NextRequest) {
   const { user, error } = await requireStaff(request);
-  if (error || !user) {
-    return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
-  }
+  if (error || !user) return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status') as ClipStatus | null;
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
+  const page   = Math.max(1, parseInt(searchParams.get('page')  || '1'));
+  const limit  = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
 
-  const where = status ? { status } : {};
+  const pagination: PaginationInput = { page, limit };
+  const result = await getClipsForModeration(status, pagination);
 
-  const [clips, total] = await Promise.all([
-    prisma.clip.findMany({
-      where,
-      include: { tags: true, user: true },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.clip.count({ where }),
-  ]);
-
-  return NextResponse.json({
-    clips,
-    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
-  });
+  return NextResponse.json({ clips: result.items, pagination: result.pagination });
 }
 
 export async function PATCH(request: NextRequest) {
   const { user, error } = await requireStaff(request);
-  if (error || !user) {
-    return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
-  }
+  if (error || !user) return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
 
-  const { searchParams } = new URL(request.url);
-  const clipId = searchParams.get('id');
+  const clipId = new URL(request.url).searchParams.get('id');
+  if (!clipId) return NextResponse.json({ error: 'Clip ID required' }, { status: 400 });
 
-  if (!clipId) {
-    return NextResponse.json({ error: 'Clip ID required' }, { status: 400 });
-  }
+  let body: unknown;
+  try { body = await request.json(); }
+  catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
 
-  let body;
+  const parsed = reviewClipSchema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: 'Validation failed' }, { status: 400 });
+
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
-
-  const parsed = reviewSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Validation failed' }, { status: 400 });
-  }
-
-  const clip = await prisma.clip.update({
-    where: { id: clipId },
-    data: {
+    const clip = await reviewClip(clipId, {
       status: parsed.data.status,
       reviewNotes: parsed.data.reviewNotes,
-      reviewedAt: new Date(),
-      reviewedBy: user.id,
-    },
-    include: { tags: true },
-  });
-
-  return NextResponse.json({ clip });
+      reviewedById: user.id,
+    });
+    return NextResponse.json({ clip });
+  } catch (err) {
+    if (err instanceof ClipServiceError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    console.error('Review clip error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

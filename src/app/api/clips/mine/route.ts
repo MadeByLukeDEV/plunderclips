@@ -1,24 +1,12 @@
+// src/app/api/clips/mine/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { requireAuth } from '@/lib/middleware-auth';
+import { requireAuth } from '@/modules/auth/auth.middleware';
+import { getClipsByUser } from '@/modules/clips/clips.service';
 
 export async function GET(request: NextRequest) {
   const { user, error } = await requireAuth(request);
-  if (error || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (error || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const clips = await prisma.clip.findMany({
-    where: { submittedBy: user.id },
-    orderBy: { createdAt: 'desc' },
-    select: {
-      id: true, twitchClipId: true, twitchUrl: true, embedUrl: true,
-      title: true, thumbnailUrl: true, viewCount: true, duration: true,
-      submittedByName: true, broadcasterName: true, status: true,
-      reviewNotes: true, reviewedAt: true, createdAt: true,
-      tags: true, platform: true, 
-    },
-  });
-
+  const clips = await getClipsByUser(user.id);
   return NextResponse.json({ clips });
 }

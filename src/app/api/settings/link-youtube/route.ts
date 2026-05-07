@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/middleware-auth';
+import { requireAuth } from '@/modules/auth/auth.middleware';
 import { prisma } from '@/lib/prisma';
-import { fetchYouTubeChannel } from '@/lib/platforms';
+import { fetchYouTubeChannel } from '@/modules/platform/youtube.service';
 
 export async function POST(request: NextRequest) {
   const { user, error } = await requireAuth(request);
