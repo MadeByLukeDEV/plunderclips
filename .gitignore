@@ -31,3 +31,8 @@ Thumbs.db
 *.swp
 
 note.txt
+
+# CLAUDE
+CLAUDE.md
+.claude/*
+.claude
