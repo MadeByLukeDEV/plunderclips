@@ -31,9 +31,13 @@ export const metadata: Metadata = {
     default: 'PlunderClips — Sea of Thieves Community Clips',
     template: '%s — PlunderClips',
   },
-  description: 'The finest Sea of Thieves moments from the seven seas. Discover, submit and showcase the best Twitch clips from the SoT streaming community.',
-  keywords: ['Sea of Thieves', 'SoT', 'Twitch clips', 'streaming', 'community', 'PlunderClips', 'gaming clips'],
-  authors: [{ name: 'PlunderClips' }],
+  description: 'PlunderClips is a Sea of Thieves community clip platform. Watch, submit, and discover the best Twitch, YouTube, and Medal.tv moments — PvP battles, kraken fights, treasure heists, and more from SoT streamers.',
+  keywords: [
+    'Sea of Thieves', 'SoT clips', 'SoT highlights', 'Sea of Thieves Twitch clips',
+    'Sea of Thieves YouTube', 'PlunderClips', 'gaming clips', 'Sea of Thieves community',
+    'SoT streamers', 'Sea of Thieves moments', 'pirate game clips',
+  ],
+  authors: [{ name: 'PlunderClips', url: BASE_URL }],
   creator: 'MadeByLuke',
 
   openGraph: {
@@ -41,15 +45,22 @@ export const metadata: Metadata = {
     url: BASE_URL,
     siteName: 'PlunderClips',
     title: 'PlunderClips — Sea of Thieves Community Clips',
-    description: 'The finest Sea of Thieves moments from the seven seas — battles, blunders, and brilliance.',
-    images: [{ url: '/android-chrome-512x512.png', width: 512, height: 512, alt: 'PlunderClips' }],
+    description: 'The finest Sea of Thieves moments from the seven seas — PvP battles, kraken fights, treasure heists, blunders, and brilliance.',
+    images: [{
+      url: '/opengraph-image.png',
+      width: 1200,
+      height: 630,
+      alt: 'PlunderClips — Sea of Thieves Community Clips',
+    }],
+    locale: 'en_US',
   },
 
   twitter: {
     card: 'summary_large_image',
     title: 'PlunderClips — Sea of Thieves Community Clips',
-    description: 'The finest Sea of Thieves moments from the seven seas — battles, blunders, and brilliance.',
-    images: ['/android-chrome-512x512.png'],
+    description: 'The finest Sea of Thieves moments from the seven seas — PvP battles, kraken fights, treasure heists, blunders, and brilliance.',
+    images: ['/opengraph-image.png'],
+    site: '@plunderclips',
   },
 
   icons: {
@@ -69,13 +80,45 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
-    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
   },
 
-  alternates: {
-    canonical: BASE_URL,
-  },
+  alternates: { canonical: BASE_URL },
+
+  category: 'gaming',
 };
+
+// Site-level JSON-LD injected once in the root layout
+const siteJsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'PlunderClips',
+    url: BASE_URL,
+    logo: `${BASE_URL}/android-chrome-512x512.png`,
+    description: 'PlunderClips is a community platform for Sea of Thieves clip discovery, submission, and sharing. Streamers and fans submit clips from Twitch, YouTube, and Medal.tv.',
+    sameAs: [],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'PlunderClips',
+    url: BASE_URL,
+    description: 'Community clip showcase for Sea of Thieves. Discover the best PvP battles, treasure heists, kraken fights, and funny moments from SoT streamers.',
+    inLanguage: 'en',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: { '@type': 'EntryPoint', urlTemplate: `${BASE_URL}/streamers?q={search_term_string}` },
+      'query-input': 'required name=search_term_string',
+    },
+  },
+];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -84,10 +127,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Preconnect to image CDNs — browser starts DNS+TLS early */}
         <link rel="preconnect" href="https://static-cdn.jtvnw.net" />
         <link rel="preconnect" href="https://i.ytimg.com" />
-        {/* dns-prefetch as fallback for older browsers */}
         <link rel="dns-prefetch" href="https://static-cdn.jtvnw.net" />
         <link rel="dns-prefetch" href="https://i.ytimg.com" />
         <link rel="dns-prefetch" href="https://clips.twitch.tv" />
+        {/* Site-level structured data — Organization + WebSite */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+        />
       </head>
       <body>
         <QueryProvider>

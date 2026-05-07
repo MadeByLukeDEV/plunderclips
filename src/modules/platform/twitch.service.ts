@@ -57,13 +57,26 @@ const SEA_OF_THIEVES_GAME_IDS = new Set(['490377', '490905', '515257']);
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
+// In-process token cache — avoids a Twitch OAuth round-trip on every request
+let _token       = '';
+let _tokenExpiry = 0;
+
 async function getAppToken(): Promise<string> {
+  if (_token && Date.now() < _tokenExpiry) return _token;
   const res = await fetch(
     `https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=client_credentials`,
     { method: 'POST' },
   );
   const data = await res.json();
-  return data.access_token;
+  _token       = data.access_token as string;
+  _tokenExpiry = Date.now() + ((data.expires_in as number) - 300) * 1000; // 5 min buffer
+  return _token;
+}
+
+function twitchPickerEmbedUrl(clipId: string): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const parent = appUrl.replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
+  return `https://clips.twitch.tv/embed?clip=${clipId}&parent=${parent}`;
 }
 
 // ── URL helpers ───────────────────────────────────────────────────────────────
@@ -212,7 +225,7 @@ export async function fetchAllEventSubSubscriptions(token: string): Promise<unkn
   let cursor: string | null = null;
 
   do {
-    const url = cursor
+    const url: any = cursor
       ? `https://api.twitch.tv/helix/eventsub/subscriptions?after=${cursor}`
       : 'https://api.twitch.tv/helix/eventsub/subscriptions';
     const res = await fetch(url, {
@@ -227,6 +240,71 @@ export async function fetchAllEventSubSubscriptions(token: string): Promise<unkn
   } while (cursor);
 
   return subs;
+}
+
+// ── Clip picker ───────────────────────────────────────────────────────────────
+
+export type TwitchPickerSort = 'NEWEST' | 'POPULAR';
+
+export interface TwitchPickerClip {
+  id:           string;
+  title:        string;
+  thumbnailUrl: string;
+  duration:     number;
+  url:          string;
+  embedUrl:     string;
+  channelName:  string;
+  viewCount:    number;
+  createdAt:    string;
+}
+
+export interface TwitchPickerResult {
+  clips:      TwitchPickerClip[];
+  nextCursor: string | null;
+}
+
+export async function fetchUserClips(
+  twitchUserId: string,
+  options: { cursor?: string } = {},
+): Promise<TwitchPickerResult> {
+  const { cursor } = options;
+  try {
+    const token = await getAppToken();
+    // Fetch up to 100 clips — the API returns them by view_count desc.
+    // We sort all 100 by created_at desc client-side so the newest always appears first.
+    const params = new URLSearchParams({ broadcaster_id: twitchUserId, first: '100' });
+    if (cursor) params.set('after', cursor);
+
+    const response = await fetch(
+      `https://api.twitch.tv/helix/clips?${params}`,
+      {
+        headers: {
+          'Client-ID': process.env.TWITCH_CLIENT_ID!,
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    if (!response.ok) return { clips: [], nextCursor: null };
+    const body: { data: TwitchClipData[]; pagination?: { cursor?: string } } = await response.json();
+
+    const clips: TwitchPickerClip[] = (body.data ?? [])
+      .map((c) => ({
+        id:           c.id,
+        title:        c.title,
+        thumbnailUrl: c.thumbnail_url,
+        duration:     c.duration,
+        url:          c.url,
+        embedUrl:     twitchPickerEmbedUrl(c.id),
+        channelName:  c.broadcaster_name,
+        viewCount:    c.view_count,
+        createdAt:    c.created_at,
+      }))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return { clips, nextCursor: body.pagination?.cursor ?? null };
+  } catch {
+    return { clips: [], nextCursor: null };
+  }
 }
 
 // Re-export getAppToken for routes that need a raw token (admin/eventsub)

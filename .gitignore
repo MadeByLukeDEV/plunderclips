@@ -36,3 +36,6 @@ note.txt
 CLAUDE.md
 .claude/*
 .claude
+.agents/*
+.agents
+skills-lock.json

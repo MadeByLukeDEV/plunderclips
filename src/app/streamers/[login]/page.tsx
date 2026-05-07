@@ -61,23 +61,64 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 // ─── JSON-LD ──────────────────────────────────────────────────────────────────
-function StreamerJsonLd({ streamer, stats, pageUrl, base }: {
+function StreamerJsonLd({ streamer, stats, clips, pageUrl, base }: {
   streamer: { displayName: string; twitchLogin: string; profileImage: string | null };
-  stats: { totalClips: number };
+  stats: { totalClips: number; totalViews: number; topTags: string[] };
+  clips: Pick<ClipDTO, 'id' | 'title' | 'thumbnailUrl' | 'viewCount'>[];
   pageUrl: string;
   base: string;
 }) {
+  const TAG_READABLE_LOCAL: Record<string, string> = {
+    FUNNY: 'Funny Moments', KILL: 'Kill Clips', HIGHLIGHT: 'Highlights',
+    PVP: 'PvP Clips', PVE: 'PvE Clips', KRAKEN: 'Kraken Clips',
+    BOSS_FIGHT: 'Boss Fights', SAILING: 'Sailing', TREASURE: 'Treasure',
+  };
+
   return (
     <>
+      {/* ProfilePage wraps the Person — preferred by Google for creator pages */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-        '@context': 'https://schema.org', '@type': 'Person',
-        name: streamer.displayName,
-        alternateName: `@${streamer.twitchLogin}`,
+        '@context': 'https://schema.org',
+        '@type': 'ProfilePage',
+        name: `${streamer.displayName} — Sea of Thieves Clips`,
         url: pageUrl,
-        image: streamer.profileImage || undefined,
-        sameAs: [`https://www.twitch.tv/${streamer.twitchLogin}`],
-        description: `${streamer.displayName} is a Sea of Thieves streamer on PlunderClips with ${stats.totalClips} clips.`,
+        mainEntity: {
+          '@type': 'Person',
+          name: streamer.displayName,
+          alternateName: `@${streamer.twitchLogin}`,
+          url: pageUrl,
+          image: streamer.profileImage || undefined,
+          sameAs: [
+            `https://www.twitch.tv/${streamer.twitchLogin}`,
+            `https://www.twitch.tv/${streamer.twitchLogin}/clips`,
+          ],
+          description: `${streamer.displayName} is a Sea of Thieves streamer with ${stats.totalClips} clips and ${stats.totalViews.toLocaleString('en-US')} total views on PlunderClips.`,
+          knowsAbout: ['Sea of Thieves', 'Game Streaming', 'Twitch', ...stats.topTags.slice(0, 3).map(t => TAG_READABLE_LOCAL[t] || t)],
+          interactionStatistic: [
+            { '@type': 'InteractionCounter', interactionType: 'https://schema.org/WatchAction', userInteractionCount: stats.totalViews },
+          ],
+        },
       }) }} />
+
+      {/* ItemList of top clips — AI engines can surface individual clips from this */}
+      {clips.length > 0 && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: `${streamer.displayName}'s Sea of Thieves Clips`,
+          description: `Top Sea of Thieves clips by ${streamer.displayName} on PlunderClips`,
+          url: pageUrl,
+          numberOfItems: clips.length,
+          itemListElement: clips.slice(0, 10).map((clip, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: `${base}/clips/${clip.id}`,
+            name: clip.title,
+            image: clip.thumbnailUrl || undefined,
+          })),
+        }) }} />
+      )}
+
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         '@context': 'https://schema.org', '@type': 'BreadcrumbList',
         itemListElement: [
@@ -118,7 +159,7 @@ export default async function StreamerPage({ params }: Props) {
 
   return (
     <>
-      <StreamerJsonLd streamer={streamer} stats={stats} pageUrl={pageUrl} base={base} />
+      <StreamerJsonLd streamer={streamer} stats={stats} clips={clips} pageUrl={pageUrl} base={base} />
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
         <Link href="../" className="flex items-center gap-2 text-xs font-mono text-white/25 mb-6">

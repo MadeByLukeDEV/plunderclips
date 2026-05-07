@@ -1,9 +1,9 @@
 // src/app/api/clips/preview/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/modules/auth/auth.middleware';
-import { fetchTwitchClip, extractClipId } from '@/modules/platform/twitch.service';
+import { fetchTwitchClip, extractClipId, buildEmbedUrl } from '@/modules/platform/twitch.service';
 import { detectPlatform, extractMedalClipId } from '@/lib/platforms';
-import { extractYouTubeVideoId, fetchYouTubeVideo } from '@/modules/platform/youtube.service';
+import { extractYouTubeVideoId, fetchYouTubeVideo, buildYouTubeEmbedUrl } from '@/modules/platform/youtube.service';
 
 export async function GET(request: NextRequest) {
   const { user, error } = await requireAuth(request);
@@ -26,13 +26,15 @@ export async function GET(request: NextRequest) {
       if (!clipId) return NextResponse.json({ error: 'Invalid Twitch clip URL' }, { status: 400 });
       const clip = await fetchTwitchClip(clipId);
       if (!clip) return NextResponse.json({ error: 'Clip not found on Twitch' }, { status: 404 });
+      const host = request.headers.get('host')?.split(':')[0] ?? 'localhost';
       return NextResponse.json({
-        platform: 'TWITCH',
-        title: clip.title,
-        channelName: clip.broadcaster_name,
+        platform:     'TWITCH',
+        title:        clip.title,
+        channelName:  clip.broadcaster_name,
         thumbnailUrl: clip.thumbnail_url,
-        viewCount: clip.view_count,
-        duration: clip.duration,
+        viewCount:    clip.view_count,
+        duration:     clip.duration,
+        embedUrl:     buildEmbedUrl(clipId, host),
       });
     }
 
@@ -42,12 +44,13 @@ export async function GET(request: NextRequest) {
       const video = await fetchYouTubeVideo(videoId);
       if (!video) return NextResponse.json({ error: 'Video not found on YouTube' }, { status: 404 });
       return NextResponse.json({
-        platform: 'YOUTUBE',
-        title: video.title,
-        channelName: video.channelName,
-        channelId: video.channelId,
+        platform:     'YOUTUBE',
+        title:        video.title,
+        channelName:  video.channelName,
+        channelId:    video.channelId,
         thumbnailUrl: video.thumbnailUrl,
-        duration: null,
+        duration:     null,
+        embedUrl:     buildYouTubeEmbedUrl(videoId),
       });
     }
 

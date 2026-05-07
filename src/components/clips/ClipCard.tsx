@@ -4,11 +4,16 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { TagBadge } from '@/components/ui/TagBadge';
-import { Eye, Clock, ExternalLink, Youtube, Monitor } from 'lucide-react';
+import { Eye, Clock, ExternalLink, Youtube, Monitor, Twitch } from 'lucide-react';
 import type { ClipDTO } from '@/modules/clips/clips.types';
 
 // Platform badge — top-left of thumbnail
 function PlatformBadge({ platform }: { platform: string }) {
+  if (platform === 'TWITCH') return (
+    <span className="absolute top-2 left-2 flex items-center gap-1 bg-purple-600 text-white text-xs px-1.5 py-0.5 rounded-sm font-display tracking-wider">
+      <Twitch className="w-3 h-3" />TWITCH
+    </span>
+  );
   if (platform === 'YOUTUBE') return (
     <span className="absolute top-2 left-2 flex items-center gap-1 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-sm font-display tracking-wider">
       <Youtube className="w-3 h-3" />YT

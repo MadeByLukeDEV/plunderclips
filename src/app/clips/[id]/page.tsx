@@ -57,9 +57,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title, description, url: `${base}/clips/${id}`,
       siteName: 'PlunderClips', type: 'video.other',
       images: clip.thumbnailUrl
-        ? [{ url: clip.thumbnailUrl, width: 1280, height: 720, alt: clip.title }]
+        ? [{ url: clip.thumbnailUrl, width: 1280, height: 720, alt: `${clip.title} — ${clip.broadcasterName} on PlunderClips` }]
         : [],
-      videos: clip.sourceUrl ? [{ url: clip.sourceUrl }] : [],
+      videos: clip.embedUrl
+        ? [{ url: clip.embedUrl, width: 1280, height: 720, type: 'text/html' }]
+        : clip.sourceUrl ? [{ url: clip.sourceUrl }] : [],
     },
     twitter: {
       card: 'summary_large_image', title, description,
@@ -70,6 +72,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 // ─── JSON-LD ──────────────────────────────────────────────────────────────────
 function VideoJsonLd({ clip, pageUrl }: { clip: ClipDTO; pageUrl: string }) {
+  const base = pageUrl.split('/clips')[0];
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'VideoObject',
@@ -81,18 +84,34 @@ function VideoJsonLd({ clip, pageUrl }: { clip: ClipDTO; pageUrl: string }) {
     contentUrl: clip.sourceUrl,
     embedUrl: clip.embedUrl,
     url: pageUrl,
+    isFamilyFriendly: true,
+    inLanguage: 'en',
+    genre: 'Gaming',
+    keywords: ['Sea of Thieves', 'SoT clip', clip.broadcasterName, ...clip.tags.map(t => TAG_READABLE[t.tag] || t.tag)].join(', '),
+    about: {
+      '@type': 'VideoGame',
+      name: 'Sea of Thieves',
+      developer: { '@type': 'Organization', name: 'Rare' },
+    },
     interactionStatistic: clip.viewCount > 0
       ? { '@type': 'InteractionCounter', interactionType: 'https://schema.org/WatchAction', userInteractionCount: clip.viewCount }
       : undefined,
+    potentialAction: {
+      '@type': 'WatchAction',
+      target: pageUrl,
+    },
     author: {
       '@type': 'Person',
       name: clip.broadcasterName,
       url: `https://www.twitch.tv/${clip.broadcasterName.toLowerCase()}`,
+      sameAs: [`https://www.twitch.tv/${clip.broadcasterName.toLowerCase()}`],
     },
-    publisher: { '@type': 'Organization', name: 'PlunderClips', url: pageUrl.split('/clips')[0] },
-    keywords: ['Sea of Thieves', 'SoT clip', clip.broadcasterName, ...clip.tags.map(t => TAG_READABLE[t.tag] || t.tag)].join(', '),
-    genre: 'Gaming',
-    inLanguage: 'en',
+    publisher: {
+      '@type': 'Organization',
+      name: 'PlunderClips',
+      url: base,
+      logo: { '@type': 'ImageObject', url: `${base}/android-chrome-512x512.png` },
+    },
   };
 
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />;

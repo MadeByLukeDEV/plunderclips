@@ -171,17 +171,56 @@ body::after {
 .nav-link:hover::after { width: 100%; }
 
 /* ── Tags ───────────────────────────────────────────────────────────────────── */
-.tag-FUNNY      { background: rgba(250,204,21,0.12);      color: #fde047; border-color: rgba(250,204,21,0.3); }
-.tag-KILL       { background: rgba(239,68,68,0.12);       color: #f87171; border-color: rgba(239,68,68,0.3); }
-.tag-TUCK       { background: rgba(0,229,192,0.12);       color: #00e5c0; border-color: rgba(0,229,192,0.3); }
-.tag-HIGHLIGHT  { background: rgba(250,204,21,0.12);      color: #fde047; border-color: rgba(250,204,21,0.3); }
-.tag-PVP        { background: rgba(239,68,68,0.12);       color: #f87171; border-color: rgba(239,68,68,0.3); }
-.tag-PVE        { background: rgba(96,165,250,0.12);      color: #93c5fd; border-color: rgba(96,165,250,0.3); }
-.tag-SAILING    { background: rgba(0,229,192,0.12);       color: #00e5c0; border-color: rgba(0,229,192,0.3); }
-.tag-TREASURE   { background: rgba(250,204,21,0.12);      color: #fde047; border-color: rgba(250,204,21,0.3); }
-.tag-KRAKEN     { background: rgba(139,92,246,0.12);      color: #c4b5fd; border-color: rgba(139,92,246,0.3); }
-.tag-MEGALODON  { background: rgba(239,246,255,0.12);     color: #ffb7d8; border-color: rgba(147,197,253,0.3); }
-.tag-KEG        { background: rgba(212,212,212,0.12);     color: #ffd4d4; border-color: rgba(239,68,68,0.3); }
-.tag-EPIC_FAIL  { background: rgba(251,146,60,0.12);      color: #fb923c; border-color: rgba(251,146,60,0.3); }
-.tag-TEAM_PLAY  { background: rgba(0,229,192,0.12);       color: #00e5c0; border-color: rgba(0,229,192,0.3); }
-.tag-SOLO       { background: rgba(250,204,21,0.12);      color: #fde047; border-color: rgba(250,204,21,0.3); }
+
+/* Humor */
+.tag-FUNNY      { background: rgba(251,191,36,0.12);  color: #fbbf24; border-color: rgba(251,191,36,0.30); }
+.tag-MEME       { background: rgba(250,204,21,0.12);  color: #facc15; border-color: rgba(250,204,21,0.30); }
+.tag-CHAOS      { background: rgba(249,115,22,0.12);  color: #f97316; border-color: rgba(249,115,22,0.30); }
+.tag-EPIC_FAIL  { background: rgba(251,146,60,0.12);  color: #fb923c; border-color: rgba(251,146,60,0.30); }
+
+/* Skill / Quality */
+.tag-HIGHLIGHT  { background: rgba(250,204,21,0.12);  color: #fde047; border-color: rgba(250,204,21,0.30); }
+.tag-CLUTCH     { background: rgba(163,230,53,0.12);  color: #a3e635; border-color: rgba(163,230,53,0.30); }
+.tag-INSANE     { background: rgba(52,211,153,0.12);  color: #6ee7b7; border-color: rgba(52,211,153,0.30); }
+.tag-SKILLFUL   { background: rgba(34,197,94,0.12);   color: #4ade80; border-color: rgba(34,197,94,0.30); }
+
+/* Combat Type */
+.tag-PVP        { background: rgba(239,68,68,0.12);   color: #f87171; border-color: rgba(239,68,68,0.30); }
+.tag-PVE        { background: rgba(96,165,250,0.12);  color: #93c5fd; border-color: rgba(96,165,250,0.30); }
+.tag-HOURGLASS  { background: rgba(167,139,250,0.12); color: #c4b5fd; border-color: rgba(167,139,250,0.30); }
+
+/* Ship Combat */
+.tag-SHIP_BATTLE { background: rgba(249,115,22,0.12); color: #fdba74; border-color: rgba(249,115,22,0.30); }
+.tag-BOARDING   { background: rgba(239,68,68,0.10);   color: #fca5a5; border-color: rgba(239,68,68,0.25); }
+.tag-KILL       { background: rgba(220,38,38,0.12);   color: #f87171; border-color: rgba(220,38,38,0.30); }
+.tag-SINK       { background: rgba(56,189,248,0.12);  color: #7dd3fc; border-color: rgba(56,189,248,0.30); }
+
+/* Stealth */
+.tag-TUCK       { background: rgba(0,229,192,0.12);   color: #00e5c0; border-color: rgba(0,229,192,0.30); }
+.tag-STEAL      { background: rgba(34,211,238,0.12);  color: #67e8f9; border-color: rgba(34,211,238,0.30); }
+.tag-HEIST      { background: rgba(0,229,192,0.10);   color: #5eead4; border-color: rgba(0,229,192,0.25); }
+.tag-SNEAKY     { background: rgba(103,232,249,0.10); color: #a5f3fc; border-color: rgba(103,232,249,0.25); }
+
+/* Team Size */
+.tag-TEAM_PLAY  { background: rgba(74,222,128,0.12);  color: #4ade80; border-color: rgba(74,222,128,0.30); }
+.tag-SOLO       { background: rgba(163,230,53,0.12);  color: #bef264; border-color: rgba(163,230,53,0.30); }
+.tag-DUO        { background: rgba(52,211,153,0.12);  color: #6ee7b7; border-color: rgba(52,211,153,0.30); }
+.tag-CREW       { background: rgba(74,222,128,0.10);  color: #86efac; border-color: rgba(74,222,128,0.25); }
+
+/* PvE Encounters */
+.tag-KRAKEN     { background: rgba(99,102,241,0.12);  color: #a5b4fc; border-color: rgba(99,102,241,0.30); }
+.tag-MEGALODON  { background: rgba(139,92,246,0.12);  color: #c4b5fd; border-color: rgba(139,92,246,0.30); }
+.tag-SIREN      { background: rgba(217,70,239,0.12);  color: #e879f9; border-color: rgba(217,70,239,0.30); }
+.tag-FORT       { background: rgba(168,162,158,0.12); color: #d6d3d1; border-color: rgba(168,162,158,0.30); }
+.tag-FLEET      { background: rgba(56,189,248,0.10);  color: #bae6fd; border-color: rgba(56,189,248,0.25); }
+.tag-BOSS_FIGHT { background: rgba(244,63,94,0.12);   color: #fb7185; border-color: rgba(244,63,94,0.30); }
+
+/* Exploration */
+.tag-SAILING    { background: rgba(56,189,248,0.12);  color: #38bdf8; border-color: rgba(56,189,248,0.30); }
+.tag-TREASURE   { background: rgba(251,191,36,0.12);  color: #fde68a; border-color: rgba(251,191,36,0.30); }
+.tag-ADVENTURE  { background: rgba(96,165,250,0.12);  color: #bfdbfe; border-color: rgba(96,165,250,0.30); }
+
+/* Misc */
+.tag-VOICE_CHAT  { background: rgba(148,163,184,0.12); color: #cbd5e1; border-color: rgba(148,163,184,0.30); }
+.tag-WHOLESOME   { background: rgba(244,114,182,0.12); color: #f9a8d4; border-color: rgba(244,114,182,0.30); }
+.tag-UNEXPECTED  { background: rgba(167,139,250,0.12); color: #ddd6fe; border-color: rgba(167,139,250,0.30); }

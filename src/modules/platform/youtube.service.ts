@@ -117,6 +117,114 @@ export async function fetchYouTubeChannel(url: string): Promise<YouTubeChannelIn
   return null;
 }
 
+// ── Channel video feed (for clip picker) ─────────────────────────────────────
+
+export type YouTubePickerSort = 'NEWEST' | 'POPULAR';
+
+export interface YouTubePickerItem {
+  id:           string;
+  title:        string;
+  thumbnailUrl: string;
+  duration:     number;
+  url:          string;
+  embedUrl:     string;
+  channelName:  string;
+  isShort:      boolean;
+  viewCount:    number;
+}
+
+export interface YouTubePickerResult {
+  videos:        YouTubePickerItem[];
+  nextPageToken: string | null;
+}
+
+export async function fetchChannelVideosFeed(
+  channelId: string,
+  options: { limit?: number; sort?: YouTubePickerSort; pageToken?: string } = {},
+): Promise<YouTubePickerResult> {
+  const { limit = 24, sort = 'NEWEST', pageToken } = options;
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) return { videos: [], nextPageToken: null };
+
+  try {
+    // Resolve uploads playlist ID (cached implicitly by Next.js fetch)
+    const channelRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/channels?id=${channelId}&part=contentDetails&key=${apiKey}`,
+    );
+    if (!channelRes.ok) return { videos: [], nextPageToken: null };
+    const channelData = await channelRes.json();
+    const uploadsId: string | undefined =
+      channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    if (!uploadsId) return { videos: [], nextPageToken: null };
+
+    // Fetch playlist page (2× to absorb livestream filtering losses)
+    const plParams = new URLSearchParams({
+      playlistId: uploadsId,
+      part:       'contentDetails',
+      maxResults: String(Math.min(limit * 2, 50)),
+      key:        apiKey,
+    });
+    if (pageToken) plParams.set('pageToken', pageToken);
+
+    const playlistRes = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?${plParams}`);
+    if (!playlistRes.ok) return { videos: [], nextPageToken: null };
+    const playlistData = await playlistRes.json();
+
+    const videoIds: string[] = (playlistData.items ?? []).map(
+      (item: { contentDetails: { videoId: string } }) => item.contentDetails.videoId,
+    );
+    if (videoIds.length === 0) return { videos: [], nextPageToken: null };
+
+    const nextToken: string | null = playlistData.nextPageToken ?? null;
+
+    // Batch-fetch details + statistics (viewCount for POPULAR sort)
+    const videosRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?id=${videoIds.join(',')}&part=snippet,contentDetails,statistics&key=${apiKey}`,
+    );
+    if (!videosRes.ok) return { videos: [], nextPageToken: null };
+    const videosData = await videosRes.json();
+
+    type RawVideo = {
+      id: string;
+      snippet: {
+        title:                string;
+        channelTitle:         string;
+        liveBroadcastContent: string;
+        thumbnails:           { medium?: { url: string }; default?: { url: string } };
+      };
+      contentDetails: { duration: string };
+      statistics?:    { viewCount?: string };
+    };
+
+    let videos: YouTubePickerItem[] = (videosData.items ?? [])
+      .filter((v: RawVideo) => v.snippet.liveBroadcastContent === 'none')
+      .slice(0, limit)
+      .map((v: RawVideo) => {
+        const durationSec = parseYouTubeDuration(v.contentDetails.duration);
+        return {
+          id:           v.id,
+          title:        v.snippet.title,
+          thumbnailUrl: v.snippet.thumbnails?.medium?.url ?? v.snippet.thumbnails?.default?.url ?? '',
+          duration:     durationSec,
+          url:          `https://www.youtube.com/watch?v=${v.id}`,
+          embedUrl:     `https://www.youtube.com/embed/${v.id}?autoplay=1`,
+          channelName:  v.snippet.channelTitle,
+          isShort:      durationSec > 0 && durationSec <= 120,
+          viewCount:    parseInt(v.statistics?.viewCount ?? '0', 10),
+        };
+      });
+
+    // Playlist order is already newest-first. POPULAR sorts by viewCount.
+    if (sort === 'POPULAR') {
+      videos = videos.sort((a, b) => b.viewCount - a.viewCount);
+    }
+
+    return { videos, nextPageToken: nextToken };
+  } catch {
+    return { videos: [], nextPageToken: null };
+  }
+}
+
 // ── Validation ────────────────────────────────────────────────────────────────
 
 export function isSeaOfThievesYouTube(video: YouTubeVideoInfo): boolean {

@@ -264,21 +264,58 @@ enum Platform {
 }
 
 enum Tag {
+  // Humor
   FUNNY
-  KILL
-  TUCK
+  MEME
+  CHAOS
+  EPIC_FAIL
+
+  // Skill / Quality
   HIGHLIGHT
+  CLUTCH
+  INSANE
+  SKILLFUL
+
+  // Combat Type
   PVP
   PVE
-  SAILING
-  TREASURE
-  SIREN
-  KRAKEN
-  BOSS_FIGHT
-  MEGALODON
-  EPIC_FAIL
+  HOURGLASS
+
+  // Ship Combat
+  SHIP_BATTLE
+  BOARDING
+  KILL
+  SINK
+
+  // Stealth
+  TUCK
+  STEAL
+  HEIST
+  SNEAKY
+
+  // Team Size
   TEAM_PLAY
   SOLO
+  DUO
+  CREW
+
+  // PvE Encounters
+  KRAKEN
+  MEGALODON
+  SIREN
+  FORT
+  FLEET
+  BOSS_FIGHT
+
+  // Exploration
+  SAILING
+  TREASURE
+  ADVENTURE
+
+  // Misc
+  VOICE_CHAT
+  WHOLESOME
+  UNEXPECTED
 }
 
 enum ChallengeType {
