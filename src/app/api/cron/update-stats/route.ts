@@ -3,6 +3,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyCronRequest } from '@/modules/cron/cron.middleware';
 import { refreshYouTubeViewCounts, refreshProfileImages } from '@/modules/cron/cron.service';
+import { invalidate, invalidatePattern } from '@/lib/redis';
+import { CACHE_KEY_TRENDING, CACHE_KEY_FEATURED } from '@/modules/clips/clips.service';
+import { CACHE_KEY_STREAMERS_ALL } from '@/modules/streamers/streamers.service';
 
 export async function POST(request: NextRequest) {
   const denied = verifyCronRequest(request);
@@ -12,6 +15,10 @@ export async function POST(request: NextRequest) {
     const [youtube, profiles] = await Promise.all([
       refreshYouTubeViewCounts(),
       refreshProfileImages(),
+    ]);
+    await Promise.all([
+      invalidate(CACHE_KEY_TRENDING, CACHE_KEY_FEATURED, CACHE_KEY_STREAMERS_ALL),
+      invalidatePattern('streamer:*'),
     ]);
 
     return NextResponse.json({

@@ -2,9 +2,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireStaff } from '@/modules/auth/auth.middleware';
 import { reviewClipSchema } from '@/modules/clips/clips.schema';
-import { getClipsForModeration, reviewClip, ClipServiceError } from '@/modules/clips/clips.service';
+import { getClipsForModeration, reviewClip, ClipServiceError, CACHE_KEY_TRENDING, CACHE_KEY_FEATURED } from '@/modules/clips/clips.service';
 import type { PaginationInput } from '@/modules/clips/clips.types';
 import { ClipStatus } from '@prisma/client';
+import { invalidate, invalidatePattern } from '@/lib/redis';
+import { CACHE_KEY_STREAMERS_ALL } from '@/modules/streamers/streamers.service';
 
 export async function GET(request: NextRequest) {
   const { user, error } = await requireStaff(request);
@@ -41,6 +43,10 @@ export async function PATCH(request: NextRequest) {
       reviewNotes: parsed.data.reviewNotes,
       reviewedById: user.id,
     });
+    await Promise.all([
+      invalidate(CACHE_KEY_TRENDING, CACHE_KEY_FEATURED, CACHE_KEY_STREAMERS_ALL),
+      invalidatePattern('streamer:*'),
+    ]);
     return NextResponse.json({ clip });
   } catch (err) {
     if (err instanceof ClipServiceError) {

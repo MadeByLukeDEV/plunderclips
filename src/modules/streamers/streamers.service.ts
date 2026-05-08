@@ -15,6 +15,10 @@ import {
   toStreamerListItemDTO,
   sortStreamers,
 } from './streamers.helpers';
+import { getOrSet } from '@/lib/redis';
+
+export const CACHE_KEY_STREAMERS_ALL = 'streamers:all';
+export const streamerCacheKey = (login: string) => `streamer:${login}`;
 
 // ── Error ─────────────────────────────────────────────────────────────────────
 
@@ -31,6 +35,10 @@ export class StreamerServiceError extends Error {
 // ── Queries ───────────────────────────────────────────────────────────────────
 
 export async function getAllStreamers(): Promise<StreamerListItemDTO[]> {
+  return getOrSet(CACHE_KEY_STREAMERS_ALL, () => _fetchAllStreamers(), 600);
+}
+
+async function _fetchAllStreamers(): Promise<StreamerListItemDTO[]> {
   const [users, clipCountRows] = await Promise.all([
     prisma.user.findMany({ select: streamerListSelect }),
     // Single batch query — avoids N+1
@@ -49,6 +57,14 @@ export async function getAllStreamers(): Promise<StreamerListItemDTO[]> {
 }
 
 export async function getStreamer(login: string): Promise<{
+  streamer: StreamerProfileDTO;
+  clips: ClipDTO[];
+  stats: StreamerStatsDTO;
+} | null> {
+  return getOrSet(streamerCacheKey(login.toLowerCase()), () => _fetchStreamer(login), 600);
+}
+
+async function _fetchStreamer(login: string): Promise<{
   streamer: StreamerProfileDTO;
   clips: ClipDTO[];
   stats: StreamerStatsDTO;

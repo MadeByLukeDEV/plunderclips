@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { PickerCardSkeleton, SubmitPageSkeleton } from '@/components/ui/Skeletons';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -55,18 +56,18 @@ function fmtDuration(s: number): string {
 }
 
 
-// ── LoadingGrid ────────────────────────────────────────────────────────────────
+// ── PickerLoadingGrid ─────────────────────────────────────────────────────────
 
-function LoadingGrid() {
+function PickerLoadingGrid({ label }: { label: string }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="space-y-2">
-          <div className="skeleton aspect-video rounded" />
-          <div className="skeleton h-3 rounded w-3/4" />
-          <div className="skeleton h-2 rounded w-1/2" />
-        </div>
-      ))}
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 text-white/30">
+        <Loader2 className="w-3.5 h-3.5 animate-spin text-teal flex-shrink-0" />
+        <span className="font-display text-[10px] tracking-widest">{label}</span>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {Array.from({ length: 6 }).map((_, i) => <PickerCardSkeleton key={i} />)}
+      </div>
     </div>
   );
 }
@@ -150,7 +151,8 @@ function ClipPickerModal({
   const [ytPageToken, setYtPageToken]         = useState<string | null>(null);
   const [ytLoadingMore, setYtLoadingMore]     = useState(false);
   const [ytNotLinked, setYtNotLinked]         = useState(false);
-  const [loading, setLoading]                 = useState(false);
+  // true by default — TWITCH tab always fetches on mount; prevents "no clips found" flash
+  const [loading, setLoading]                 = useState(true);
   const [linkUrl, setLinkUrl]                 = useState('');
   const [linkPreview, setLinkPreview]         = useState<PreviewData | null>(null);
   const [linkLoading, setLinkLoading]         = useState(false);
@@ -275,7 +277,10 @@ function ClipPickerModal({
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  if (tab.id !== 'LINK') setLoading(true);
+                  setActiveTab(tab.id);
+                }}
                 className={`font-display text-xs tracking-wider px-3 py-1.5 rounded transition-colors border ${
                   activeTab === tab.id
                     ? 'bg-teal/10 text-teal border-teal/30'
@@ -314,7 +319,7 @@ function ClipPickerModal({
 
           {/* Twitch tab */}
           {activeTab === 'TWITCH' && (
-            loading ? <LoadingGrid /> :
+            loading ? <PickerLoadingGrid label="FETCHING YOUR TWITCH CLIPS..." /> :
             twitchAll.length === 0 ? (
               <p className="text-center text-white/30 py-16 font-display tracking-wider text-sm">
                 No clips found on your channel
@@ -353,7 +358,7 @@ function ClipPickerModal({
                 </Link>
               </div>
             ) :
-            loading ? <LoadingGrid /> :
+            loading ? <PickerLoadingGrid label="FETCHING YOUR YOUTUBE VIDEOS..." /> :
             filteredYt.length === 0 ? (
               <p className="text-center text-white/30 py-16 font-display tracking-wider text-sm">
                 {ytVideos.length === 0 ? 'No videos found on your channel' : `No ${ytFilter.toLowerCase()} found`}
@@ -509,12 +514,7 @@ export default function SubmitPage() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [url, platform, showUrlInput]);
 
-  if (loading) return (
-    <div className="max-w-2xl mx-auto px-6 py-20 space-y-4">
-      <div className="skeleton h-8 w-48 rounded" />
-      <div className="skeleton h-64 rounded" />
-    </div>
-  );
+  if (loading) return <SubmitPageSkeleton />;
 
   if (!user) return (
     <div className="max-w-sm mx-auto px-6 py-24 text-center">

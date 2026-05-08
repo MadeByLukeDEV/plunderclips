@@ -11,17 +11,17 @@ import type { ClipDTO } from '@/modules/clips/clips.types';
 function PlatformBadge({ platform }: { platform: string }) {
   if (platform === 'TWITCH') return (
     <span className="absolute top-2 left-2 flex items-center gap-1 bg-purple-600 text-white text-xs px-1.5 py-0.5 rounded-sm font-display tracking-wider">
-      <Twitch className="w-3 h-3" />TWITCH
+      <Twitch className="w-3 h-3 uppercase" />TWITCH
     </span>
   );
   if (platform === 'YOUTUBE') return (
     <span className="absolute top-2 left-2 flex items-center gap-1 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-sm font-display tracking-wider">
-      <Youtube className="w-3 h-3" />YT
+      <Youtube className="w-3 h-3 uppercase" />YOUTUBE
     </span>
   );
   if (platform === 'MEDAL') return (
     <span className="absolute top-2 left-2 flex items-center gap-1 bg-yellow-500 text-black text-xs px-1.5 py-0.5 rounded-sm font-display tracking-wider">
-      <Monitor className="w-3 h-3" />MEDAL
+      <Monitor className="w-3 h-3 uppercase" />MEDAL
     </span>
   );
   return null;

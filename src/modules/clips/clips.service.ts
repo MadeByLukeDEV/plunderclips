@@ -27,6 +27,13 @@ import type {
   PaginatedResult,
 } from './clips.types';
 import { clipSelect, toClipDTO } from './clips.helpers';
+import { getOrSet } from '@/lib/redis';
+import { awardXP } from '@/modules/progress/progress.service';
+import { incrementChallengeProgress } from '@/modules/challenges/challenges.service';
+import { XP_REWARDS } from '@/modules/progress/progress.constants';
+
+export const CACHE_KEY_TRENDING = 'clips:trending';
+export const CACHE_KEY_FEATURED = 'clips:featured';
 
 // ── Error ─────────────────────────────────────────────────────────────────────
 
@@ -128,6 +135,10 @@ export async function getChannelClips(userId: string, twitchLogin: string): Prom
 }
 
 export async function getFeaturedClip(): Promise<ClipDTO | null> {
+  return getOrSet(CACHE_KEY_FEATURED, () => _fetchFeaturedClip(), 3_600);
+}
+
+async function _fetchFeaturedClip(): Promise<ClipDTO | null> {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   const clip =
@@ -146,6 +157,10 @@ export async function getFeaturedClip(): Promise<ClipDTO | null> {
 }
 
 export async function getTrendingClips(limit = 8): Promise<ClipDTO[]> {
+  return getOrSet(CACHE_KEY_TRENDING, () => _fetchTrendingClips(limit), 1_800);
+}
+
+async function _fetchTrendingClips(limit: number): Promise<ClipDTO[]> {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
   const clips = await prisma.clip.findMany({
@@ -179,9 +194,18 @@ export async function submitClip(input: ClipSubmissionInput): Promise<ClipDTO> {
     );
   }
 
-  if (platform === 'TWITCH') return submitTwitchClip({ clipUrl, tags, submittedById, submittedByName, appUrl });
-  if (platform === 'YOUTUBE') return submitYouTubeClip({ clipUrl, tags, submittedById, submittedByName });
-  return submitMedalClip({ clipUrl, tags, submittedById, submittedByName });
+  let result: ClipDTO;
+  if (platform === 'TWITCH')       result = await submitTwitchClip({ clipUrl, tags, submittedById, submittedByName, appUrl });
+  else if (platform === 'YOUTUBE') result = await submitYouTubeClip({ clipUrl, tags, submittedById, submittedByName });
+  else                             result = await submitMedalClip({ clipUrl, tags, submittedById, submittedByName });
+
+  // Award XP + challenge progress — non-fatal, never blocks the submission response
+  Promise.all([
+    awardXP(submittedById, XP_REWARDS.CLIP_SUBMITTED),
+    incrementChallengeProgress(submittedById, 'SUBMIT_CLIPS'),
+  ]).catch(err => console.error('[XP] submit error:', err));
+
+  return result;
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
@@ -219,7 +243,10 @@ export async function getClipsForModeration(
 }
 
 export async function reviewClip(clipId: string, input: ClipReviewInput): Promise<ClipDTO> {
-  const exists = await prisma.clip.findUnique({ where: { id: clipId }, select: { id: true } });
+  const exists = await prisma.clip.findUnique({
+    where:  { id: clipId },
+    select: { id: true, submittedBy: true },
+  });
   if (!exists) throw new ClipServiceError('Clip not found', 404);
 
   await prisma.clipModeration.upsert({
@@ -240,6 +267,19 @@ export async function reviewClip(clipId: string, input: ClipReviewInput): Promis
   });
 
   const updated = await prisma.clip.findUniqueOrThrow({ where: { id: clipId }, select: clipSelect });
+
+  // Award XP + challenge progress on approval — non-fatal
+  if (input.status === 'APPROVED') {
+    const views = updated.stats?.viewCount ?? 0;
+    Promise.all([
+      awardXP(exists.submittedBy, XP_REWARDS.CLIP_APPROVED),
+      incrementChallengeProgress(exists.submittedBy, 'GET_APPROVED'),
+      views > 0
+        ? incrementChallengeProgress(exists.submittedBy, 'REACH_VIEWS', views)
+        : Promise.resolve(),
+    ]).catch(err => console.error('[XP] review error:', err));
+  }
+
   return toClipDTO(updated);
 }
 

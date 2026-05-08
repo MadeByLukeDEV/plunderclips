@@ -1,111 +1,154 @@
-# 🚀 Deployment Guide — Coolify + Nixpacks
-
-Step-by-step guide for deploying SoT Clips on a Coolify server.
+# PlunderClips — Deployment Guide (Coolify + Nixpacks)
 
 ---
 
 ## Prerequisites
 
-- A Coolify instance (self-hosted or cloud)
-- A MariaDB 10.6+ database (can be created in Coolify)
-- Your Git repository (GitHub, GitLab, Gitea, etc.)
+- Coolify instance (self-hosted or cloud)
+- MariaDB 10.6+ (created in Coolify)
+- Redis (created in Coolify — use standard Redis, not Dragonfly)
+- Git repository connected to Coolify
 - Twitch Developer Application
+- Google Cloud project with YouTube Data API v3 enabled
 
 ---
 
-## Step 1: Create MariaDB Database in Coolify
+## Step 1: Create MariaDB in Coolify
 
-1. In Coolify, go to **Resources → New Resource → Database**
-2. Select **MariaDB**
-3. Set a strong password
-4. Deploy the database
-5. Note the **internal connection string** (e.g., `mysql://user:pass@mariadb-service:3306/database_name`)
-
----
-
-## Step 2: Create the Application
-
-1. Go to **Resources → New Resource → Application**
-2. Connect your **Git repository**
-3. Select **Nixpacks** as the build pack (or it may be auto-detected)
-4. Set **Port** to `3000`
+1. Resources → New Resource → Database → **MariaDB**
+2. Set a strong password, deploy
+3. Note the **internal** connection string: `mysql://user:pass@mariadb-service:3306/plunderclips`
+4. Create two database users:
+   - `plunderclips_app` — DML only (SELECT, INSERT, UPDATE, DELETE)
+   - `plunderclips_migrate` — full DDL (for Prisma migrations)
 
 ---
 
-## Step 3: Configure Environment Variables
+## Step 2: Create Redis in Coolify
 
-In the application's **Environment Variables** tab, add:
+1. Resources → New Resource → Database → **Redis**
+2. Deploy and note the connection string
+3. The app expects `redis://:password@host:port/0` format — Coolify may include a username in the URL; the app automatically strips it
+
+---
+
+## Step 3: Create the Application
+
+1. Resources → New Resource → Application
+2. Connect your Git repository, select the `main` branch (production)
+3. Build pack: **Nixpacks** (auto-detected)
+4. Port: `3000`
+
+---
+
+## Step 4: Environment Variables
+
+In the application's Environment Variables tab:
 
 ```env
-# Database (use internal Coolify network address for MariaDB)
-DATABASE_URL=mysql://sotclips_user:password@mariadb-service:3306/sot_clips
+# ── Database ────────────────────────────────────────────────────────────────
+DATABASE_URL=mysql://plunderclips_app:password@mariadb-service:3306/plunderclips
+MIGRATE_DATABASE_URL=mysql://plunderclips_migrate:password@mariadb-service:3306/plunderclips
 
-# Application URL (your Coolify domain)
-NEXTAUTH_URL=https://sot-clips.your-domain.com
-NEXT_PUBLIC_APP_URL=https://sot-clips.your-domain.com
+# ── Redis ───────────────────────────────────────────────────────────────────
+REDIS_URL=redis://:password@redis-service:6379/0
 
-# Secrets (generate with: openssl rand -base64 32)
-NEXTAUTH_SECRET=<32+ char secret>
-JWT_SECRET=<32+ char secret>
+# ── Application URLs ────────────────────────────────────────────────────────
+NEXTAUTH_URL=https://plunderclips.com
+NEXT_PUBLIC_APP_URL=https://plunderclips.com
+NEXT_PUBLIC_APP_NAME=PlunderClips
 
-# Twitch OAuth
+# ── Secrets (generate with: openssl rand -hex 32) ───────────────────────────
+JWT_SECRET=<64-char hex>
+CRON_SECRET=<64-char hex>
+
+# ── Twitch OAuth ─────────────────────────────────────────────────────────────
 TWITCH_CLIENT_ID=your_twitch_client_id
 TWITCH_CLIENT_SECRET=your_twitch_client_secret
+TWITCH_WEBHOOK_SECRET=<64-char hex>
 
-# CORS (your production domain)
-ALLOWED_ORIGINS=https://sot-clips.your-domain.com
+# ── Google / YouTube ─────────────────────────────────────────────────────────
+YOUTUBE_API_KEY=your_youtube_data_api_v3_key
+GOOGLE_CLIENT_ID=your_google_oauth_client_id
+GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
+GOOGLE_VERIFICATION_ID=your_search_console_verification_id
 
-# Node environment
+# ── CORS ─────────────────────────────────────────────────────────────────────
+ALLOWED_ORIGINS=https://plunderclips.com,https://www.plunderclips.com
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
 NODE_ENV=production
+ALLOW_MANUAL_LIVE_OVERRIDE=false
+NIXPACKS_NODE_VERSION=22
 ```
 
 ---
 
-## Step 4: Configure Twitch Developer Console
+## Step 5: Configure Twitch Developer Console
 
-1. Go to [dev.twitch.tv/console/apps](https://dev.twitch.tv/console/apps)
-2. Click your application → Edit
-3. Add **OAuth Redirect URL**:
+1. Go to [dev.twitch.tv/console/apps](https://dev.twitch.tv/console/apps) → your app → Edit
+2. Add OAuth Redirect URL:
    ```
-   https://sot-clips.your-domain.com/api/auth/callback
+   https://plunderclips.com/api/auth/callback
    ```
-4. Save
+3. Save
 
 ---
 
-## Step 5: Deploy
+## Step 6: Configure Google Cloud (YouTube OAuth)
 
-Click **Deploy** in Coolify. The Nixpacks build process will:
-
-1. Detect Node.js from `package.json`
-2. Run: `npm install && npm run db:generate && npm run build`
-3. On start: `npm run db:migrate && npm start`
+1. Go to [console.cloud.google.com](https://console.cloud.google.com)
+2. Enable **YouTube Data API v3**
+3. Create **OAuth 2.0 Client ID** (Web application type)
+4. Add Authorised redirect URI:
+   ```
+   https://plunderclips.com/api/auth/youtube/callback
+   ```
+5. Copy Client ID and Secret into env vars
 
 ---
 
-## Step 6: Create Admin User
+## Step 7: Deploy
 
-After the first deployment:
+Click **Deploy** in Coolify. The Nixpacks build process runs:
 
-1. Visit `https://sot-clips.your-domain.com`
-2. Sign in with Twitch
-3. Connect to your MariaDB and run:
+1. `npm install && npm run db:generate && npm run build`
+2. On start: `npm run db:migrate && npm start`
+
+---
+
+## Step 8: Create Admin User
+
+After first deploy:
+1. Sign in at `https://plunderclips.com` with your Twitch account
+2. Open Coolify's database terminal or run Prisma Studio (`npm run db:studio`) and execute:
 
 ```sql
 UPDATE users SET role = 'ADMIN' WHERE twitch_login = 'your_twitch_username';
 ```
 
-You can do this through Coolify's database terminal or Prisma Studio:
-```bash
-# On your server
-npm run db:studio
+---
+
+## Step 9: Set Up Cron Jobs
+
+Configure these in Coolify (or an external scheduler like cron-job.org):
+
+| Endpoint | Schedule | Purpose |
+|----------|----------|---------|
+| `POST /api/cron/update-live` | Every 5 minutes | Refresh live streamer status |
+| `POST /api/cron/update-stats` | Every 6 hours | Refresh YouTube views + profile images |
+| `POST /api/cron/reset-challenges` | Weekly (Monday 00:01 UTC) | Reset weekly challenges |
+
+All cron requests require the header:
+```
+Authorization: Bearer <CRON_SECRET>
 ```
 
 ---
 
 ## Nixpacks Configuration
 
-The `nixpacks.json` at the project root controls the build:
+`nixpacks.json` at project root:
 
 ```json
 {
@@ -115,41 +158,47 @@ The `nixpacks.json` at the project root controls the build:
 }
 ```
 
-- **buildCmd**: Installs deps, generates Prisma types, builds Next.js
-- **startCmd**: Runs Prisma migrations, starts the production server
-
 ---
 
 ## Updating the Application
 
-Simply push to your connected Git branch. Coolify will automatically detect the push and redeploy (if auto-deploy is enabled) or you can trigger manually.
-
----
-
-## Troubleshooting
-
-### Build fails: "Can't reach database during build"
-Prisma generation doesn't need a database. Make sure `DATABASE_URL` is set even during builds — it's needed for Prisma to know the provider.
-
-### "CORS: Origin not allowed"
-Ensure `ALLOWED_ORIGINS` matches your exact domain including `https://` and without trailing slash.
-
-### Twitch callback fails
-Verify that the redirect URL in Twitch dev console exactly matches `NEXTAUTH_URL + /api/auth/callback`.
-
-### Database connection errors
-Check that `DATABASE_URL` uses the **internal Coolify network address** for MariaDB, not the external IP.
+Push to the connected Git branch. Coolify auto-deploys on push (if enabled) or trigger manually.
 
 ---
 
 ## Health Check
 
-You can add a health check in Coolify pointing to:
+Point Coolify's health check to:
 ```
 GET /api/auth/me
 ```
-This will return `200` if the app is running correctly.
+Returns `200` when the app is running. Returns `401` if Redis/DB issues prevent a valid session but the app itself is up — that's acceptable for a health check.
 
 ---
 
-*Happy sailing! ⚓*
+## Troubleshooting
+
+### `WRONGPASS` on Redis connection
+Coolify generates URLs with a service name as the username (e.g. `redis://plunderclips:pass@host`). The app strips the username automatically — no manual action needed.
+
+### "Can't reach database during build"
+Prisma generation (`db:generate`) doesn't need a live database. Ensure `DATABASE_URL` is set in build env even if the DB isn't accessible during build time.
+
+### "CORS: Origin not allowed"
+`ALLOWED_ORIGINS` must exactly match the requesting origin including `https://` and no trailing slash.
+
+### Twitch OAuth callback fails
+The redirect URI in the Twitch dev console must exactly match `NEXTAUTH_URL + /api/auth/callback`.
+
+### YouTube OAuth callback fails
+The redirect URI in Google Cloud Console must exactly match `NEXTAUTH_URL + /api/auth/youtube/callback`.
+
+### Database connection errors
+Use the **internal Coolify network address** for MariaDB — not the external IP.
+
+### Weekly challenges not appearing
+Challenges are auto-seeded on the first `/api/challenges` request of each week. If the reset cron didn't run, the first user to open their dashboard will trigger seeding automatically.
+
+---
+
+*Happy sailing. ⚓*

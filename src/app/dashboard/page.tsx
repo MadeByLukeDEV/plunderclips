@@ -11,6 +11,8 @@ import { CheckCircle, Clock, XCircle, Swords, Trash2, AlertTriangle, Settings, Y
 import toast from 'react-hot-toast';
 import { RoleBadge } from '@/components/ui/RoleBadge';
 import { YoutubeRelinkBanner } from '@/components/ui/YoutubeRelinkBanner';
+import { XPWidget } from '@/components/dashboard/XPWidget';
+import { ChallengesWidget } from '@/components/dashboard/ChallengesWidget';
 
 const STATUS = {
   APPROVED: { icon: <CheckCircle className="w-3.5 h-3.5" />, cls: 'text-teal border-teal/30 bg-teal/10' },
@@ -258,7 +260,9 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-          <div className="flex gap-2 pt-4 border-t border-white/5">
+          <XPWidget />
+
+          <div className="flex gap-2 pt-4 border-t border-white/5 mt-3">
             <Link href="/submit" className="btn-teal flex-1 py-2.5 rounded text-sm flex items-center justify-center gap-2">
               <Swords className="w-4 h-4" />Submit Clip
             </Link>
@@ -271,6 +275,11 @@ export default function DashboardPage() {
               <Trash2 className="w-3.5 h-3.5" /><span className="hidden sm:inline">Delete</span>
             </button>
           </div>
+        </div>
+
+        {/* Weekly Challenges */}
+        <div className="mb-8">
+          <ChallengesWidget />
         </div>
 
         {/* Stats */}

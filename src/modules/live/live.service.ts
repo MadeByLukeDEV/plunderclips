@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma';
 import type { Role } from '@prisma/client';
 import type { LiveStreamerDTO, LiveStatusInput } from './live.types';
 import { LIVE_ROLES as LIVE_ROLE_KEYS } from '@/modules/auth/auth.roles';
+import { getOrSet } from '@/lib/redis';
+
+export const CACHE_KEY_LIVE = 'live:streamers';
 
 // Derived from central role registry — roles with isLive: true
 export const LIVE_ROLES: Role[] = LIVE_ROLE_KEYS as Role[];
@@ -12,6 +15,10 @@ export const LIVE_ROLES: Role[] = LIVE_ROLE_KEYS as Role[];
 // ── Queries ───────────────────────────────────────────────────────────────────
 
 export async function getLiveStreamers(): Promise<LiveStreamerDTO[]> {
+  return getOrSet(CACHE_KEY_LIVE, () => _fetchLiveStreamers(), 60);
+}
+
+async function _fetchLiveStreamers(): Promise<LiveStreamerDTO[]> {
   const liveStatuses = await prisma.userLiveStatus.findMany({
     where: {
       isLive: true,

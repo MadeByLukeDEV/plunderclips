@@ -1,16 +1,14 @@
-# 📡 SoT Clips — API Documentation
+# PlunderClips — API Reference
 
-Base URL: `https://your-domain.com/api`
+Base URL: `https://plunderclips.com/api`
 
 ---
 
 ## Authentication
 
-The API uses **httpOnly cookies** for browser clients and **Bearer tokens** for programmatic access.
+The API uses **httpOnly cookies** for browser clients.
 
-All protected routes require:
-- Cookie: `auth-token=<jwt_token>` (set automatically by login flow), OR  
-- Header: `Authorization: Bearer <jwt_token>`
+All protected routes require the `auth-token` cookie set automatically by the login flow, or an `Authorization: Bearer <token>` header.
 
 Sessions last **3 days** from creation.
 
@@ -28,32 +26,30 @@ Returns a paginated list of approved clips.
 |-------|------|---------|-------------|
 | `page` | integer | 1 | Page number |
 | `limit` | integer | 12 | Items per page (max: 50) |
-| `tag` | string | — | Filter by tag enum |
-| `search` | string | — | Search title/broadcaster |
-
-**Available Tags:**
-`FUNNY`, `KILL`, `TUCK`, `HIGHLIGHT`, `PVP`, `PVE`, `SAILING`, `TREASURE`, `KRAKEN`, `SIREN`, `BOSS_FIGHT`, `EPIC_FAIL`, `TEAM_PLAY`, `SOLO`
+| `sort` | `newest` \| `popular` | `newest` | Sort order |
+| `tag` | string | — | Filter by tag |
+| `platform` | `TWITCH` \| `YOUTUBE` \| `MEDAL` | — | Filter by platform |
+| `search` | string | — | Search title / broadcaster name |
 
 **Response:**
 ```json
 {
   "clips": [
     {
-      "id": "cluid123",
-      "twitchClipId": "RichLuckyFlyTBC...",
-      "twitchUrl": "https://www.twitch.tv/user/clip/...",
-      "embedUrl": "https://clips.twitch.tv/embed?clip=...&parent=your-domain.com",
+      "id": "cm...",
+      "platformClipId": "RichLuckyFly...",
+      "sourceUrl": "https://clips.twitch.tv/...",
+      "embedUrl": "https://clips.twitch.tv/embed?clip=...&parent=plunderclips.com",
       "title": "Epic Kraken Fight",
       "thumbnailUrl": "https://clips-media-assets2.twitch.tv/...",
-      "viewCount": 1234,
       "duration": 30.0,
-      "submittedByName": "PirateStreamer",
-      "broadcasterName": "WorldOfChap",
-      "status": "APPROVED",
-      "tags": [
-        { "id": "tag123", "clipId": "cluid123", "tag": "KRAKEN" }
-      ],
-      "createdAt": "2024-01-15T12:00:00.000Z"
+      "platform": "TWITCH",
+      "platformVerified": true,
+      "broadcasterName": "worldofchap",
+      "submittedByName": "piratestreamer",
+      "tags": ["KRAKEN", "PVE"],
+      "viewCount": 1234,
+      "createdAt": "2025-01-15T12:00:00.000Z"
     }
   ],
   "pagination": {
@@ -67,63 +63,162 @@ Returns a paginated list of approved clips.
 
 ---
 
+### `GET /clips/featured`
+
+Returns the single highest-viewed approved clip from the last 7 days (falls back to all-time best).
+
+**Response:** `{ "clip": { ...ClipDTO } | null }`
+
+---
+
+### `GET /clips/trending`
+
+Returns up to 8 highest-viewed clips from the last 30 days.
+
+**Response:** `{ "clips": [ ...ClipDTO ] }`
+
+---
+
+### `GET /live`
+
+Returns all currently live streamers with eligible roles.
+
+**Response:**
+```json
+{
+  "streamers": [
+    {
+      "id": "cm...",
+      "twitchLogin": "worldofchap",
+      "displayName": "WorldOfChap",
+      "profileImage": "https://static-cdn.jtvnw.net/...",
+      "role": "PARTNER",
+      "streamTitle": "SoT Saturday!",
+      "streamGame": "Sea of Thieves",
+      "viewerCount": 342,
+      "liveUpdatedAt": "2025-05-08T14:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### `GET /streamers`
+
+Returns a list of all registered streamers sorted by live status → role weight → clip count.
+
+**Response:** `{ "streamers": [ ...StreamerListItemDTO ] }`
+
+---
+
+### `GET /streamers/:login`
+
+Returns a single streamer's full profile, approved clips, and stats.
+
+**Response:**
+```json
+{
+  "streamer": { "id": "...", "twitchLogin": "...", "displayName": "...", "role": "...", "isLive": false },
+  "clips": [ ...ClipDTO ],
+  "stats": { "totalClips": 12, "totalViews": 8400, "topTags": ["PVP", "FUNNY"] }
+}
+```
+
+---
+
 ### `GET /auth/me`
 
-Returns the currently authenticated user or `{ user: null }` if not logged in.
+Returns the currently authenticated user or `{ "user": null }`.
 
 **Response (authenticated):**
 ```json
 {
   "user": {
-    "id": "cluid456",
+    "id": "cm...",
     "twitchId": "12345678",
     "twitchLogin": "piratestreamer",
     "displayName": "PirateStreamer",
     "profileImage": "https://static-cdn.jtvnw.net/...",
     "role": "USER",
-    "createdAt": "2024-01-01T00:00:00.000Z"
+    "youtubeChannelId": "UC...",
+    "youtubeChannelName": "PirateStreamer YT",
+    "medalUserId": null,
+    "isLive": false
   }
 }
 ```
 
 ---
 
-## Protected Endpoints (Requires Login)
+## Auth Endpoints
+
+### `GET /auth/login`
+
+Redirects the browser to Twitch OAuth. No body required.
+
+---
+
+### `GET /auth/callback`
+
+OAuth callback from Twitch. Handled server-side — do not call directly.
+
+---
+
+### `GET /auth/youtube/login`
+
+Redirects the authenticated user to Google OAuth for YouTube channel linking. Sets a `yt-oauth-state` CSRF cookie.
+
+**Requires:** active session cookie.
+
+---
+
+### `GET /auth/youtube/callback`
+
+OAuth callback from Google. Handled server-side. On success redirects to `/settings?linked=youtube`. On error redirects to `/settings?error=<code>`.
+
+---
+
+### `GET /auth/logout`
+
+Invalidates the current session and clears the auth cookie. Redirects to `/`.
+
+---
+
+## Protected Endpoints
 
 ### `POST /clips`
 
-Submit a new clip for review.
+Submit a clip for review.
 
 **Request Body:**
 ```json
 {
-  "twitchUrl": "https://www.twitch.tv/username/clip/ClipSlug-abc123",
+  "clipUrl": "https://clips.twitch.tv/ClipSlug | https://youtube.com/watch?v=... | https://medal.tv/...",
   "tags": ["FUNNY", "HIGHLIGHT"]
 }
 ```
 
-**Validation Rules:**
-- `twitchUrl`: Valid Twitch clip URL
-- `tags`: Array of 1–5 valid Tag enums
+**Validation:**
+* `clipUrl`: valid Twitch clip, YouTube video, or Medal.tv clip URL
+* `tags`: 1–5 items from the Tag enum
 
-**Success Response (201):**
+**Success (201):**
 ```json
-{
-  "clip": { ... },
-  "message": "Clip submitted successfully! It will be reviewed shortly."
-}
+{ "clip": { ...ClipDTO } }
 ```
 
-**Error Responses:**
+**Errors:**
 
-| Status | Error | Reason |
-|--------|-------|--------|
-| 400 | `Invalid Twitch clip URL` | URL format doesn't match Twitch pattern |
-| 401 | `Unauthorized` | Not logged in |
-| 403 | `Creator not registered` | Clip creator isn't a registered user |
-| 404 | `Could not fetch clip from Twitch` | Clip doesn't exist or is private |
-| 409 | `Clip already submitted` | Duplicate clip |
-| 422 | `Not a Sea of Thieves clip` | Wrong game detected by Twitch API |
+| Status | Reason |
+|--------|--------|
+| 400 | Invalid URL format |
+| 401 | Not logged in |
+| 403 | Broadcaster not registered on PlunderClips |
+| 404 | Clip not found on platform API |
+| 409 | Clip already submitted |
+| 422 | Not a Sea of Thieves clip |
+| 429 | Rate limit exceeded (10 clips/hour) |
 
 ---
 
@@ -131,20 +226,84 @@ Submit a new clip for review.
 
 Returns all clips submitted by the authenticated user (all statuses).
 
+**Response:** `{ "clips": [ ...ClipDTO ] }`
+
+---
+
+### `GET /clips/channel`
+
+Returns approved clips submitted by others featuring the authenticated user's channel.
+
+**Response:** `{ "clips": [ ...ClipDTO ] }`
+
+---
+
+### `DELETE /clips/:id`
+
+Deletes a clip submitted by the authenticated user.
+
+**Response:** `{ "success": true }`
+
+---
+
+### `GET /progress`
+
+Returns the authenticated user's XP and level progress.
+
 **Response:**
 ```json
 {
-  "clips": [ /* Same clip structure, includes PENDING and DECLINED */ ]
+  "progress": {
+    "xp": 450,
+    "level": 4,
+    "rank": "Cannon Fodder",
+    "currentXP": 150,
+    "neededXP": 400,
+    "percent": 38,
+    "isMaxLevel": false
+  }
 }
 ```
 
 ---
 
-## Admin Endpoints (Requires ADMIN or MODERATOR Role)
+### `GET /challenges`
+
+Returns this week's challenges with the user's progress on each.
+
+**Response:**
+```json
+{
+  "weekStart": "2025-05-05T00:00:00.000Z",
+  "weekEnd": "2025-05-11T23:59:59.999Z",
+  "challenges": [
+    {
+      "id": "cm...",
+      "title": "Sea Legs",
+      "description": "Submit 3 clips this week",
+      "type": "SUBMIT_CLIPS",
+      "target": 3,
+      "xpReward": 75,
+      "userProgress": 1,
+      "completedAt": null
+    }
+  ]
+}
+```
+
+---
+
+### `DELETE /settings/link-youtube`
+
+Unlinks the authenticated user's YouTube channel. Past clips are not affected.
+
+**Response:** `{ "success": true }`
+
+---
+
+## Admin Endpoints (ADMIN or MODERATOR)
 
 ### `GET /admin/stats`
-
-Returns platform-wide statistics.
 
 **Response:**
 ```json
@@ -164,77 +323,84 @@ Returns platform-wide statistics.
 
 ### `GET /admin/clips`
 
-Returns clips with filtering. All statuses visible.
-
-**Query Parameters:**
+Returns clips for moderation.
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `status` | string | Filter: `PENDING`, `APPROVED`, `DECLINED` |
+| `status` | `PENDING` \| `APPROVED` \| `DECLINED` | Filter by status |
 | `page` | integer | Page number |
-| `limit` | integer | Items per page (max: 100) |
+| `limit` | integer | Max 100 |
 
 ---
 
 ### `PATCH /admin/clips?id={clipId}`
 
-Approve or decline a clip.
+Review a clip.
 
-**Request Body:**
 ```json
-{
-  "status": "APPROVED",
-  "reviewNotes": "Optional moderator notes"
-}
+{ "status": "APPROVED", "reviewNotes": "Optional notes" }
 ```
 
-**Valid statuses:** `PENDING`, `APPROVED`, `DECLINED`
+On `APPROVED`, automatically awards the submitter +50 XP and increments their `GET_APPROVED` challenge progress.
 
 ---
 
 ### `GET /admin/users`
 
-Returns all registered users.
+Returns all registered users with their roles and live status.
 
 ---
 
 ### `PATCH /admin/users?id={userId}` (ADMIN only)
 
-Update a user's role.
+Update a user's permission role.
 
-**Request Body:**
 ```json
-{
-  "role": "MODERATOR"
-}
+{ "role": "MODERATOR" }
 ```
 
-**Valid roles:** `USER`, `MODERATOR`, `ADMIN`
+**Valid roles:** `USER`, `CONTRIBUTOR`, `SUPPORTER`, `VIP`, `VERIFIED`, `PARTNER`, `MODERATOR`, `FEATURED`, `ADMIN`
 
 ---
 
-## Auth Flow
+## Cron Endpoints (CRON_SECRET required)
 
+All cron endpoints accept both `POST` and `GET`. They require the header:
 ```
-User clicks "Sign in with Twitch"
-  → GET /api/auth/login
-  → Redirect to Twitch OAuth
-  → User authorizes
-  → Twitch redirects to GET /api/auth/callback?code=...
-  → Server exchanges code for token
-  → Server fetches Twitch user info
-  → Server upserts user in DB
-  → Server creates JWT session (3 days)
-  → Server sets httpOnly cookie
-  → Redirect to /dashboard
+Authorization: Bearer <CRON_SECRET>
 ```
+
+| Endpoint | Schedule | Action |
+|----------|----------|--------|
+| `POST /cron/update-live` | Every 5 min | Refreshes live streamer status and viewer counts |
+| `POST /cron/update-stats` | Every 6 hours | Refreshes YouTube view counts and profile images |
+| `POST /cron/reset-challenges` | Weekly (Monday 00:01 UTC) | Deactivates previous week's challenges and seeds new ones |
+
+---
+
+## Webhook Endpoint
+
+### `POST /webhooks/twitch`
+
+Receives Twitch EventSub notifications. Validates HMAC signature before processing.
+
+**Handled event types:**
+* `stream.online` — sets live status, invalidates cache
+* `stream.offline` — clears live status, invalidates cache
+* `webhook_callback_verification` — returns challenge for subscription verification
 
 ---
 
 ## CORS
 
-The API enforces CORS based on the `ALLOWED_ORIGINS` environment variable. Only listed origins can make API requests. The Twitch OAuth flow uses server-side redirects and is not affected by CORS.
+Enforced via `ALLOWED_ORIGINS` environment variable. Only listed origins may make API requests.
 
 ---
 
-*API version 1.0.0 — SoT Clips*
+## Available Tags
+
+`FUNNY`, `KILL`, `TUCK`, `HIGHLIGHT`, `PVP`, `PVE`, `SAILING`, `TREASURE`, `KRAKEN`, `SIREN`, `BOSS_FIGHT`, `EPIC_FAIL`, `TEAM_PLAY`, `SOLO`
+
+---
+
+*PlunderClips API — v2*

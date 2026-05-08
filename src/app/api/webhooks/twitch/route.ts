@@ -1,7 +1,9 @@
 // src/app/api/webhooks/twitch/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyTwitchSignature, fetchLiveStreams } from '@/modules/platform/twitch.service';
-import { setLiveStatus, clearLiveStatus } from '@/modules/live/live.service';
+import { setLiveStatus, clearLiveStatus, CACHE_KEY_LIVE } from '@/modules/live/live.service';
+import { invalidate } from '@/lib/redis';
+import { CACHE_KEY_STREAMERS_ALL, streamerCacheKey } from '@/modules/streamers/streamers.service';
 
 // Twitch requires the raw body for signature verification
 export const runtime = 'nodejs';
@@ -56,11 +58,13 @@ export async function POST(request: NextRequest) {
       }
 
       await setLiveStatus(twitchId, { streamTitle, streamGame, viewerCount });
+      await invalidate(CACHE_KEY_LIVE, CACHE_KEY_STREAMERS_ALL, streamerCacheKey(event.broadcaster_user_login));
       console.log(`stream.online: ${event.broadcaster_user_login}`);
     }
 
     if (type === 'stream.offline') {
       await clearLiveStatus(twitchId);
+      await invalidate(CACHE_KEY_LIVE, CACHE_KEY_STREAMERS_ALL, streamerCacheKey(event.broadcaster_user_login));
       console.log(`stream.offline: ${event.broadcaster_user_login}`);
     }
   }
