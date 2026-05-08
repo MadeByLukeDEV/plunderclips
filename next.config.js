@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    dirs: ['src'],
+    dirs: ['./src'],
   },
 
   // Serve modern JS only to modern browsers — eliminates legacy polyfills
