@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "db:migrate": "prisma migrate deploy",
-    "db:push": "DATABASE_URL=$MIGRATE_DATABASE_URL prisma db push",
+    "db:push": "node --env-file=.env -e \"const {execSync}=require('child_process');execSync('prisma db push',{stdio:'inherit',env:{...process.env,DATABASE_URL:process.env.MIGRATE_DATABASE_URL}})\"",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate"
   },

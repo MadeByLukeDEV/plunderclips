@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/modules/auth/auth.middleware';
 import { fetchTwitchClip, extractClipId, buildEmbedUrl } from '@/modules/platform/twitch.service';
-import { detectPlatform, extractMedalClipId } from '@/lib/platforms';
+import { detectPlatform, extractMedalClipId } from '@/modules/platform/platform.helpers';
 import { extractYouTubeVideoId, fetchYouTubeVideo, buildYouTubeEmbedUrl } from '@/modules/platform/youtube.service';
 
 export async function GET(request: NextRequest) {

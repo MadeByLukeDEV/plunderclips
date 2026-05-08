@@ -8,7 +8,7 @@ import {
   isSeaOfThievesClip,
   buildEmbedUrl as buildTwitchEmbedUrl,
 } from '@/modules/platform/twitch.service';
-import { detectPlatform, extractMedalClipId } from '@/lib/platforms';
+import { detectPlatform, extractMedalClipId } from '@/modules/platform/platform.helpers';
 import {
   extractYouTubeVideoId,
   fetchYouTubeVideo,
