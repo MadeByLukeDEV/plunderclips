@@ -1,0 +1,103 @@
+name: CI
+
+# Runs on every push to development and on any PR targeting main.
+# main is protected — merges are only allowed when this workflow passes.
+
+on:
+  push:
+    branches: [development]
+  pull_request:
+    branches: [main]
+
+# Cancel redundant runs on the same branch/PR to save minutes
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Type Check · Lint · Build
+    runs-on: ubuntu-latest
+
+    # ── MariaDB service ───────────────────────────────────────────────────────
+    # Gives the build a real database so Prisma migrations and any build-time
+    # DB calls (sitemap, generateMetadata) have a live schema to work against.
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: ci_root
+          MARIADB_DATABASE: plunderclips_ci
+          MARIADB_USER: plunderclips_ci
+          MARIADB_PASSWORD: plunderclips_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    # ── Environment ───────────────────────────────────────────────────────────
+    # Non-sensitive values are inlined. Sensitive values come from GitHub
+    # Secrets (Settings → Secrets and variables → Actions → New repository secret).
+    env:
+      DATABASE_URL:            mysql://plunderclips_ci:plunderclips_ci@127.0.0.1:3306/plunderclips_ci
+      MIGRATE_DATABASE_URL:    mysql://plunderclips_ci:plunderclips_ci@127.0.0.1:3306/plunderclips_ci
+      NEXTAUTH_URL:            https://plunderclips.com
+      NEXT_PUBLIC_APP_URL:     https://plunderclips.com
+      NEXT_PUBLIC_APP_NAME:    PlunderClips
+      ALLOWED_ORIGINS:         https://plunderclips.com
+      ALLOW_MANUAL_LIVE_OVERRIDE: "false"
+      # Placeholders — real values not needed for a successful build
+      CRON_SECRET:             ci_placeholder
+      TWITCH_WEBHOOK_SECRET:   ci_placeholder
+      REDIS_URL:               ""
+      # Secrets — must be added in GitHub repository settings
+      JWT_SECRET:              ${{ secrets.JWT_SECRET }}
+      TWITCH_CLIENT_ID:        ${{ secrets.TWITCH_CLIENT_ID }}
+      TWITCH_CLIENT_SECRET:    ${{ secrets.TWITCH_CLIENT_SECRET }}
+      YOUTUBE_API_KEY:         ${{ secrets.YOUTUBE_API_KEY }}
+      GOOGLE_CLIENT_ID:        ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET:    ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+    steps:
+      # ── 1. Source ───────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── 2. Node ─────────────────────────────────────────────────────────────
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # ── 3. Dependencies ─────────────────────────────────────────────────────
+      - name: Install dependencies
+        run: npm ci
+
+      # ── 4. Prisma client ────────────────────────────────────────────────────
+      # Must run before tsc so generated types are available
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      # ── 5. Type check ───────────────────────────────────────────────────────
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      # ── 6. Lint ─────────────────────────────────────────────────────────────
+      - name: Lint
+        run: npm run lint
+
+      # ── 7. Schema ───────────────────────────────────────────────────────────
+      # Apply all migrations to the CI database so the build has a valid schema.
+      # This also validates that the migration history is clean.
+      - name: Apply database migrations
+        run: npx prisma migrate deploy
+
+      # ── 8. Build ─────────────────────────────────────────────────────────────
+      # Full production build — catches any runtime import errors, missing env
+      # vars used at module load time, and broken server component trees.
+      - name: Build
+        run: npm run build
