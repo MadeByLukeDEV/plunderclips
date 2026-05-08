@@ -71,7 +71,7 @@ function DeleteAccountModal({ onConfirm, onCancel, loading }: {
 }
 
 function ClipRow({ clip, showStatus = true, onDelete }: { clip: ClipDTO; showStatus?: boolean; onDelete: (id: string) => void }) {
-  const clipStatus = clip.moderation?.status ?? clip.status ?? 'PENDING';
+  const clipStatus = clip.moderation?.status ?? 'PENDING';
   const s = STATUS[clipStatus as keyof typeof STATUS];
   return (
     <div className="sot-card rounded flex items-center gap-3 p-3 hover:border-teal/20 transition-colors">
@@ -95,12 +95,12 @@ function ClipRow({ clip, showStatus = true, onDelete }: { clip: ClipDTO; showSta
         <div className="flex flex-wrap gap-1 mt-1">
           {clip.tags.slice(0, 2).map((t: { tag: string }) => <TagBadge key={t.tag} tag={t.tag} small />)}
         </div>
-        {clipStatus === 'DECLINED' && (clip.moderation?.reviewNotes ?? clip.reviewNotes) && (
+        {clipStatus === 'DECLINED' && clip.moderation?.reviewNotes && (
           <p className="text-xs text-red-400/60 font-body mt-1 flex items-center gap-1">
-            <span className="flex-shrink-0">→</span>Reason: {clip.moderation?.reviewNotes ?? clip.reviewNotes}
+            <span className="flex-shrink-0">→</span>Reason: {clip.moderation.reviewNotes}
           </p>
         )}
-        {!clip.platformVerified && clip.status === 'PENDING' && (
+        {!clip.platformVerified && clipStatus === 'PENDING' && (
           <p className="text-xs text-yellow-400/60 font-body mt-1 flex items-center gap-1">
             <AlertTriangle className="w-3 h-3 flex-shrink-0" />Ownership unverified — pending manual review
           </p>

@@ -7,6 +7,7 @@ import { SectionHeader } from './SectionHeader';
 import { useState, useEffect } from 'react';
 
 type RisingCreator = {
+  id:              string;
   twitchLogin:     string;
   displayName:     string;
   profileImage:    string | null;

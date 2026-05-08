@@ -139,8 +139,8 @@ export async function GET() {
   });
 
   const results = scored
-    .filter(Boolean)
-    .sort((a: { momentumScore: number }, b: { momentumScore: number }) => b.momentumScore - a.momentumScore)
+    .filter((x): x is NonNullable<typeof x> => x !== null)
+    .sort((a, b) => b.momentumScore - a.momentumScore)
     .slice(0, 6);
 
   return NextResponse.json(

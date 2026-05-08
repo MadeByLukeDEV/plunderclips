@@ -12,7 +12,7 @@ import {
   Shield, CheckCircle, XCircle, Clock, Users, Film,
   AlertTriangle, Radio, Wifi, WifiOff, RefreshCw, Trash2, Search,
 } from 'lucide-react';
-import { ROLE_META, ROLE_DROPDOWN_ORDER, LIVE_ROLES } from '@/modules/auth/auth.roles';
+import { ROLE_META, ROLE_DROPDOWN_ORDER, LIVE_ROLES, type RoleKey } from '@/modules/auth/auth.roles';
 
 // ─── Local admin types ────────────────────────────────────────────────────────
 type AdminClip = {
@@ -33,7 +33,9 @@ type AdminUser = {
   progress?: { xp: number; level: number; class: string } | null;
 };
 type EventSubPartner = {
-  userId: string; twitchLogin: string; displayName: string;
+  id: string; userId: string; twitchLogin: string; displayName: string;
+  profileImage: string | null; role: string; isLive: boolean;
+  fullySubscribed: boolean;
   subscriptions: { online?: { status: string }; offline?: { status: string } };
 };
 
@@ -358,7 +360,7 @@ export default function AdminPage() {
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <a href={clip.sourceUrl ?? clip.twitchUrl} target="_blank" rel="noopener noreferrer"
+                          <a href={clip.sourceUrl ?? clip.twitchUrl ?? undefined} target="_blank" rel="noopener noreferrer"
                             className="font-display text-sm font-600 text-white hover:text-teal transition-colors truncate">
                             {clip.title}
                           </a>
@@ -606,7 +608,7 @@ export default function AdminPage() {
 
                       {/* Live toggle */}
                       <div className="hidden md:flex justify-center pr-4">
-                        {allowManualLive && LIVE_ROLES.includes(u.role) ? (
+                        {allowManualLive && LIVE_ROLES.includes(u.role as RoleKey) ? (
                           <button
                             onClick={() => userMutation.mutate({ id: u.id, isLive: !u.isLive })}
                             disabled={userMutation.isPending}
