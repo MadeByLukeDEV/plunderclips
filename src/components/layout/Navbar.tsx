@@ -3,7 +3,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { usePathname } from 'next/navigation';
-import { LogOut, Shield, Swords, LayoutDashboard, Compass, User, Youtube } from 'lucide-react';
+import { LogOut, Shield, Swords, LayoutDashboard, Compass, User } from 'lucide-react';
+import { YouTubeIcon } from '@/components/ui/BrandIcons';
 
 const YT_CHANNEL = 'https://www.youtube.com/@PlunderClips';
 
@@ -67,7 +68,7 @@ export default function Navbar() {
             aria-label="PlunderClips YouTube Channel"
             className="hidden md:flex items-center justify-center w-8 h-8 rounded text-white/25 hover:text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all"
           >
-            <Youtube className="w-4 h-4" />
+            <YouTubeIcon className="w-4 h-4" />
           </a>
 
           {loading ? (
@@ -126,7 +127,7 @@ export default function Navbar() {
           rel="noopener noreferrer"
           className="flex-1 flex flex-col items-center py-2.5 gap-0.5 text-[10px] font-display tracking-wider text-white/25 hover:text-red-400 transition-colors"
         >
-          <Youtube className="w-4 h-4" />
+          <YouTubeIcon className="w-4 h-4" />
           <span>YouTube</span>
         </a>
       </div>

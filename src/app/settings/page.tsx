@@ -3,7 +3,8 @@
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Youtube, Trash2, Loader2, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Trash2, Loader2, ArrowLeft, ExternalLink } from 'lucide-react';
+import { YouTubeIcon } from '@/components/ui/BrandIcons';
 import Link from 'next/link';
 import { YoutubeRelinkBanner } from '@/components/ui/YoutubeRelinkBanner';
 
@@ -36,7 +37,7 @@ function YouTubeCard({
     <div className="sot-card rounded p-5">
       <div className="flex items-center gap-3 mb-4">
         <div className="w-9 h-9 rounded bg-red-500/10 flex items-center justify-center flex-shrink-0">
-          <Youtube className="w-4 h-4 text-red-400" />
+          <YouTubeIcon className="w-4 h-4 text-red-400" />
         </div>
         <div>
           <h3 className="font-display text-base font-700 text-white tracking-wide">YouTube</h3>
@@ -76,7 +77,7 @@ function YouTubeCard({
           href="/api/auth/youtube/login"
           className="flex items-center justify-center gap-2 w-full py-2.5 border border-red-500/30 bg-red-500/8 hover:bg-red-500/15 text-red-400 font-display text-xs rounded tracking-wider transition-all"
         >
-          <Youtube className="w-3.5 h-3.5" />
+          <YouTubeIcon className="w-3.5 h-3.5" />
           CONNECT WITH YOUTUBE
         </a>
       )}

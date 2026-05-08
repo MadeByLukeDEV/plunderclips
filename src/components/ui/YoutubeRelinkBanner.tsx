@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Youtube, X, RefreshCw } from 'lucide-react';
+import { X, RefreshCw } from 'lucide-react';
+import { YouTubeIcon } from '@/components/ui/BrandIcons';
 import { useAuth } from '@/components/providers/AuthProvider';
 
 const DISMISS_KEY = 'yt-relink-v2-dismissed';
@@ -27,7 +28,7 @@ export function YoutubeRelinkBanner() {
   return (
     <div className="mb-6 rounded border border-yellow-500/30 bg-yellow-500/8 px-4 py-3 flex items-start gap-3">
       <div className="w-8 h-8 rounded bg-yellow-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <Youtube className="w-4 h-4 text-yellow-400" />
+        <YouTubeIcon className="w-4 h-4 text-yellow-400" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-display text-sm font-700 text-yellow-300 tracking-wide mb-0.5">

@@ -7,7 +7,8 @@ import { TagBadge } from '@/components/ui/TagBadge';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { CheckCircle, Clock, XCircle, Swords, Trash2, AlertTriangle, Settings, Youtube, Users, Monitor } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, Swords, Trash2, AlertTriangle, Settings, Users, Monitor } from 'lucide-react';
+import { YouTubeIcon } from '@/components/ui/BrandIcons';
 import toast from 'react-hot-toast';
 import { RoleBadge } from '@/components/ui/RoleBadge';
 import { YoutubeRelinkBanner } from '@/components/ui/YoutubeRelinkBanner';
@@ -24,7 +25,7 @@ const STATUS = {
 
 
 const PLATFORM_BADGE: Record<string, React.ReactNode> = {
-  YOUTUBE: <span className="text-xs font-mono text-red-400"><Youtube className="w-3.5 h-3.5" /></span>,
+  YOUTUBE: <span className="text-xs font-mono text-red-400"><YouTubeIcon className="w-3.5 h-3.5" /></span>,
   MEDAL: <span className="text-xs font-mono text-yellow-400"><Monitor className="w-3.5 h-3.5" /></span>,
   TWITCH:  null,
 };
