@@ -244,11 +244,15 @@ model UserChallenge {
 // ══════════════════════════════════════════════════════════════════════════════
 
 enum Role {
-  USER
-  MODERATOR
-  PARTNER
-  SUPPORTER
-  ADMIN
+  USER         // Basic registered user
+  CONTRIBUTOR  // Active clip submitter — many approved clips
+  SUPPORTER    // Financial supporter / patron
+  VIP          // VIP community member — exclusive perks, live visibility
+  VERIFIED     // Verified streamer — live visibility
+  PARTNER      // Official partner — live visibility
+  MODERATOR    // Moderates clips, accesses admin panel
+  FEATURED     // Hand-picked featured creator — live visibility
+  ADMIN        // Full platform access
 }
 
 enum ClipStatus {

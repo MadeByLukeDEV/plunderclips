@@ -4,9 +4,10 @@
 import { prisma } from '@/lib/prisma';
 import type { Role } from '@prisma/client';
 import type { LiveStreamerDTO, LiveStatusInput } from './live.types';
+import { LIVE_ROLES as LIVE_ROLE_KEYS } from '@/modules/auth/auth.roles';
 
-// Only PARTNER and ADMIN are tracked for live status via EventSub
-export const LIVE_ROLES: Role[] = ['PARTNER', 'ADMIN'];
+// Derived from central role registry — roles with isLive: true
+export const LIVE_ROLES: Role[] = LIVE_ROLE_KEYS as Role[];
 
 // ── Queries ───────────────────────────────────────────────────────────────────
 

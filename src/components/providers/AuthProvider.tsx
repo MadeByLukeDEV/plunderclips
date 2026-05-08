@@ -10,7 +10,7 @@ interface User {
   twitchLogin: string;
   displayName: string;
   profileImage: string;
-  role: 'USER' | 'ADMIN' | 'MODERATOR';
+  role: 'USER' | 'CONTRIBUTOR' | 'SUPPORTER' | 'VIP' | 'VERIFIED' | 'PARTNER' | 'MODERATOR' | 'FEATURED' | 'ADMIN';
   createdAt: string;
 }
 

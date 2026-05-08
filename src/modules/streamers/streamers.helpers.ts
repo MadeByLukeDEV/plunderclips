@@ -1,6 +1,7 @@
 // src/modules/streamers/streamers.helpers.ts
 
 import type { Prisma, Role } from '@prisma/client';
+import { roleWeight } from '@/modules/auth/auth.roles';
 import type { StreamerProfileDTO, StreamerListItemDTO } from './streamers.types';
 
 // ── Select constants ──────────────────────────────────────────────────────────
@@ -75,22 +76,13 @@ export function toStreamerListItemDTO(
 
 // ── Sorting ───────────────────────────────────────────────────────────────────
 
-const ROLE_WEIGHT: Record<Role, number> = {
-  ADMIN: 0,
-  PARTNER: 1,
-  MODERATOR: 2,
-  SUPPORTER: 3,
-  USER: 4,
-};
-
 export function sortStreamers<T extends { isLive: boolean; role: Role; approvedClips: number }>(
   a: T,
   b: T,
 ): number {
   if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
-  const roleA = ROLE_WEIGHT[a.role] ?? 5;
-  const roleB = ROLE_WEIGHT[b.role] ?? 5;
-  if (roleA !== roleB) return roleA - roleB;
+  const diff = roleWeight(a.role) - roleWeight(b.role);
+  if (diff !== 0) return diff;
   return b.approvedClips - a.approvedClips;
 }
 

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ClipCard } from '@/components/clips/ClipCard';
 import { TagBadge } from '@/components/ui/TagBadge';
+import { RoleBadge } from '@/components/ui/RoleBadge';
 import { Eye, Film, TrendingUp, ExternalLink, ArrowLeft, Radio } from 'lucide-react';
 import { StreamerClipFilter } from '@/components/streamers/StreamerClipFilter';
 import { getStreamer } from '@/modules/streamers/streamers.service';
@@ -22,13 +23,6 @@ const TAG_READABLE: Record<string, string> = {
   BOSS_FIGHT: 'Boss Fights',
 };
 
-const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
-  ADMIN:     { label: 'Captain',    cls: 'text-red-400 border-red-400/30 bg-red-400/10' },
-  PARTNER:   { label: 'Partner',    cls: 'text-purple-400 border-purple-400/30 bg-purple-400/10' },
-  MODERATOR: { label: 'First Mate', cls: 'text-green-400 border-green-400/30 bg-green-400/10' },
-  SUPPORTER: { label: 'Bilge Rat',  cls: 'text-blue-400 border-blue-400/30 bg-blue-400/10' },
-  USER:      { label: 'Crew',       cls: 'text-gray-300 border-gray-400/20 bg-gray-400/10' },
-};
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -152,8 +146,7 @@ export default async function StreamerPage({ params }: Props) {
 
   const { streamer, clips, stats } = data;
   const isLive = streamer.isLive && LIVE_ROLES.includes(streamer.role);
-  const roleBadge = ROLE_BADGE[streamer.role] || ROLE_BADGE.USER;
-  const topClips = clips.slice(0, 4);
+const topClips = clips.slice(0, 4);
   const tagText = stats.topTags.slice(0, 3).map((t: string) => TAG_READABLE[t] || t).join(', ');
   const tagLinks = stats.topTags.slice(0, 3);
 
@@ -219,9 +212,7 @@ export default async function StreamerPage({ params }: Props) {
               </h1>
               <p className="font-mono text-white/30 text-xs mb-3">@{streamer.twitchLogin}</p>
               <div className="flex flex-wrap items-center gap-2">
-                <span className={`px-2 py-0.5 rounded-sm text-xs font-display tracking-wider border ${roleBadge.cls}`}>
-                  {roleBadge.label}
-                </span>
+                <RoleBadge role={streamer.role} size="md" />
                 {isLive && (
                   <span className="flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-display tracking-wider border border-red-500/30 bg-red-500/10 text-red-400">
                     <Radio className="w-3 h-3 animate-pulse" />LIVE

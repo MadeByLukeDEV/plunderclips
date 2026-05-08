@@ -5,19 +5,13 @@ import type { Metadata } from 'next';
 import { Radio } from 'lucide-react';
 import { getAllStreamers } from '@/modules/streamers/streamers.service';
 import type { StreamerListItemDTO } from '@/modules/streamers/streamers.types';
+import { ROLE_META } from '@/modules/auth/auth.roles';
+import { RoleBadge } from '@/components/ui/RoleBadge';
 
 export const metadata: Metadata = {
   title: 'Sea of Thieves Streamers | PlunderClips',
   description: 'Browse all Sea of Thieves streamers registered on PlunderClips. Discover their best clips, highlights, and moments from the seven seas.',
   alternates: { canonical: `${process.env.NEXTAUTH_URL || 'https://plunderclips.gg'}/streamers` },
-};
-
-const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
-  ADMIN:     { label: 'Captain',    cls: 'text-red-400 border-red-400/30' },
-  PARTNER:   { label: 'Partner',    cls: 'text-purple-400 border-purple-400/30' },
-  MODERATOR: { label: 'First Mate', cls: 'text-green-400 border-green-400/30' },
-  SUPPORTER: { label: 'Bilge Rat',  cls: 'text-blue-400 border-blue-400/30' },
-  USER:      { label: 'Crew',       cls: 'text-white/30 border-white/10' },
 };
 
 export default async function StreamersPage() {
@@ -37,9 +31,7 @@ export default async function StreamersPage() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-        {streamers.map((s: StreamerListItemDTO) => {
-          const badge = ROLE_BADGE[s.role] || ROLE_BADGE.USER;
-          return (
+        {streamers.map((s: StreamerListItemDTO) => (
             <Link key={s.id} href={`/streamers/${s.twitchLogin}`}
               className="sot-card rounded-lg p-4 text-center hover:border-teal/30 transition-colors group">
               <div className="relative w-14 h-14 mx-auto mb-3 rounded-full overflow-hidden border-2 border-white/10 group-hover:border-teal/30 transition-colors">
@@ -58,9 +50,7 @@ export default async function StreamersPage() {
               </p>
               <p className="text-white/25 text-xs font-mono truncate mb-2">@{s.twitchLogin}</p>
               <div className="flex items-center justify-center gap-2 flex-wrap">
-                <span className={`text-xs font-display tracking-wider border px-1.5 py-0.5 rounded-sm ${badge.cls}`}>
-                  {badge.label}
-                </span>
+                <RoleBadge role={s.role} size="xs" />
                 {s.isLive && (
                   <span className="flex items-center gap-0.5 text-xs text-red-400 font-mono">
                     <Radio className="w-2.5 h-2.5 animate-pulse" />
@@ -74,8 +64,7 @@ export default async function StreamersPage() {
                 </p>
               )}
             </Link>
-          );
-        })}
+        ))}
       </div>
 
       <div className="mt-12 pt-8 border-t border-white/5">

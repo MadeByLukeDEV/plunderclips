@@ -28,19 +28,17 @@ export async function POST(request: NextRequest) {
   }
 
   // Check not already linked to another account
-  const existing = await prisma.user.findFirst({
-    where: { youtubeChannelId: channel.channelId, id: { not: user.id } },
+  const existing = await prisma.userLinkedAccount.findFirst({
+    where: { youtubeChannelId: channel.channelId, userId: { not: user.id } },
   });
   if (existing) {
     return NextResponse.json({ error: 'This YouTube channel is already linked to another account.' }, { status: 409 });
   }
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      youtubeChannelId: channel.channelId,
-      youtubeChannelName: channel.channelName,
-    },
+  await prisma.userLinkedAccount.upsert({
+    where:  { userId: user.id },
+    create: { userId: user.id, youtubeChannelId: channel.channelId, youtubeChannelName: channel.channelName },
+    update: { youtubeChannelId: channel.channelId, youtubeChannelName: channel.channelName },
   });
 
   return NextResponse.json({
@@ -54,9 +52,10 @@ export async function DELETE(request: NextRequest) {
   const { user, error } = await requireAuth(request);
   if (error || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { youtubeChannelId: null, youtubeChannelName: null },
+  await prisma.userLinkedAccount.upsert({
+    where:  { userId: user.id },
+    create: { userId: user.id },
+    update: { youtubeChannelId: null, youtubeChannelName: null },
   });
 
   return NextResponse.json({ success: true });

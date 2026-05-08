@@ -77,6 +77,24 @@ export async function fetchYouTubeVideo(videoId: string): Promise<YouTubeVideoIn
   };
 }
 
+export async function fetchYouTubeChannelFromToken(accessToken: string): Promise<YouTubeChannelInfo | null> {
+  const res = await fetch(
+    'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!res.ok) return null;
+  const data = await res.json();
+  const channel = data.items?.[0];
+  if (!channel) return null;
+  return {
+    channelId:    channel.id,
+    channelName:  channel.snippet.title,
+    thumbnailUrl: getYouTubeChannelAvatar(
+      channel.snippet.thumbnails?.high?.url || channel.snippet.thumbnails?.default?.url || '',
+    ),
+  };
+}
+
 export async function fetchYouTubeChannel(url: string): Promise<YouTubeChannelInfo | null> {
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) throw new Error('YOUTUBE_API_KEY not set');

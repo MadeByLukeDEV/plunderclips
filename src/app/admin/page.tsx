@@ -12,6 +12,7 @@ import {
   Shield, CheckCircle, XCircle, Clock, Users, Film,
   AlertTriangle, Radio, Wifi, WifiOff, RefreshCw, Trash2, Search,
 } from 'lucide-react';
+import { ROLE_META, ROLE_DROPDOWN_ORDER, LIVE_ROLES } from '@/modules/auth/auth.roles';
 
 // ─── Decline Modal ────────────────────────────────────────────────────────────
 function DeclineModal({ clip, onConfirm, onCancel, loading }: {
@@ -97,12 +98,10 @@ function DeleteClipModal({ onConfirm, onCancel, loading }: {
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const ROLE_STYLES: Record<string, string> = {
-  USER:      'text-white/40 border-white/10',
-  MODERATOR: 'text-blue-400 border-blue-400/30',
-  PARTNER:   'text-purple-400 border-purple-400/30',
-  ADMIN:     'text-red-400 border-red-400/30',
-};
+// Derive role styles from central registry — no duplication
+const ROLE_STYLES: Record<string, string> = Object.fromEntries(
+  Object.entries(ROLE_META).map(([k, v]) => [k, v.cls]),
+);
 
 const PLATFORM_BADGE: Record<string, React.ReactNode> = {
   YOUTUBE: <span className="text-xs font-mono text-red-400 border border-red-400/30 bg-red-400/10 px-1.5 py-0.5 rounded">YT</span>,
@@ -574,15 +573,17 @@ export default function AdminPage() {
                           onChange={e => userMutation.mutate({ id: u.id, role: e.target.value })}
                           className={`w-full bg-sot-dark border rounded px-2.5 py-1.5 font-display text-xs tracking-wider focus:outline-none focus:border-teal/50 transition-colors cursor-pointer ${ROLE_STYLES[u.role] || 'border-white/10 text-white/40'}`}
                         >
-                          {['USER', 'MODERATOR', 'SUPPORTER', 'PARTNER', 'ADMIN'].map(r => (
-                            <option key={r} value={r} className="bg-sot-dark text-white">{r}</option>
+                          {ROLE_DROPDOWN_ORDER.map(r => (
+                            <option key={r} value={r} className="bg-sot-dark text-white">
+                              {ROLE_META[r].label} ({r})
+                            </option>
                           ))}
                         </select>
                       </div>
 
                       {/* Live toggle */}
                       <div className="hidden md:flex justify-center pr-4">
-                        {allowManualLive && ['PARTNER', 'ADMIN'].includes(u.role) ? (
+                        {allowManualLive && LIVE_ROLES.includes(u.role) ? (
                           <button
                             onClick={() => userMutation.mutate({ id: u.id, isLive: !u.isLive })}
                             disabled={userMutation.isPending}
@@ -702,7 +703,7 @@ export default function AdminPage() {
                   );
                 })}
                 {eventsubData?.partners?.length === 0 && (
-                  <div className="text-center py-16 text-white/20 font-display text-2xl">NO PARTNERS OR ADMINS</div>
+                  <div className="text-center py-16 text-white/20 font-display text-2xl">NO LIVE-ELIGIBLE USERS</div>
                 )}
               </div>
             )}

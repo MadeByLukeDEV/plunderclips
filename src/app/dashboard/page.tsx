@@ -9,7 +9,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { CheckCircle, Clock, XCircle, Swords, Trash2, AlertTriangle, Settings, Youtube, Users, Monitor } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Shield, Crown, Star, User as UserIcon } from "lucide-react";
+import { RoleBadge } from '@/components/ui/RoleBadge';
+import { YoutubeRelinkBanner } from '@/components/ui/YoutubeRelinkBanner';
 
 const STATUS = {
   APPROVED: { icon: <CheckCircle className="w-3.5 h-3.5" />, cls: 'text-teal border-teal/30 bg-teal/10' },
@@ -19,33 +20,6 @@ const STATUS = {
 
 
 
-const ROLES = {
-  USER: {
-    label: 'Crew Member',
-    icon: <UserIcon className="w-3.5 h-3.5" />,
-    cls: 'text-gray-300 border-gray-400/20 bg-gray-400/10'
-  },
-  MODERATOR: {
-    label: 'First Mate',
-    icon: <Shield className="w-3.5 h-3.5" />,
-    cls: 'text-green-400 border-green-400/30 bg-green-400/10'
-  },
-  ADMIN: {
-    label: 'Captain',
-    icon: <Crown className="w-3.5 h-3.5" />,
-    cls: 'text-red-400 border-red-400/30 bg-red-400/10'
-  },
-  PARTNER: {
-    label: 'Partner',
-    icon: <Star className="w-3.5 h-3.5" />,
-    cls: 'text-purple-400 border-purple-400/30 bg-purple-400/10'
-  },
-  SUPPORTER: {
-    label: 'Bilge Rat',
-    icon: <Star className="w-3.5 h-3.5" />,
-    cls: 'text-blue-400 border-blue-400/30 bg-blue-400/10'
-  }
-};
 
 const PLATFORM_BADGE: Record<string, React.ReactNode> = {
   YOUTUBE: <span className="text-xs font-mono text-red-400"><Youtube className="w-3.5 h-3.5" /></span>,
@@ -207,7 +181,6 @@ export default function DashboardPage() {
   const myClips = myData?.clips || [];
   const channelClips = channelData?.clips || [];
 
-  const role = ROLES[user.role as keyof typeof ROLES] ?? ROLES.USER;
   const getStatus = (c: any) => c.moderation?.status ?? c.status ?? 'PENDING';
   const counts = {
     APPROVED: myClips.filter((c: any) => getStatus(c) === 'APPROVED').length,
@@ -250,6 +223,7 @@ export default function DashboardPage() {
       )}
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
+        <YoutubeRelinkBanner />
         {/* Profile card */}
         <div className="sot-card rounded p-4 md:p-6 mb-6">
           <div className="flex items-center gap-4 mb-4">
@@ -263,10 +237,7 @@ export default function DashboardPage() {
             <div className="flex-1 min-w-0">
               <h1 className="font-display flex text-2xl md:text-3xl font-700 text-white gap-2">
               {user.displayName}
-              <div className={`inline-flex gap-1 m-2 p-1 rounded border text-xs items-center justify-center ${role.cls}`}>
-                {role.icon}
-                {role.label}
-              </div>
+              <RoleBadge role={user.role} size="sm" />
             </h1>
               <p className="text-white/30 font-mono text-xs mt-0.5">@{user.twitchLogin}</p>
               {/* Linked platforms */}
