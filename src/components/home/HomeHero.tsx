@@ -7,7 +7,9 @@ import { Eye, Play } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export function HomeHero({ featuredClip }: { featuredClip: any | null }) {
+import type { ClipDTO } from '@/modules/clips/clips.types';
+
+export function HomeHero({ featuredClip }: { featuredClip: ClipDTO | null }) {
   const { user } = useAuth();
   const [playing, setPlaying] = useState(false);
 
@@ -119,7 +121,7 @@ export function HomeHero({ featuredClip }: { featuredClip: any | null }) {
                       {/* Clip info */}
                       <div className="absolute bottom-0 left-0 right-0 p-[clamp(0.75rem,2vw,1rem)]">
                         <div className="flex gap-1.5 mb-1.5 flex-wrap">
-                          {featuredClip.tags?.slice(0, 3).map((t: any) => (
+                          {featuredClip.tags?.slice(0, 3).map((t: { tag: string }) => (
                             <TagBadge key={t.tag} tag={t.tag} small />
                           ))}
                         </div>

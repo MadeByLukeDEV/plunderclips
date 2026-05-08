@@ -5,7 +5,6 @@ import type { Metadata } from 'next';
 import { Radio } from 'lucide-react';
 import { getAllStreamers } from '@/modules/streamers/streamers.service';
 import type { StreamerListItemDTO } from '@/modules/streamers/streamers.types';
-import { ROLE_META } from '@/modules/auth/auth.roles';
 import { RoleBadge } from '@/components/ui/RoleBadge';
 
 export const metadata: Metadata = {

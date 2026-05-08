@@ -118,7 +118,7 @@ export async function incrementChallengeProgress(
   });
 
   for (const challenge of challenges) {
-    const entry = await prisma.userChallenge.upsert({
+    const _entry = await prisma.userChallenge.upsert({
       where:  { userId_challengeId: { userId, challengeId: challenge.id } },
       create: { userId, challengeId: challenge.id, progress: amount },
       update: { progress: { increment: amount } },

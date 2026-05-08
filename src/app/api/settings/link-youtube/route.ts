@@ -17,8 +17,9 @@ export async function POST(request: NextRequest) {
   let channel;
   try {
     channel = await fetchYouTubeChannel(channelUrl);
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to fetch YouTube channel' }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to fetch YouTube channel';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 
   if (!channel) {

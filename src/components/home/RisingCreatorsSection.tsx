@@ -6,13 +6,24 @@ import { Eye, Flame } from 'lucide-react';
 import { SectionHeader } from './SectionHeader';
 import { useState, useEffect } from 'react';
 
+type RisingCreator = {
+  twitchLogin:     string;
+  displayName:     string;
+  profileImage:    string | null;
+  latestThumbnail: string | null;
+  isLive:          boolean;
+  last7Views:      number;
+  growthLabel:     string | null;
+  badge:           { cls: string; emoji: string; label: string };
+};
+
 const RANK_STYLE: Record<number, string> = {
   1: 'text-teal font-900',
   2: 'text-white/50',
   3: 'text-yellow-600/70',
 };
 
-function CreatorCard({ creator, rank }: { creator: any; rank: number }) {
+function CreatorCard({ creator, rank }: { creator: RisingCreator; rank: number }) {
   const isTop = rank === 1;
 
   return (
@@ -92,7 +103,7 @@ function CreatorCard({ creator, rank }: { creator: any; rank: number }) {
 }
 
 export function RisingCreatorsSection({ creators, cachedAt }: {
-  creators: any[];
+  creators: RisingCreator[];
   cachedAt: string;
 }) {
   const [minutesAgo, setMinutesAgo] = useState<number | null>(null);

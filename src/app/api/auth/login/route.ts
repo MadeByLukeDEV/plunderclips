@@ -1,7 +1,7 @@
 // src/app/api/auth/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const appUrl   = process.env.NEXTAUTH_URL || 'http://localhost:3000';
   const clientId = process.env.TWITCH_CLIENT_ID!;
 

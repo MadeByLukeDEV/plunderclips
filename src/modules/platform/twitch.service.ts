@@ -225,16 +225,16 @@ export async function fetchAllEventSubSubscriptions(token: string): Promise<unkn
   let cursor: string | null = null;
 
   do {
-    const url: any = cursor
+    const url: string = cursor
       ? `https://api.twitch.tv/helix/eventsub/subscriptions?after=${cursor}`
       : 'https://api.twitch.tv/helix/eventsub/subscriptions';
-    const res = await fetch(url, {
+    const res: Response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Client-Id': process.env.TWITCH_CLIENT_ID!,
       },
     });
-    const data = await res.json();
+    const data: { data?: unknown[]; pagination?: { cursor?: string } } = await res.json();
     subs.push(...(data.data ?? []));
     cursor = data.pagination?.cursor ?? null;
   } while (cursor);

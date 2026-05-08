@@ -100,7 +100,7 @@ export default function SettingsPage() {
       toast.error(YT_ERROR_MESSAGES[error] ?? 'YouTube linking failed.');
       window.history.replaceState({}, '', '/settings');
     }
-  }, []);
+  }, [refetch]);
 
   if (loading) return (
     <div className="max-w-2xl mx-auto px-4 py-12 space-y-4">

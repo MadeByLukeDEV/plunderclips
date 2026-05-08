@@ -1,7 +1,7 @@
 // src/app/dashboard/page.tsx
 'use client';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClipGridSkeleton } from '@/components/ui/Skeletons';
 import { TagBadge } from '@/components/ui/TagBadge';
 import Image from 'next/image';
@@ -11,6 +11,7 @@ import { CheckCircle, Clock, XCircle, Swords, Trash2, AlertTriangle, Settings, U
 import { YouTubeIcon } from '@/components/ui/BrandIcons';
 import toast from 'react-hot-toast';
 import { RoleBadge } from '@/components/ui/RoleBadge';
+import type { ClipDTO } from '@/modules/clips/clips.types';
 import { YoutubeRelinkBanner } from '@/components/ui/YoutubeRelinkBanner';
 import { XPWidget } from '@/components/dashboard/XPWidget';
 import { ChallengesWidget } from '@/components/dashboard/ChallengesWidget';
@@ -69,7 +70,7 @@ function DeleteAccountModal({ onConfirm, onCancel, loading }: {
   );
 }
 
-function ClipRow({ clip, showStatus = true, onDelete }: { clip: any; showStatus?: boolean; onDelete: (id: string) => void }) {
+function ClipRow({ clip, showStatus = true, onDelete }: { clip: ClipDTO; showStatus?: boolean; onDelete: (id: string) => void }) {
   const clipStatus = clip.moderation?.status ?? clip.status ?? 'PENDING';
   const s = STATUS[clipStatus as keyof typeof STATUS];
   return (
@@ -92,7 +93,7 @@ function ClipRow({ clip, showStatus = true, onDelete }: { clip: any; showStatus?
           {clip.broadcasterName}
         </Link>
         <div className="flex flex-wrap gap-1 mt-1">
-          {clip.tags.slice(0, 2).map((t: any) => <TagBadge key={t.tag} tag={t.tag} small />)}
+          {clip.tags.slice(0, 2).map((t: { tag: string }) => <TagBadge key={t.tag} tag={t.tag} small />)}
         </div>
         {clipStatus === 'DECLINED' && (clip.moderation?.reviewNotes ?? clip.reviewNotes) && (
           <p className="text-xs text-red-400/60 font-body mt-1 flex items-center gap-1">
@@ -184,11 +185,11 @@ export default function DashboardPage() {
   const myClips = myData?.clips || [];
   const channelClips = channelData?.clips || [];
 
-  const getStatus = (c: any) => c.moderation?.status ?? c.status ?? 'PENDING';
+  const getStatus = (c: ClipDTO) => c.moderation?.status ?? 'PENDING';
   const counts = {
-    APPROVED: myClips.filter((c: any) => getStatus(c) === 'APPROVED').length,
-    PENDING:  myClips.filter((c: any) => getStatus(c) === 'PENDING').length,
-    DECLINED: myClips.filter((c: any) => getStatus(c) === 'DECLINED').length,
+    APPROVED: myClips.filter((c: ClipDTO) => getStatus(c) === 'APPROVED').length,
+    PENDING:  myClips.filter((c: ClipDTO) => getStatus(c) === 'PENDING').length,
+    DECLINED: myClips.filter((c: ClipDTO) => getStatus(c) === 'DECLINED').length,
   };
 
   return (
@@ -323,7 +324,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {myClips.map((clip: any) => <ClipRow key={clip.id} clip={clip} onDelete={setDeleteClipId} />)}
+              {myClips.map((clip: ClipDTO) => <ClipRow key={clip.id} clip={clip} onDelete={setDeleteClipId} />)}
             </div>
           )
         )}
@@ -338,7 +339,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {channelClips.map((clip: any) => <ClipRow key={clip.id} clip={clip} showStatus={false} onDelete={setDeleteClipId} />)}
+              {channelClips.map((clip: ClipDTO) => <ClipRow key={clip.id} clip={clip} showStatus={false} onDelete={setDeleteClipId} />)}
             </div>
           )
         )}

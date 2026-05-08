@@ -5,7 +5,6 @@ import { HomeHero } from '@/components/home/HomeHero';
 import { LiveSection } from '@/components/home/LiveSection';
 import { TrendingSection } from '@/components/home/TrendingSection';
 import { RisingCreatorsSection } from '@/components/home/RisingCreatorsSection';
-import { TrendingSkeleton, RisingCreatorsSkeleton } from '@/components/home/HomeSkeleton';
 import dynamic from 'next/dynamic';
 
 const BASE_URL = process.env.NEXTAUTH_URL || 'https://plunderclips.gg';

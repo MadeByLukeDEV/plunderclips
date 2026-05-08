@@ -14,9 +14,32 @@ import {
 } from 'lucide-react';
 import { ROLE_META, ROLE_DROPDOWN_ORDER, LIVE_ROLES } from '@/modules/auth/auth.roles';
 
+// ─── Local admin types ────────────────────────────────────────────────────────
+type AdminClip = {
+  id: string; title: string; thumbnailUrl: string | null; platform: string;
+  platformVerified: boolean; broadcasterName: string; submittedByName: string;
+  sourceUrl?: string | null; twitchUrl?: string | null;
+  embedUrl?: string | null; reviewNotes?: string | null;
+  tags: { tag: string }[];
+  moderation?: { status: string; reviewNotes?: string | null };
+};
+type AdminUser = {
+  id: string; twitchLogin: string; displayName: string;
+  profileImage: string | null; role: string;
+  isLive: boolean; viewerCount?: number | null;
+  youtubeChannelName?: string | null;
+  _count: { clips: number };
+  channelClipCount: number;
+  progress?: { xp: number; level: number; class: string } | null;
+};
+type EventSubPartner = {
+  userId: string; twitchLogin: string; displayName: string;
+  subscriptions: { online?: { status: string }; offline?: { status: string } };
+};
+
 // ─── Decline Modal ────────────────────────────────────────────────────────────
 function DeclineModal({ clip, onConfirm, onCancel, loading }: {
-  clip: any; onConfirm: (reason: string) => void; onCancel: () => void; loading: boolean;
+  clip: AdminClip; onConfirm: (reason: string) => void; onCancel: () => void; loading: boolean;
 }) {
   const [reason, setReason] = useState('');
   const presets = [
@@ -116,7 +139,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<'clips' | 'users' | 'eventsub'>('clips');
   const [clipTab, setClipTab] = useState('PENDING');
   const [page, setPage] = useState(1);
-  const [declineClip, setDeclineClip] = useState<any>(null);
+  const [declineClip, setDeclineClip] = useState<AdminClip | null>(null);
   const [deleteClipId, setDeleteClipId] = useState<string | null>(null);
   const [userSearch, setUserSearch] = useState('');
   const [deletingClip, setDeletingClip] = useState(false);
@@ -303,7 +326,7 @@ export default function AdminPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {clipsData?.clips?.map((clip: any) => (
+                {clipsData?.clips?.map((clip: AdminClip) => (
                   <div key={clip.id} className="sot-card rounded overflow-hidden hover:border-teal/20 transition-colors">
 
                     {/* Mobile: full-width thumbnail */}
@@ -345,7 +368,7 @@ export default function AdminPage() {
                           {clip.broadcasterName} · by {clip.submittedByName}
                         </p>
                         <div className="flex flex-wrap gap-1">
-                          {clip.tags.map((t: any) => <TagBadge key={t.tag} tag={t.tag} small />)}
+                          {clip.tags.map((t: { tag: string }) => <TagBadge key={t.tag} tag={t.tag} small />)}
                         </div>
                         {!clip.platformVerified && (
                           <p className="hidden md:flex text-xs text-yellow-400/70 mt-1 items-center gap-1">
@@ -468,7 +491,7 @@ export default function AdminPage() {
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <p className="text-white/20 text-xs font-mono">
-                    {usersData?.users?.filter((u: any) =>
+                    {usersData?.users?.filter((u: AdminUser) =>
                       !userSearch ||
                       u.displayName.toLowerCase().includes(userSearch.toLowerCase()) ||
                       u.twitchLogin.toLowerCase().includes(userSearch.toLowerCase())
@@ -494,12 +517,12 @@ export default function AdminPage() {
               {/* User rows */}
               <div className="space-y-1">
                 {usersData?.users
-                  ?.filter((u: any) =>
+                  ?.filter((u: AdminUser) =>
                     !userSearch ||
                     u.displayName.toLowerCase().includes(userSearch.toLowerCase()) ||
                     u.twitchLogin.toLowerCase().includes(userSearch.toLowerCase())
                   )
-                  .map((u: any) => (
+                  .map((u: AdminUser) => (
                     <div key={u.id}
                       className="sot-card rounded p-3 md:p-0 flex flex-col md:grid md:grid-cols-[auto_1fr_100px_160px_40px] md:gap-4 md:items-center hover:border-white/10 transition-colors group">
 
@@ -605,7 +628,7 @@ export default function AdminPage() {
               </div>
 
               {/* Empty search state */}
-              {userSearch && usersData?.users?.filter((u: any) =>
+              {userSearch && usersData?.users?.filter((u: AdminUser) =>
                 u.displayName.toLowerCase().includes(userSearch.toLowerCase()) ||
                 u.twitchLogin.toLowerCase().includes(userSearch.toLowerCase())
               ).length === 0 && (
@@ -640,7 +663,7 @@ export default function AdminPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {eventsubData?.partners?.map((partner: any) => {
+                {eventsubData?.partners?.map((partner: EventSubPartner) => {
                   const onlineStatus = partner.subscriptions.online?.status;
                   const offlineStatus = partner.subscriptions.offline?.status;
 

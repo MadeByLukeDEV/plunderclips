@@ -2,9 +2,9 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
 interface User {
-  [x: string]: string;
-  youtubeChannelId: any;
-  medalUserId: any;
+  youtubeChannelId: string | null;
+  youtubeChannelName: string | null;
+  medalUserId: string | null;
   id: string;
   twitchId: string;
   twitchLogin: string;

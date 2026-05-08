@@ -4,8 +4,9 @@ import { useRef } from 'react';
 import { ClipCard } from '@/components/clips/ClipCard';
 import { TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { SectionHeader } from './SectionHeader';
+import type { ClipDTO } from '@/modules/clips/clips.types';
 
-export function TrendingSection({ clips }: { clips: any[] }) {
+export function TrendingSection({ clips }: { clips: ClipDTO[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: 'left' | 'right') => {

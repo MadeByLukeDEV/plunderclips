@@ -140,7 +140,7 @@ export async function GET() {
 
   const results = scored
     .filter(Boolean)
-    .sort((a: any, b: any) => b.momentumScore - a.momentumScore)
+    .sort((a: { momentumScore: number }, b: { momentumScore: number }) => b.momentumScore - a.momentumScore)
     .slice(0, 6);
 
   return NextResponse.json(

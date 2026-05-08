@@ -41,6 +41,7 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
       >
         {/* Background thumbnail */}
         {clip?.thumbnailUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={clip.thumbnailUrl}
             style={{

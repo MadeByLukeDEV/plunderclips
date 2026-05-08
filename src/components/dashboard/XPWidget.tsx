@@ -1,7 +1,6 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
 import type { UserProgressDTO } from '@/modules/progress/progress.types';
-import { MAX_LEVEL } from '@/modules/progress/progress.constants';
 
 export function XPWidget() {
   const { data, isLoading } = useQuery<{ progress: UserProgressDTO }>({

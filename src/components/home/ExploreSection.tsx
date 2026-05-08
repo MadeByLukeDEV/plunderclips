@@ -8,6 +8,7 @@ import { TAG_LABELS } from '@/components/ui/TagBadge';
 import { Search, RefreshCw, TrendingUp, Clock, ChevronLeft, ChevronRight, Shuffle } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/components/providers/AuthProvider';
+import type { ClipDTO } from '@/modules/clips/clips.types';
 import { SectionHeader } from './SectionHeader';
 
 const TAGS = Object.keys(TAG_LABELS);
@@ -207,7 +208,7 @@ export function ExploreSection() {
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-            {data?.clips?.map((clip: any) => <ClipCard key={clip.id} clip={clip} />)}
+            {data?.clips?.map((clip: ClipDTO) => <ClipCard key={clip.id} clip={clip} />)}
           </div>
           {data?.pagination?.pages > 1 && (
             <Pagination page={page} pages={data.pagination.pages} onPage={handlePageChange} />
