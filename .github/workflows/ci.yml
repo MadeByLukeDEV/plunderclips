@@ -42,6 +42,7 @@ jobs:
     # Non-sensitive values are inlined. Sensitive values come from GitHub
     # Secrets (Settings → Secrets and variables → Actions → New repository secret).
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       DATABASE_URL:            mysql://plunderclips_ci:plunderclips_ci@127.0.0.1:3306/plunderclips_ci
       MIGRATE_DATABASE_URL:    mysql://plunderclips_ci:plunderclips_ci@127.0.0.1:3306/plunderclips_ci
       NEXTAUTH_URL:            https://plunderclips.com
