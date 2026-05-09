@@ -110,16 +110,16 @@ export default async function OGImage({ params }: { params: Promise<{ login: str
 
           {/* Profile image + live badge */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-            {/* Circular crop via wrapper div — border on wrapper, borderRadius 50% clips child */}
-            <div style={{ width: 224, height: 224, borderRadius: '50%', border: `3px solid ${isLive ? '#ef4444' : 'rgba(0,229,192,0.35)'}`, display: 'flex', overflow: 'hidden', flexShrink: 0 }}>
-              {streamer.profileImage
-                ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={streamer.profileImage} alt="" style={{ width: 224, height: 224, objectFit: 'cover' }} />
-                )
-                : <div style={{ width: 224, height: 224, background: '#161b20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 80 }}>🏴‍☠️</div>
-              }
-            </div>
+            {/* Circular image — borderRadius on img directly, avoids overflow:hidden Satori edge cases */}
+            {streamer.profileImage
+              ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={streamer.profileImage} alt="" style={{ width: 220, height: 220, objectFit: 'cover', borderRadius: '50%', border: `4px solid ${isLive ? '#ef4444' : 'rgba(0,229,192,0.4)'}`, flexShrink: 0 }} />
+              )
+              : <div style={{ width: 220, height: 220, borderRadius: '50%', background: '#1e2328', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '4px solid rgba(0,229,192,0.3)', flexShrink: 0 }}>
+                  <span style={{ fontSize: 80 }}>🏴</span>
+                </div>
+            }
 
             {isLive
               ? <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.45)', borderRadius: 100 }}>
@@ -135,10 +135,10 @@ export default async function OGImage({ params }: { params: Promise<{ login: str
 
           {/* Info */}
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-            <div style={{ fontSize: 50, fontWeight: 900, color: 'white', lineHeight: 1.05, letterSpacing: -1, marginBottom: 6 }}>
+            <div style={{ display: 'flex', fontSize: 50, fontWeight: 900, color: 'white', letterSpacing: -1, marginBottom: 6 }}>
               {streamer.displayName}
             </div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: 'rgba(255,255,255,0.35)', marginBottom: 20 }}>
+            <div style={{ display: 'flex', fontSize: 18, fontWeight: 700, color: 'rgba(255,255,255,0.35)', marginBottom: 20 }}>
               {`@${streamer.twitchLogin}`}
             </div>
 
