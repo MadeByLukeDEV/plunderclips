@@ -45,8 +45,7 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
   const titleLen   = clip.title?.length ?? 0;
   const titleSize  = titleLen > 80 ? 34 : titleLen > 55 ? 42 : 52;
 
-  return new ImageResponse(
-    (
+  const jsx = (
       <div style={{
         width: 1200, height: 630,
         display: 'flex',
@@ -155,7 +154,25 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
           </div>
         )}
       </div>
-    ),
-    { ...size, fonts },
-  );
+    );
+
+  // Eagerly render so Satori errors surface as caught exceptions, not 502s
+  try {
+    const ir  = new ImageResponse(jsx, { ...size, fonts });
+    const buf = await ir.arrayBuffer();
+    return new Response(buf, {
+      headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=3600, s-maxage=3600' },
+    });
+  } catch (err) {
+    console.error('[clip-og] render error for', id, ':', err);
+    return new ImageResponse(
+      <div style={{ background: '#0c0e10', width: 1200, height: 630, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ display: 'flex' }}>
+          <span style={{ fontSize: 60, fontWeight: 900, color: 'white' }}>PLUNDER</span>
+          <span style={{ fontSize: 60, fontWeight: 900, color: '#00e5c0' }}>CLIPS</span>
+        </div>
+      </div>,
+      { ...size, fonts },
+    );
+  }
 }
