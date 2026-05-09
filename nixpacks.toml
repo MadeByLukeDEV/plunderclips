@@ -1,0 +1,5 @@
+[phases.build]
+cmds = ['npm run build']
+# Only cache valid directories — tsconfig.tsbuildinfo is a file and cannot be
+# used as a Docker bind-cache mount target (causes "not a directory" on overlayfs).
+cacheDirectories = ['.next/cache', 'node_modules/.cache']
