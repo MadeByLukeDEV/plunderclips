@@ -20,13 +20,11 @@ export const metadata: Metadata = {
     description: 'Discover the best Sea of Thieves clips from top streamers. Watch PvP battles, kraken fights, treasure heists, and hilarious moments from the SoT community.',
     url: BASE_URL,
     type: 'website',
-    images: [{ url: '/opengraph-image.png', width: 1200, height: 630, alt: 'PlunderClips — Sea of Thieves Community Clips' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PlunderClips — Best Sea of Thieves Clips',
     description: 'Discover the best Sea of Thieves clips from top streamers. Watch PvP battles, kraken fights, treasure heists, and hilarious moments.',
-    images: ['/opengraph-image.png'],
   },
 };
 

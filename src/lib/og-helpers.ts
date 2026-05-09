@@ -10,22 +10,31 @@ export type OGFont = { name: string; data: ArrayBuffer; weight: 700 | 900; style
 // Cached per cold start — avoids re-fetching on every OG image request
 let _fonts: OGFont[] | null = null;
 
+async function fetchWithTimeout(url: string, options: RequestInit, ms = 5000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 async function fetchGoogleFont(family: string, weight: number): Promise<ArrayBuffer> {
+  // Firefox 38 UA → Google returns woff (not woff2). Satori supports woff + ttf, NOT woff2.
+  const ua = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0';
+
   const css = await (
-    await fetch(
+    await fetchWithTimeout(
       `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}&display=block`,
-      {
-        // Firefox 38 (pre-woff2 era) — Google Fonts returns woff format.
-        // Satori (next/og) supports woff + ttf/otf but NOT woff2.
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0',
-        },
-      },
+      { headers: { 'User-Agent': ua } },
     )
   ).text();
+
   const match = css.match(/src:\s*url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/);
   if (!match?.[1]) throw new Error(`Google Fonts URL not found: ${family} ${weight}`);
-  return (await fetch(match[1])).arrayBuffer();
+
+  return (await fetchWithTimeout(match[1], { headers: { 'User-Agent': ua } })).arrayBuffer();
 }
 
 export async function getOGFonts(): Promise<OGFont[]> {

@@ -13,7 +13,7 @@ export const contentType = 'image/png';
 
 export default async function OGImage() {
   const [fonts, logo, screenshot] = await Promise.all([
-    getOGFonts(),
+    getOGFonts().catch(() => [] as import('@/lib/og-helpers').OGFont[]),
     getLocalAsset('og-logo.png'),
     getLocalAsset('og-screenshot.png'),
   ]);

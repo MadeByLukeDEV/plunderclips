@@ -46,12 +46,6 @@ export const metadata: Metadata = {
     siteName: 'PlunderClips',
     title: 'PlunderClips — Sea of Thieves Community Clips',
     description: 'The finest Sea of Thieves moments from the seven seas — PvP battles, kraken fights, treasure heists, blunders, and brilliance.',
-    images: [{
-      url: '/opengraph-image.png',
-      width: 1200,
-      height: 630,
-      alt: 'PlunderClips — Sea of Thieves Community Clips',
-    }],
     locale: 'en_US',
   },
 
@@ -59,7 +53,6 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'PlunderClips — Sea of Thieves Community Clips',
     description: 'The finest Sea of Thieves moments from the seven seas — PvP battles, kraken fights, treasure heists, blunders, and brilliance.',
-    images: ['/opengraph-image.png'],
     site: '@plunderclips',
   },
 
