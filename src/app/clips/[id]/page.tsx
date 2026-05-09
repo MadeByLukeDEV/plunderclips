@@ -41,7 +41,7 @@ function buildDescription(clip: Pick<ClipDTO, 'title' | 'broadcasterName' | 'vie
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const base = process.env.NEXTAUTH_URL || 'https://plunderclips.gg';
+  const base = process.env.NEXTAUTH_URL || 'https://plunderclips.com';
 
   const clip = await getClipById(id);
   if (!clip || clip.moderation?.status !== 'APPROVED') return { title: 'Clip Not Found — PlunderClips' };
@@ -56,16 +56,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title, description, url: `${base}/clips/${id}`,
       siteName: 'PlunderClips', type: 'video.other',
-      images: clip.thumbnailUrl
-        ? [{ url: clip.thumbnailUrl, width: 1280, height: 720, alt: `${clip.title} — ${clip.broadcasterName} on PlunderClips` }]
-        : [],
+      // No images here — opengraph-image.tsx generates the 1200×630 branded
+      // card (full-bleed thumbnail + title + streamer + views + platform badge).
+      // Keep videos so platforms that support og:video render a richer embed.
       videos: clip.embedUrl
         ? [{ url: clip.embedUrl, width: 1280, height: 720, type: 'text/html' }]
         : clip.sourceUrl ? [{ url: clip.sourceUrl }] : [],
     },
     twitter: {
       card: 'summary_large_image', title, description,
-      images: clip.thumbnailUrl ? [clip.thumbnailUrl] : [],
+      site: '@plunderclips',
+      // No images — Twitter uses og:image from opengraph-image.tsx
     },
   };
 }
@@ -133,7 +134,7 @@ function BreadcrumbJsonLd({ clip, pageUrl, base }: { clip: ClipDTO; pageUrl: str
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default async function ClipPage({ params }: Props) {
   const { id } = await params;
-  const base = process.env.NEXTAUTH_URL || 'https://plunderclips.gg';
+  const base = process.env.NEXTAUTH_URL || 'https://plunderclips.com';
   const pageUrl = `${base}/clips/${id}`;
 
   const clip = await getClipById(id);

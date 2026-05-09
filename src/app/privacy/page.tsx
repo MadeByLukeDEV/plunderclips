@@ -5,7 +5,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Privacy Policy | PlunderClips',
   description: 'Read the PlunderClips Privacy Policy — how we collect, use, and protect your personal data on our Sea of Thieves community clip platform.',
-  alternates: { canonical: `${process.env.NEXTAUTH_URL || 'https://plunderclips.gg'}/privacy` },
+  alternates: { canonical: `${process.env.NEXTAUTH_URL || 'https://plunderclips.com'}/privacy` },
   robots: { index: true, follow: false },
 };
 

@@ -7,7 +7,7 @@ import { TrendingSection } from '@/components/home/TrendingSection';
 import { RisingCreatorsSection } from '@/components/home/RisingCreatorsSection';
 import dynamic from 'next/dynamic';
 
-const BASE_URL = process.env.NEXTAUTH_URL || 'https://plunderclips.gg';
+const BASE_URL = process.env.NEXTAUTH_URL || 'https://plunderclips.com';
 
 export const metadata: Metadata = {
   title: {

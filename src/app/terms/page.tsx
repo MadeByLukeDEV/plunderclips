@@ -5,7 +5,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Terms of Service | PlunderClips',
   description: 'Read the PlunderClips Terms of Service — the rules governing your use of our Sea of Thieves community clip platform.',
-  alternates: { canonical: `${process.env.NEXTAUTH_URL || 'https://plunderclips.gg'}/terms` },
+  alternates: { canonical: `${process.env.NEXTAUTH_URL || 'https://plunderclips.com'}/terms` },
   robots: { index: true, follow: false },
 };
 

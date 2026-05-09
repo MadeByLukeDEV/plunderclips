@@ -9,7 +9,7 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 
-const BASE = process.env.NEXTAUTH_URL || 'https://plunderclips.gg';
+const BASE = process.env.NEXTAUTH_URL || 'https://plunderclips.com';
 
 export async function generateSitemaps() {
   return [{ id: 0 }, { id: 1 }, { id: 2 }];

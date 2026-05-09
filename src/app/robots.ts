@@ -2,7 +2,7 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const base = process.env.NEXTAUTH_URL || 'https://plunderclips.gg';
+  const base = process.env.NEXTAUTH_URL || 'https://plunderclips.com';
   return {
     rules: [
       {

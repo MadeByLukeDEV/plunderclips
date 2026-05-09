@@ -26,7 +26,7 @@ const TAG_READABLE: Record<string, string> = {
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { login } = await params;
-  const base = process.env.NEXTAUTH_URL || 'https://plunderclips.gg';
+  const base = process.env.NEXTAUTH_URL || 'https://plunderclips.com';
   const data = await getStreamer(login);
   if (!data) return { title: 'Streamer Not Found — PlunderClips' };
 
@@ -42,13 +42,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title, description, url: `${base}/streamers/${streamer.twitchLogin}`,
       siteName: 'PlunderClips', type: 'profile',
-      images: streamer.profileImage
-        ? [{ url: streamer.profileImage, width: 300, height: 300, alt: streamer.displayName }]
-        : [],
+      // No images here — opengraph-image.tsx in this segment generates
+      // the 1200×630 branded card with avatar, stats, and role badge.
     },
     twitter: {
-      card: 'summary', title, description,
-      images: streamer.profileImage ? [streamer.profileImage] : [],
+      card: 'summary_large_image', title, description,
+      site: '@plunderclips',
+      // No images here — Twitter falls back to og:image from opengraph-image.tsx
     },
   };
 }
@@ -127,7 +127,7 @@ function StreamerJsonLd({ streamer, stats, clips, pageUrl, base }: {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default async function StreamerPage({ params }: Props) {
   const { login } = await params;
-  const base = process.env.NEXTAUTH_URL || 'https://plunderclips.gg';
+  const base = process.env.NEXTAUTH_URL || 'https://plunderclips.com';
   const pageUrl = `${base}/streamers/${login}`;
 
   const data = await getStreamer(login);

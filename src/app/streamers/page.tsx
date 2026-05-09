@@ -10,7 +10,7 @@ import { RoleBadge } from '@/components/ui/RoleBadge';
 export const metadata: Metadata = {
   title: 'Sea of Thieves Streamers | PlunderClips',
   description: 'Browse all Sea of Thieves streamers registered on PlunderClips. Discover their best clips, highlights, and moments from the seven seas.',
-  alternates: { canonical: `${process.env.NEXTAUTH_URL || 'https://plunderclips.gg'}/streamers` },
+  alternates: { canonical: `${process.env.NEXTAUTH_URL || 'https://plunderclips.com'}/streamers` },
 };
 
 export default async function StreamersPage() {
