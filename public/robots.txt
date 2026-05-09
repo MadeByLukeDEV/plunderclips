@@ -19,10 +19,19 @@ Allow: /
 User-agent: Claude-Web
 Allow: /
 
+User-agent: OAI-SearchBot
+Allow: /
+
 User-agent: PerplexityBot
 Allow: /
 
 User-agent: Googlebot
 Allow: /
 
-Sitemap: https://plunderclips.gg/sitemap.xml
+User-agent: GoogleOther
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+Sitemap: https://plunderclips.com/sitemap.xml

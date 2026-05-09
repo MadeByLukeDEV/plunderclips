@@ -1,13 +1,13 @@
 // src/app/streamers/[login]/opengraph-image.tsx
 import { ImageResponse } from 'next/og';
 import { prisma } from '@/lib/prisma';
-import { getOGFonts, getLocalAsset, formatViews, ROLE_OG, TAG_OG_LABELS } from '@/lib/og-helpers';
+import { getOGFonts, getLocalAsset, formatViews, ROLE_OG, TAG_OG_LABELS, type OGFont } from '@/lib/og-helpers';
 
 export const runtime     = 'nodejs';
 export const alt         = 'PlunderClips';
 export const size        = { width: 1200, height: 630 };
 export const contentType = 'image/png';
-export const revalidate  = 3600; // 1-hour ISR
+export const revalidate  = 3600;
 
 export default async function OGImage({ params }: { params: Promise<{ login: string }> }) {
   const { login } = await params;
@@ -35,21 +35,19 @@ export default async function OGImage({ params }: { params: Promise<{ login: str
       orderBy: { _count: { tag: 'desc' } },
       take: 3,
     }),
-    // Background collage thumbnails
     prisma.clip.findMany({
       where: { broadcasterName: normalised, moderation: { status: 'APPROVED' }, thumbnailUrl: { not: null } },
       select: { thumbnailUrl: true },
       orderBy: { createdAt: 'desc' },
       take: 6,
     }),
-    getOGFonts(),
+    getOGFonts().catch((): OGFont[] => []),
     getLocalAsset('og-logo.png'),
   ]);
 
-  // Graceful 404 fallback
   if (!streamer) {
     return new ImageResponse(
-      <div style={{ background: '#0c0e10', width: '1200px', height: '630px', display: 'flex' }} />,
+      <div style={{ background: '#0c0e10', width: 1200, height: 630, display: 'flex' }} />,
       { ...size },
     );
   }
@@ -58,169 +56,147 @@ export default async function OGImage({ params }: { params: Promise<{ login: str
   const isLive     = streamer.liveStatus?.isLive ?? false;
   const totalViews = viewsAgg._sum.viewCount ?? 0;
   const topTags    = topTagsData.map(t => t.tag as string);
-  const role       = streamer.role as string;
-  const roleStyle  = ROLE_OG[role] ?? ROLE_OG.USER;
+  const roleStyle  = ROLE_OG[streamer.role as string] ?? ROLE_OG.USER;
   const thumbs     = thumbnailClips.map(c => c.thumbnailUrl!).filter(Boolean);
 
-  // Background collage positions — 6 thumbnails spread across the canvas
-  const COLLAGE: { x: number; y: number; w: number; h: number }[] = [
-    { x: 0,    y: 0,    w: 420, h: 270 },
-    { x: 400,  y: 0,    w: 420, h: 270 },
-    { x: 800,  y: 0,    w: 420, h: 270 },
-    { x: 0,    y: 250,  w: 420, h: 270 },
-    { x: 400,  y: 250,  w: 420, h: 270 },
-    { x: 800,  y: 250,  w: 420, h: 270 },
+  // Collage grid positions
+  const GRID = [
+    { x: 0,   y: 0,   w: 420, h: 270 }, { x: 400, y: 0,   w: 420, h: 270 },
+    { x: 800, y: 0,   w: 420, h: 270 }, { x: 0,   y: 250, w: 420, h: 270 },
+    { x: 400, y: 250, w: 420, h: 270 }, { x: 800, y: 250, w: 420, h: 270 },
   ];
 
   return new ImageResponse(
     (
       <div style={{
-        width: '1200px', height: '630px',
+        width: 1200, height: 630,
         display: 'flex', flexDirection: 'column',
         background: '#0c0e10',
         fontFamily: ff,
-        position: 'relative', overflow: 'hidden',
+        position: 'relative',
+        overflow: 'hidden',
       }}>
-
-        {/* ─── BACKGROUND: clip thumbnail collage ──────────────────────────── */}
-        {thumbs.length > 0 && COLLAGE.slice(0, thumbs.length).map((pos, i) => (
+        {/* Background collage — explicit px, no inset/% */}
+        {thumbs.slice(0, GRID.length).map((src, i) => (
           // eslint-disable-next-line @next/next/no-img-element
-          <img key={i} src={thumbs[i]} alt=""
-            style={{
-              position: 'absolute',
-              left: `${pos.x}px`, top: `${pos.y}px`,
-              width: `${pos.w}px`, height: `${pos.h}px`,
-              objectFit: 'cover',
-              opacity: 0.18,
-            }}
-          />
+          <img key={i} src={src} alt="" style={{
+            position: 'absolute',
+            left: GRID[i].x, top: GRID[i].y,
+            width: GRID[i].w, height: GRID[i].h,
+            objectFit: 'cover', opacity: 0.18,
+          }} />
         ))}
 
-        {/* Heavy dark vignette over collage */}
+        {/* Dark overlay over collage */}
         <div style={{
-          position: 'absolute', inset: 0,
-          background: 'rgba(12,14,16,0.86)',
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(12,14,16,0.87)',
         }} />
 
         {/* Teal glow top-left */}
         <div style={{
-          position: 'absolute', top: '-120px', left: '-120px',
-          width: '600px', height: '400px',
+          position: 'absolute', top: -120, left: -120,
+          width: 600, height: 400,
           background: 'radial-gradient(ellipse, rgba(0,229,192,0.10) 0%, transparent 65%)',
         }} />
 
-        {/* Top accent line */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: '#00e5c0' }} />
+        {/* Top accent */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: '#00e5c0' }} />
 
-        {/* ─── TOP-RIGHT: branding ─────────────────────────────────────────── */}
+        {/* Top-right branding */}
         <div style={{
-          position: 'absolute', top: '28px', right: '44px',
-          display: 'flex', alignItems: 'center', gap: '10px', zIndex: 10,
+          position: 'absolute', top: 28, right: 44,
+          display: 'flex', alignItems: 'center', gap: 10, zIndex: 10,
         }}>
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logo} alt="PlunderClips"
-              style={{ height: '24px', width: 'auto', objectFit: 'contain' }} />
-          ) : (
-            <span style={{ fontSize: '15px', fontWeight: 900, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.5px' }}>
-              PLUNDER<span style={{ color: 'rgba(0,229,192,0.6)' }}>CLIPS</span>
-            </span>
-          )}
-          <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '13px' }}>·</span>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: '2px' }}>
+            <img src={logo} alt="" style={{ height: 22, width: 22, objectFit: 'contain' }} />
+          ) : null}
+          <span style={{ fontSize: 14, fontWeight: 900, color: 'rgba(255,255,255,0.45)', letterSpacing: 0.5 }}>
+            PLUNDER<span style={{ color: 'rgba(0,229,192,0.6)' }}>CLIPS</span>
+          </span>
+          <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 13 }}>·</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: 2 }}>
             plunderclips.com
           </span>
         </div>
 
-        {/* ─── MAIN CONTENT ────────────────────────────────────────────────── */}
+        {/* Main content — explicit top/left/right/bottom (no inset) */}
         <div style={{
-          position: 'absolute', inset: 0,
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
           display: 'flex', alignItems: 'center',
           padding: '64px',
           zIndex: 5,
-          gap: '56px',
+          gap: 56,
         }}>
-
-          {/* Left: profile image */}
+          {/* Profile image column */}
           <div style={{
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', gap: '16px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
             flexShrink: 0,
           }}>
             <div style={{
-              position: 'relative', display: 'flex',
-              width: '220px', height: '220px',
+              width: 220, height: 220,
               borderRadius: '50%',
               overflow: 'hidden',
               border: `3px solid ${isLive ? '#ef4444' : 'rgba(0,229,192,0.35)'}`,
               boxShadow: isLive
-                ? '0 0 0 6px rgba(239,68,68,0.15), 0 0 40px rgba(239,68,68,0.2)'
-                : '0 0 0 6px rgba(0,229,192,0.06), 0 0 40px rgba(0,0,0,0.4)',
+                ? '0 0 0 6px rgba(239,68,68,0.15)'
+                : '0 0 0 6px rgba(0,229,192,0.06)',
+              display: 'flex',
+              flexShrink: 0,
             }}>
               {streamer.profileImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={streamer.profileImage} alt={streamer.displayName}
-                  style={{ width: '220px', height: '220px', objectFit: 'cover' }} />
+                  style={{ width: 220, height: 220, objectFit: 'cover' }} />
               ) : (
                 <div style={{
-                  width: '220px', height: '220px',
-                  background: '#161b20',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '80px',
-                }}>
-                  🏴‍☠️
-                </div>
+                  width: 220, height: 220, background: '#161b20',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 80,
+                }}>🏴‍☠️</div>
               )}
             </div>
 
-            {/* Live badge below avatar */}
+            {/* Live badge */}
             {isLive && (
               <div style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
+                display: 'flex', alignItems: 'center', gap: 6,
                 padding: '5px 14px',
                 background: 'rgba(239,68,68,0.15)',
                 border: '1px solid rgba(239,68,68,0.45)',
-                borderRadius: '100px',
+                borderRadius: 100,
               }}>
-                <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ef4444', flexShrink: 0 }} />
-                <span style={{ fontSize: '11px', fontWeight: 900, color: '#f87171', letterSpacing: '3px' }}>LIVE</span>
+                <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#ef4444', flexShrink: 0 }} />
+                <span style={{ fontSize: 11, fontWeight: 900, color: '#f87171', letterSpacing: 3 }}>LIVE</span>
               </div>
             )}
           </div>
 
           {/* Vertical divider */}
           <div style={{
-            width: '1px', height: '260px', flexShrink: 0,
+            width: 1, height: 260, flexShrink: 0,
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.08) 75%, transparent 100%)',
           }} />
 
-          {/* Right: info */}
-          <div style={{
-            display: 'flex', flexDirection: 'column', justifyContent: 'center',
-            gap: '0px', flex: 1,
-          }}>
+          {/* Info column */}
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 0 }}>
 
-            {/* Display name */}
+            {/* Name */}
             <div style={{
-              fontSize: clipCount >= 10 ? '52px' : '56px',
-              fontWeight: 900,
-              color: 'white',
-              lineHeight: 1.05,
-              letterSpacing: '-1px',
-              marginBottom: '6px',
-              maxWidth: '580px',
-              // Truncate very long names
-              overflow: 'hidden',
+              fontSize: 50, fontWeight: 900,
+              color: 'white', lineHeight: 1.05, letterSpacing: -1,
+              marginBottom: 6,
             }}>
               {streamer.displayName}
             </div>
 
-            {/* @handle */}
+            {/* Handle */}
             <div style={{
-              fontSize: '18px', fontWeight: 700,
+              fontSize: 18, fontWeight: 700,
               color: 'rgba(255,255,255,0.35)',
-              letterSpacing: '0.5px',
-              marginBottom: '20px',
+              marginBottom: 20,
             }}>
               @{streamer.twitchLogin}
             </div>
@@ -231,37 +207,32 @@ export default async function OGImage({ params }: { params: Promise<{ login: str
               padding: '5px 14px',
               background: roleStyle.bg,
               border: `1px solid ${roleStyle.border}`,
-              borderRadius: '4px',
-              width: 'fit-content',
-              marginBottom: '24px',
+              borderRadius: 4,
+              marginBottom: 24,
             }}>
-              <span style={{ fontSize: '12px', fontWeight: 900, color: roleStyle.color, letterSpacing: '2.5px' }}>
+              <span style={{ fontSize: 12, fontWeight: 900, color: roleStyle.color, letterSpacing: 2.5 }}>
                 {roleStyle.label.toUpperCase()}
               </span>
             </div>
 
-            {/* Stats row */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '20px',
-              marginBottom: topTags.length > 0 ? '18px' : '0',
-            }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <span style={{ fontSize: '30px', fontWeight: 900, color: '#00e5c0', lineHeight: 1 }}>
+            {/* Stats */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: topTags.length ? 18 : 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 30, fontWeight: 900, color: '#00e5c0', lineHeight: 1 }}>
                   {clipCount.toLocaleString()}
                 </span>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '2px' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: 2 }}>
                   CLIPS
                 </span>
               </div>
-
               {totalViews > 0 && (
                 <>
-                  <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <span style={{ fontSize: '30px', fontWeight: 900, color: 'rgba(255,255,255,0.8)', lineHeight: 1 }}>
+                  <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ fontSize: 30, fontWeight: 900, color: 'rgba(255,255,255,0.8)', lineHeight: 1 }}>
                       {formatViews(totalViews)}
                     </span>
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '2px' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: 2 }}>
                       VIEWS
                     </span>
                   </div>
@@ -271,15 +242,16 @@ export default async function OGImage({ params }: { params: Promise<{ login: str
 
             {/* Top tags */}
             {topTags.length > 0 && (
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
+              <div style={{ display: 'flex', gap: 8 }}>
                 {topTags.map(tag => (
                   <div key={tag} style={{
+                    display: 'flex', alignItems: 'center',
                     padding: '4px 12px',
                     background: 'rgba(255,255,255,0.05)',
                     border: '1px solid rgba(255,255,255,0.10)',
-                    borderRadius: '4px',
+                    borderRadius: 4,
                   }}>
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '1.5px' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: 1.5 }}>
                       {(TAG_OG_LABELS[tag] ?? tag).toUpperCase()}
                     </span>
                   </div>

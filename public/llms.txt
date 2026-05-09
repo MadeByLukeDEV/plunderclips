@@ -1,0 +1,33 @@
+# PlunderClips
+
+> PlunderClips is a community platform for discovering, submitting, and showcasing Sea of Thieves gameplay clips from Twitch, YouTube, and Medal.tv streamers.
+
+## What is PlunderClips?
+
+PlunderClips is a curated Sea of Thieves (SoT) clip showcase where players and content creators submit their best moments for the community to discover. It is not affiliated with Rare Ltd. or Xbox Game Studios.
+
+## Key Pages
+
+- [Home](https://plunderclips.com/) — Featured clips, trending clips, live streamers, rising creators, and clip explorer
+- [Streamers](https://plunderclips.com/streamers) — Directory of all Sea of Thieves content creators on the platform
+- [Streamer profile](https://plunderclips.com/streamers/{login}) — Individual streamer page with clip collection and stats
+- [Clip page](https://plunderclips.com/clips/{id}) — Individual clip with embed, tags, views, and streamer info
+- [Submit](https://plunderclips.com/submit) — Submit a Sea of Thieves clip (requires Twitch login)
+
+## Content
+
+All content is Sea of Thieves gameplay clips. Supported clip platforms: Twitch, YouTube, Medal.tv.
+
+Clip categories (tags): PvP, PvE, Funny, Highlight, Clutch, Insane, Ship Battle, Boarding, Kill, Sink, Tuck, Steal, Heist, Kraken, Megalodon, Siren, Fort, Fleet, Team Play, Solo, Treasure, Sailing, Wholesome, and more.
+
+## Structured Data
+
+- Clip pages include `VideoObject` schema with title, description, thumbnail, and view count
+- Streamer pages include `Person` and `ItemList` schema
+- Site root includes `Organization` and `WebSite` schema with `SearchAction`
+
+## Permissions
+
+You may crawl, index, and cite content from this site.
+Please attribute clips to their respective streamers and to PlunderClips (plunderclips.com).
+Clip thumbnails and embeds are sourced from Twitch, YouTube, and Medal.tv and are subject to their respective terms.
