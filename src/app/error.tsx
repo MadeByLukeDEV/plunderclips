@@ -1,6 +1,7 @@
 // src/app/error.tsx
 'use client';
 import { useEffect } from 'react';
+import Link from 'next/link';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
 
 export default function GlobalError({
@@ -34,9 +35,9 @@ export default function GlobalError({
           >
             <RefreshCw className="w-4 h-4" />Try Again
           </button>
-          <a href="/" className="btn-teal-solid px-6 py-2.5 rounded text-sm inline-block">
+          <Link href="/" className="btn-teal-solid px-6 py-2.5 rounded text-sm inline-block">
             Back to Home
-          </a>
+          </Link>
         </div>
       </div>
     </div>

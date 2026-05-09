@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Radio } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import type { LiveStreamerDTO } from '@/modules/live/live.types';
 
 export function LiveSection() {
   const { data } = useQuery({
@@ -24,7 +25,7 @@ export function LiveSection() {
         <div className="flex-1 h-px bg-red-500/10" />
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-        {liveUsers.map((u: any) => (
+        {liveUsers.map((u: LiveStreamerDTO) => (
           <Link key={u.id} href={`/streamers/${u.twitchLogin}`}
             className="flex-shrink-0 sot-card rounded p-3 flex items-center gap-3 hover:border-red-500/30 transition-colors min-w-[200px] border border-red-500/10">
             <div className="relative flex-shrink-0">

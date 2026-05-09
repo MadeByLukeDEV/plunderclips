@@ -8,6 +8,7 @@ import { TAG_LABELS } from '@/components/ui/TagBadge';
 import { Search, RefreshCw, TrendingUp, Clock, ChevronLeft, ChevronRight, Shuffle } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/components/providers/AuthProvider';
+import type { ClipDTO } from '@/modules/clips/clips.types';
 import { SectionHeader } from './SectionHeader';
 
 const TAGS = Object.keys(TAG_LABELS);
@@ -22,35 +23,82 @@ async function fetchClips(page: number, tag: string, search: string, sort: strin
 }
 
 function Pagination({ page, pages, onPage }: { page: number; pages: number; onPage: (p: number) => void }) {
-  const getPages = (): (number | '...')[] => {
+  if (pages <= 1) return null;
+
+  // Mobile — max 5 visible items (3 numbers + up to 2 ellipses)
+  const getMobile = (): (number | '...')[] => {
+    if (pages <= 5) return Array.from({ length: pages }, (_, i) => i + 1);
+    if (page <= 2)          return [1, 2, 3, '...', pages];
+    if (page >= pages - 1)  return [1, '...', pages - 2, pages - 1, pages];
+    return [1, '...', page, '...', pages];
+  };
+
+  // Desktop — max 7 visible items
+  const getDesktop = (): (number | '...')[] => {
     if (pages <= 7) return Array.from({ length: pages }, (_, i) => i + 1);
-    if (page <= 4) return [1, 2, 3, 4, 5, '...', pages];
-    if (page >= pages - 3) return [1, '...', pages - 4, pages - 3, pages - 2, pages - 1, pages];
+    if (page <= 4)          return [1, 2, 3, 4, 5, '...', pages];
+    if (page >= pages - 3)  return [1, '...', pages - 4, pages - 3, pages - 2, pages - 1, pages];
     return [1, '...', page - 1, page, page + 1, '...', pages];
   };
+
+  const pageBtn = (p: number) => (
+    <button
+      key={p}
+      onClick={() => onPage(p)}
+      className={`w-9 h-9 rounded font-display text-sm tracking-wider transition-all flex-shrink-0 ${
+        page === p
+          ? 'bg-teal text-sot-bg border border-teal font-900'
+          : 'border border-white/10 text-white/40 hover:border-teal/40 hover:text-teal'
+      }`}
+    >
+      {p}
+    </button>
+  );
+
+  const dots = (key: string) => (
+    <span key={key} className="w-7 text-center text-white/20 font-mono text-sm select-none flex-shrink-0">···</span>
+  );
+
+  const navBtn = (dir: 'prev' | 'next') => {
+    const isPrev    = dir === 'prev';
+    const disabled  = isPrev ? page === 1 : page === pages;
+    return (
+      <button
+        onClick={() => onPage(isPrev ? Math.max(1, page - 1) : Math.min(pages, page + 1))}
+        disabled={disabled}
+        aria-label={isPrev ? 'Previous page' : 'Next page'}
+        className="flex items-center gap-1.5 h-9 px-2.5 border border-white/10 text-white/40 hover:border-teal/40 hover:text-teal font-display text-xs tracking-wider rounded transition-all disabled:opacity-20 disabled:cursor-not-allowed flex-shrink-0"
+      >
+        {isPrev && <ChevronLeft className="w-3.5 h-3.5" />}
+        <span className="hidden sm:inline">{isPrev ? 'Prev' : 'Next'}</span>
+        {!isPrev && <ChevronRight className="w-3.5 h-3.5" />}
+      </button>
+    );
+  };
+
   return (
-    <div className="flex items-center justify-center gap-1.5 mt-10 flex-wrap">
-      <button onClick={() => onPage(Math.max(1, page - 1))} disabled={page === 1}
-        className="flex items-center gap-1 px-3 py-2 border border-white/10 text-white/40 hover:border-teal/40 hover:text-teal font-display text-xs tracking-wider rounded transition-all disabled:opacity-20">
-        <ChevronLeft className="w-3.5 h-3.5" />Previous
-      </button>
-      {getPages().map((p, i) =>
-        p === '...' ? (
-          <span key={`e-${i}`} className="px-1 text-white/20 font-mono text-sm select-none">···</span>
-        ) : (
-          <button key={p} onClick={() => onPage(p as number)}
-            className={`w-9 h-9 rounded font-display text-sm tracking-wider transition-all ${
-              page === p
-                ? 'bg-teal text-sot-bg border border-teal font-900'
-                : 'border border-white/10 text-white/40 hover:border-teal/40 hover:text-teal'
-            }`}>{p}</button>
-        )
-      )}
-      <button onClick={() => onPage(Math.min(pages, page + 1))} disabled={page === pages}
-        className="flex items-center gap-1 px-3 py-2 border border-white/10 text-white/40 hover:border-teal/40 hover:text-teal font-display text-xs tracking-wider rounded transition-all disabled:opacity-20">
-        Next<ChevronRight className="w-3.5 h-3.5" />
-      </button>
-    </div>
+    <nav aria-label="Pagination" className="mt-10 flex flex-col items-center gap-2">
+      <div className="flex items-center justify-center gap-1">
+        {navBtn('prev')}
+
+        {/* Mobile: compact range */}
+        <div className="flex sm:hidden items-center gap-1">
+          {getMobile().map((p, i) => p === '...' ? dots(`m-${i}`) : pageBtn(p as number))}
+        </div>
+
+        {/* Desktop: full range */}
+        <div className="hidden sm:flex items-center gap-1">
+          {getDesktop().map((p, i) => p === '...' ? dots(`d-${i}`) : pageBtn(p as number))}
+        </div>
+
+        {navBtn('next')}
+      </div>
+
+      {/* Page indicator — mobile only */}
+      <p className="sm:hidden text-[10px] font-mono text-white/20 tracking-wider">
+        Page {page} of {pages}
+      </p>
+    </nav>
   );
 }
 
@@ -160,7 +208,7 @@ export function ExploreSection() {
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-            {data?.clips?.map((clip: any) => <ClipCard key={clip.id} clip={clip} />)}
+            {data?.clips?.map((clip: ClipDTO) => <ClipCard key={clip.id} clip={clip} />)}
           </div>
           {data?.pagination?.pages > 1 && (
             <Pagination page={page} pages={data.pagination.pages} onPage={handlePageChange} />

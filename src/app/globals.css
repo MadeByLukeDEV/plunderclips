@@ -7,17 +7,44 @@
 /* with zero render blocking and automatic self-hosting          */
 
 :root {
+  /* ── Brand colours ── */
   --teal:       #00e5c0;
   --teal-dark:  #00b89a;
   --teal-dim:   #00e5c033;
+
+  /* ── Backgrounds ── */
   --bg-deep:    #0c0e10;
   --bg-dark:    #111418;
   --bg-card:    #161b20;
   --bg-card2:   #1c2228;
-  --border:     rgba(0,229,192,0.15);
-  --border-mid: rgba(0,229,192,0.3);
+
+  /* ── Borders ── */
+  --border:     rgba(0,229,192,0.12);
+  --border-mid: rgba(0,229,192,0.28);
+
+  /* ── Text ── */
   --text:       #d4dde6;
   --text-dim:   #7a8a96;
+
+  /* ── Fluid type scale (clamp) ── */
+  --step--1: clamp(0.72rem,  1.2vw + 0.1rem,  0.8rem);
+  --step-0:  clamp(0.875rem, 1.5vw + 0.15rem, 1rem);
+  --step-1:  clamp(1rem,     2vw   + 0.15rem, 1.2rem);
+  --step-2:  clamp(1.25rem,  2.5vw + 0.2rem,  1.75rem);
+  --step-3:  clamp(1.6rem,   3.5vw + 0.3rem,  2.5rem);
+  --step-4:  clamp(2rem,     5vw   + 0.4rem,  3.5rem);
+  --step-5:  clamp(2.8rem,   8vw   + 0.5rem,  6rem);
+
+  /* ── Fluid spacing ── */
+  --space-xs:      clamp(0.5rem,  1.5vw, 0.75rem);
+  --space-sm:      clamp(0.75rem, 2vw,   1rem);
+  --space-md:      clamp(1rem,    2.5vw, 1.5rem);
+  --space-lg:      clamp(1.5rem,  3.5vw, 2.5rem);
+  --space-xl:      clamp(2rem,    5vw,   3.5rem);
+  --space-section: clamp(2.5rem,  6vw,   5rem);
+
+  /* ── Container ── */
+  --container-px: clamp(1rem, 4vw, 1.5rem);
 }
 
 * { box-sizing: border-box; }
@@ -26,8 +53,9 @@ html { scroll-behavior: smooth; }
 body {
   background-color: var(--bg-deep);
   color: var(--text);
-  /* Use CSS variable from next/font — falls back to system sans-serif */
   font-family: var(--font-barlow), sans-serif;
+  font-size: var(--step-0);
+  line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -54,14 +82,13 @@ body::after {
 
 /* ── Typography ─────────────────────────────────────────────────────────────── */
 
-/* Display font — Barlow Condensed via next/font CSS variable */
 .font-display, h1, h2, h3 {
   font-family: var(--font-barlow-condensed), sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+  line-height: 1.1;
 }
 
-/* Body font — Barlow via next/font CSS variable */
 .font-body {
   font-family: var(--font-barlow), sans-serif;
   text-transform: none;
@@ -70,7 +97,25 @@ body::after {
 
 .teal-heading {
   color: var(--teal);
-  text-shadow: 0 0 40px rgba(0,229,192,0.4), 0 0 80px rgba(0,229,192,0.15);
+  text-shadow: 0 0 40px rgba(0,229,192,0.35), 0 0 80px rgba(0,229,192,0.12);
+}
+
+/* Fluid hero heading — used in HomeHero */
+.text-hero {
+  font-size: var(--step-5);
+  font-family: var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 0.95;
+}
+
+/* Fluid section heading */
+.text-section {
+  font-size: var(--step-3);
+  font-family: var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
 }
 
 /* ── Skeleton ───────────────────────────────────────────────────────────────── */
@@ -90,39 +135,49 @@ body::after {
   border: 1px solid var(--border);
 }
 .clip-card:hover {
-  transform: translateY(-5px);
-  border-color: var(--teal-dark);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.6), 0 0 24px rgba(0,229,192,0.12);
+  transform: translateY(-4px);
+  border-color: rgba(0,229,192,0.25);
+  box-shadow: 0 20px 56px rgba(0,0,0,0.55), 0 0 28px rgba(0,229,192,0.1);
 }
 
 /* ── Buttons ────────────────────────────────────────────────────────────────── */
 .btn-teal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: 1px solid var(--teal);
   color: var(--teal);
   font-family: var(--font-barlow-condensed), sans-serif;
+  font-size: clamp(0.8rem, 1.5vw + 0.1rem, 0.9rem);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 700;
-  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s, transform 0.15s;
 }
 .btn-teal:hover {
   background: var(--teal);
   color: var(--bg-deep);
-  box-shadow: 0 0 20px rgba(0,229,192,0.4);
+  box-shadow: 0 0 22px rgba(0,229,192,0.35);
+  transform: translateY(-1px);
 }
 .btn-teal-solid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--teal);
   color: var(--bg-deep);
   font-family: var(--font-barlow-condensed), sans-serif;
+  font-size: clamp(0.8rem, 1.5vw + 0.1rem, 0.9rem);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 800;
-  transition: opacity 0.2s, box-shadow 0.2s;
+  transition: opacity 0.2s, box-shadow 0.2s, transform 0.15s;
 }
 .btn-teal-solid:hover {
   opacity: 0.9;
-  box-shadow: 0 0 30px rgba(0,229,192,0.5);
+  box-shadow: 0 0 32px rgba(0,229,192,0.45);
+  transform: translateY(-1px);
 }
 
 /* ── Cards ──────────────────────────────────────────────────────────────────── */
@@ -170,18 +225,141 @@ body::after {
 .nav-link:hover { color: var(--teal); }
 .nav-link:hover::after { width: 100%; }
 
+/* ── Role Badges ────────────────────────────────────────────────────────────── */
+
+/* Captain (ADMIN) — crimson command */
+.role-captain {
+  background: linear-gradient(135deg, rgba(239,68,68,0.22), rgba(185,28,28,0.14));
+  border-color: rgba(239,68,68,0.6) !important;
+  box-shadow: 0 0 16px rgba(239,68,68,0.4), inset 0 0 10px rgba(239,68,68,0.1);
+}
+
+/* Pirate Legend (FEATURED) — gold shimmer, most prestigious */
+.role-legend {
+  background: linear-gradient(135deg, rgba(253,224,71,0.22), rgba(251,146,60,0.16), rgba(253,224,71,0.14));
+  border-color: rgba(253,224,71,0.7) !important;
+  box-shadow: 0 0 20px rgba(253,224,71,0.45);
+  animation: legendPulse 2.8s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+.role-legend::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(253,224,71,0.25) 50%, transparent 100%);
+  transform: translateX(-100%);
+  animation: legendShimmer 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes legendPulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(253,224,71,0.35); border-color: rgba(253,224,71,0.6) !important; }
+  50%       { box-shadow: 0 0 28px rgba(253,224,71,0.65); border-color: rgba(253,224,71,0.9) !important; }
+}
+@keyframes legendShimmer {
+  0%        { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(220%); }
+}
+
+/* First Mate (MODERATOR) — seafoam authority */
+.role-moderator {
+  background: linear-gradient(135deg, rgba(16,185,129,0.20), rgba(4,120,87,0.12));
+  border-color: rgba(52,211,153,0.55) !important;
+  box-shadow: 0 0 14px rgba(16,185,129,0.35);
+}
+
+/* Navigator (PARTNER) — royal violet */
+.role-partner {
+  background: linear-gradient(135deg, rgba(139,92,246,0.22), rgba(109,40,217,0.14));
+  border-color: rgba(167,139,250,0.55) !important;
+  box-shadow: 0 0 16px rgba(139,92,246,0.38);
+}
+
+/* Sea Dog (VERIFIED) — deep sea cyan */
+.role-verified {
+  background: linear-gradient(135deg, rgba(6,182,212,0.22), rgba(8,145,178,0.14));
+  border-color: rgba(103,232,249,0.55) !important;
+  box-shadow: 0 0 14px rgba(6,182,212,0.38);
+}
+
+/* Privateer (VIP) — blazing orange */
+.role-vip {
+  background: linear-gradient(135deg, rgba(249,115,22,0.22), rgba(194,65,12,0.14));
+  border-color: rgba(251,146,60,0.6) !important;
+  box-shadow: 0 0 16px rgba(249,115,22,0.38);
+}
+
+/* Gold Hoarder (SUPPORTER) — hot pink */
+.role-supporter {
+  background: linear-gradient(135deg, rgba(236,72,153,0.22), rgba(190,24,93,0.14));
+  border-color: rgba(249,168,212,0.55) !important;
+  box-shadow: 0 0 14px rgba(236,72,153,0.35);
+}
+
+/* Plunderer (CONTRIBUTOR) — electric lime */
+.role-contributor {
+  background: linear-gradient(135deg, rgba(132,204,22,0.20), rgba(77,124,15,0.12));
+  border-color: rgba(163,230,53,0.55) !important;
+  box-shadow: 0 0 12px rgba(132,204,22,0.32);
+}
+
+/* Deckhand (USER) — muted steel */
+.role-user {
+  background: linear-gradient(135deg, rgba(100,116,139,0.12), rgba(71,85,105,0.08));
+  border-color: rgba(148,163,184,0.22) !important;
+}
+
 /* ── Tags ───────────────────────────────────────────────────────────────────── */
-.tag-FUNNY      { background: rgba(250,204,21,0.12);      color: #fde047; border-color: rgba(250,204,21,0.3); }
-.tag-KILL       { background: rgba(239,68,68,0.12);       color: #f87171; border-color: rgba(239,68,68,0.3); }
-.tag-TUCK       { background: rgba(0,229,192,0.12);       color: #00e5c0; border-color: rgba(0,229,192,0.3); }
-.tag-HIGHLIGHT  { background: rgba(250,204,21,0.12);      color: #fde047; border-color: rgba(250,204,21,0.3); }
-.tag-PVP        { background: rgba(239,68,68,0.12);       color: #f87171; border-color: rgba(239,68,68,0.3); }
-.tag-PVE        { background: rgba(96,165,250,0.12);      color: #93c5fd; border-color: rgba(96,165,250,0.3); }
-.tag-SAILING    { background: rgba(0,229,192,0.12);       color: #00e5c0; border-color: rgba(0,229,192,0.3); }
-.tag-TREASURE   { background: rgba(250,204,21,0.12);      color: #fde047; border-color: rgba(250,204,21,0.3); }
-.tag-KRAKEN     { background: rgba(139,92,246,0.12);      color: #c4b5fd; border-color: rgba(139,92,246,0.3); }
-.tag-MEGALODON  { background: rgba(239,246,255,0.12);     color: #ffb7d8; border-color: rgba(147,197,253,0.3); }
-.tag-KEG        { background: rgba(212,212,212,0.12);     color: #ffd4d4; border-color: rgba(239,68,68,0.3); }
-.tag-EPIC_FAIL  { background: rgba(251,146,60,0.12);      color: #fb923c; border-color: rgba(251,146,60,0.3); }
-.tag-TEAM_PLAY  { background: rgba(0,229,192,0.12);       color: #00e5c0; border-color: rgba(0,229,192,0.3); }
-.tag-SOLO       { background: rgba(250,204,21,0.12);      color: #fde047; border-color: rgba(250,204,21,0.3); }
+
+/* Humor */
+.tag-FUNNY      { background: rgba(251,191,36,0.12);  color: #fbbf24; border-color: rgba(251,191,36,0.30); }
+.tag-MEME       { background: rgba(250,204,21,0.12);  color: #facc15; border-color: rgba(250,204,21,0.30); }
+.tag-CHAOS      { background: rgba(249,115,22,0.12);  color: #f97316; border-color: rgba(249,115,22,0.30); }
+.tag-EPIC_FAIL  { background: rgba(251,146,60,0.12);  color: #fb923c; border-color: rgba(251,146,60,0.30); }
+
+/* Skill / Quality */
+.tag-HIGHLIGHT  { background: rgba(250,204,21,0.12);  color: #fde047; border-color: rgba(250,204,21,0.30); }
+.tag-CLUTCH     { background: rgba(163,230,53,0.12);  color: #a3e635; border-color: rgba(163,230,53,0.30); }
+.tag-INSANE     { background: rgba(52,211,153,0.12);  color: #6ee7b7; border-color: rgba(52,211,153,0.30); }
+.tag-SKILLFUL   { background: rgba(34,197,94,0.12);   color: #4ade80; border-color: rgba(34,197,94,0.30); }
+
+/* Combat Type */
+.tag-PVP        { background: rgba(239,68,68,0.12);   color: #f87171; border-color: rgba(239,68,68,0.30); }
+.tag-PVE        { background: rgba(96,165,250,0.12);  color: #93c5fd; border-color: rgba(96,165,250,0.30); }
+.tag-HOURGLASS  { background: rgba(167,139,250,0.12); color: #c4b5fd; border-color: rgba(167,139,250,0.30); }
+
+/* Ship Combat */
+.tag-SHIP_BATTLE { background: rgba(249,115,22,0.12); color: #fdba74; border-color: rgba(249,115,22,0.30); }
+.tag-BOARDING   { background: rgba(239,68,68,0.10);   color: #fca5a5; border-color: rgba(239,68,68,0.25); }
+.tag-KILL       { background: rgba(220,38,38,0.12);   color: #f87171; border-color: rgba(220,38,38,0.30); }
+.tag-SINK       { background: rgba(56,189,248,0.12);  color: #7dd3fc; border-color: rgba(56,189,248,0.30); }
+
+/* Stealth */
+.tag-TUCK       { background: rgba(0,229,192,0.12);   color: #00e5c0; border-color: rgba(0,229,192,0.30); }
+.tag-STEAL      { background: rgba(34,211,238,0.12);  color: #67e8f9; border-color: rgba(34,211,238,0.30); }
+.tag-HEIST      { background: rgba(0,229,192,0.10);   color: #5eead4; border-color: rgba(0,229,192,0.25); }
+.tag-SNEAKY     { background: rgba(103,232,249,0.10); color: #a5f3fc; border-color: rgba(103,232,249,0.25); }
+
+/* Team Size */
+.tag-TEAM_PLAY  { background: rgba(74,222,128,0.12);  color: #4ade80; border-color: rgba(74,222,128,0.30); }
+.tag-SOLO       { background: rgba(163,230,53,0.12);  color: #bef264; border-color: rgba(163,230,53,0.30); }
+.tag-DUO        { background: rgba(52,211,153,0.12);  color: #6ee7b7; border-color: rgba(52,211,153,0.30); }
+.tag-CREW       { background: rgba(74,222,128,0.10);  color: #86efac; border-color: rgba(74,222,128,0.25); }
+
+/* PvE Encounters */
+.tag-KRAKEN     { background: rgba(99,102,241,0.12);  color: #a5b4fc; border-color: rgba(99,102,241,0.30); }
+.tag-MEGALODON  { background: rgba(139,92,246,0.12);  color: #c4b5fd; border-color: rgba(139,92,246,0.30); }
+.tag-SIREN      { background: rgba(217,70,239,0.12);  color: #e879f9; border-color: rgba(217,70,239,0.30); }
+.tag-FORT       { background: rgba(168,162,158,0.12); color: #d6d3d1; border-color: rgba(168,162,158,0.30); }
+.tag-FLEET      { background: rgba(56,189,248,0.10);  color: #bae6fd; border-color: rgba(56,189,248,0.25); }
+.tag-BOSS_FIGHT { background: rgba(244,63,94,0.12);   color: #fb7185; border-color: rgba(244,63,94,0.30); }
+
+/* Exploration */
+.tag-SAILING    { background: rgba(56,189,248,0.12);  color: #38bdf8; border-color: rgba(56,189,248,0.30); }
+.tag-TREASURE   { background: rgba(251,191,36,0.12);  color: #fde68a; border-color: rgba(251,191,36,0.30); }
+.tag-ADVENTURE  { background: rgba(96,165,250,0.12);  color: #bfdbfe; border-color: rgba(96,165,250,0.30); }
+
+/* Misc */
+.tag-VOICE_CHAT  { background: rgba(148,163,184,0.12); color: #cbd5e1; border-color: rgba(148,163,184,0.30); }
+.tag-WHOLESOME   { background: rgba(244,114,182,0.12); color: #f9a8d4; border-color: rgba(244,114,182,0.30); }
+.tag-UNEXPECTED  { background: rgba(167,139,250,0.12); color: #ddd6fe; border-color: rgba(167,139,250,0.30); }
