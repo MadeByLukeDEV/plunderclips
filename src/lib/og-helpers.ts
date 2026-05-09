@@ -15,10 +15,10 @@ async function fetchGoogleFont(family: string, weight: number): Promise<ArrayBuf
     await fetch(
       `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}&display=block`,
       {
+        // Firefox 38 (pre-woff2 era) — Google Fonts returns woff format.
+        // Satori (next/og) supports woff + ttf/otf but NOT woff2.
         headers: {
-          // Desktop UA ensures Google returns woff2 (not legacy woff)
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0',
         },
       },
     )
