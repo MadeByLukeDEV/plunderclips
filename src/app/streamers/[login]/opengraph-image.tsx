@@ -139,11 +139,11 @@ export default async function OGImage({ params }: { params: Promise<{ login: str
               {streamer.displayName}
             </div>
             <div style={{ fontSize: 18, fontWeight: 700, color: 'rgba(255,255,255,0.35)', marginBottom: 20 }}>
-              @{streamer.twitchLogin}
+              {`@${streamer.twitchLogin}`}
             </div>
 
-            {/* Role badge */}
-            <div style={{ display: 'flex', alignItems: 'center', padding: '5px 14px', background: roleStyle.bg, border: `1px solid ${roleStyle.border}`, borderRadius: 4, marginBottom: 24, width: 'fit-content' }}>
+            {/* Role badge — no width:fit-content (unsupported in Satori) */}
+            <div style={{ display: 'flex', alignItems: 'center', padding: '5px 14px', background: roleStyle.bg, border: `1px solid ${roleStyle.border}`, borderRadius: 4, marginBottom: 24 }}>
               <span style={{ fontSize: 12, fontWeight: 900, color: roleStyle.color, letterSpacing: 2.5 }}>
                 {roleStyle.label.toUpperCase()}
               </span>
