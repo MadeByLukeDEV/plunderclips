@@ -56,12 +56,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title, description, url: `${base}/clips/${id}`,
       siteName: 'PlunderClips', type: 'video.other',
-      // No images here — opengraph-image.tsx generates the 1200×630 branded
-      // card (full-bleed thumbnail + title + streamer + views + platform badge).
-      // Keep videos so platforms that support og:video render a richer embed.
-      videos: clip.embedUrl
-        ? [{ url: clip.embedUrl, width: 1280, height: 720, type: 'text/html' }]
-        : clip.sourceUrl ? [{ url: clip.sourceUrl }] : [],
+      // No images — opengraph-image.tsx generates the 1200×630 branded card.
+      // No videos — og:video causes Discord/Slack to embed the Twitch iframe
+      // directly which breaks video playback on the actual page.
     },
     twitter: {
       card: 'summary_large_image', title, description,

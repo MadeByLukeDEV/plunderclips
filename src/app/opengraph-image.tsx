@@ -78,12 +78,12 @@ export default async function OGImage() {
           background: 'linear-gradient(to right, #00e5c0 0%, rgba(0,229,192,0.3) 50%, transparent 100%)',
         }} />
 
-        {/* ── Left content — EXPLICIT height so justifyContent: center works ── */}
+        {/* ── Left content — last in DOM = on top of screenshot, no z-index needed ── */}
         <div style={{
           display: 'flex', flexDirection: 'column', justifyContent: 'center',
           width: 520, height: 630,
           padding: '0 52px',
-          position: 'relative', zIndex: 5,
+          position: 'relative',
           flexShrink: 0,
         }}>
 

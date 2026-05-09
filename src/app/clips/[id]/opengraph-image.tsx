@@ -49,82 +49,40 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
     (
       <div style={{
         width: 1200, height: 630,
-        display: 'flex', flexDirection: 'column',
+        display: 'flex',
         background: '#0c0e10',
         fontFamily: ff,
         position: 'relative',
         overflow: 'hidden',
       }}>
-        {/* Full-bleed thumbnail — explicit px, no inset/% */}
+        {/* ── 1. Background thumbnail (first = lowest layer) ── */}
         {clip.thumbnailUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={clip.thumbnailUrl} alt="" style={{
-            position: 'absolute',
-            top: 0, left: 0,
+            position: 'absolute', top: 0, left: 0,
             width: 1200, height: 630,
-            objectFit: 'cover',
-            opacity: 0.45,
+            objectFit: 'cover', opacity: 0.45,
           }} />
         )}
 
-        {/* Primary overlay — light top, very dark bottom */}
+        {/* ── 2. Gradient overlays ── */}
         <div style={{
-          position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
           background: 'linear-gradient(to bottom, rgba(12,14,16,0.3) 0%, rgba(12,14,16,0.6) 40%, rgba(12,14,16,0.97) 100%)',
         }} />
-
-        {/* Left vignette */}
         <div style={{
-          position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
           background: 'linear-gradient(to right, rgba(12,14,16,0.55) 0%, transparent 55%)',
         }} />
 
-        {/* Top accent */}
+        {/* ── 3. Top accent ── */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: '#00e5c0' }} />
 
-        {/* Top-left branding */}
-        <div style={{
-          position: 'absolute', top: 28, left: 44,
-          display: 'flex', alignItems: 'center', gap: 10, zIndex: 10,
-        }}>
-          {logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logo} alt="" style={{ height: 26, width: 26, objectFit: 'contain' }} />
-          ) : null}
-          <span style={{ fontSize: 17, fontWeight: 900, color: 'white', letterSpacing: 0.5 }}>
-            PLUNDER<span style={{ color: '#00e5c0' }}>CLIPS</span>
-          </span>
-          <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 14 }}>·</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: 2 }}>
-            plunderclips.com
-          </span>
-        </div>
-
-        {/* Top-right featured badge */}
-        {isFeatured && (
-          <div style={{
-            position: 'absolute', top: 26, right: 44,
-            display: 'flex', alignItems: 'center',
-            padding: '6px 14px',
-            background: 'rgba(250,204,21,0.14)',
-            border: '1px solid rgba(250,204,21,0.5)',
-            borderRadius: 4,
-            zIndex: 10,
-          }}>
-            <span style={{ fontSize: 11, fontWeight: 900, color: '#fef08a', letterSpacing: 3 }}>
-              ★ WEEKLY HIGHLIGHT
-            </span>
-          </div>
-        )}
-
-        {/* Bottom content */}
+        {/* ── 4. Bottom content (last = top layer, no z-index needed) ── */}
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
           padding: '0 48px 44px',
           display: 'flex', flexDirection: 'column', gap: 14,
-          zIndex: 10,
         }}>
           {/* Platform badge */}
           <div style={{
@@ -139,12 +97,8 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
             </span>
           </div>
 
-          {/* Title */}
-          <div style={{
-            fontSize: titleSize, fontWeight: 900,
-            color: 'white', lineHeight: 1.1,
-            maxWidth: 960,
-          }}>
+          {/* Title — single text child, no display needed */}
+          <div style={{ fontSize: titleSize, fontWeight: 900, color: 'white', lineHeight: 1.1, maxWidth: 960 }}>
             {clip.title || 'Sea of Thieves Clip'}
           </div>
 
@@ -163,6 +117,43 @@ export default async function OGImage({ params }: { params: Promise<{ id: string
             )}
           </div>
         </div>
+
+        {/* ── 5. Top-bar overlays (after bottom content = on top) ── */}
+        {/* Branding top-left */}
+        <div style={{
+          position: 'absolute', top: 28, left: 44,
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logo} alt="" style={{ height: 26, width: 26, objectFit: 'contain' }} />
+          ) : null}
+          {/* Split into two spans — Satori requires display:flex if mixing text + element child */}
+          <div style={{ display: 'flex' }}>
+            <span style={{ fontSize: 17, fontWeight: 900, color: 'white' }}>PLUNDER</span>
+            <span style={{ fontSize: 17, fontWeight: 900, color: '#00e5c0' }}>CLIPS</span>
+          </div>
+          <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 14 }}>·</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: 2 }}>
+            plunderclips.com
+          </span>
+        </div>
+
+        {/* Featured badge top-right */}
+        {isFeatured && (
+          <div style={{
+            position: 'absolute', top: 26, right: 44,
+            display: 'flex', alignItems: 'center',
+            padding: '6px 14px',
+            background: 'rgba(250,204,21,0.14)',
+            border: '1px solid rgba(250,204,21,0.5)',
+            borderRadius: 4,
+          }}>
+            <span style={{ fontSize: 11, fontWeight: 900, color: '#fef08a', letterSpacing: 3 }}>
+              ★ WEEKLY HIGHLIGHT
+            </span>
+          </div>
+        )}
       </div>
     ),
     { ...size, fonts },

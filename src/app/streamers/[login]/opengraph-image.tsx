@@ -117,26 +117,11 @@ export default async function OGImage({ params }: { params: Promise<{ login: str
           {/* Top accent */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: '#00e5c0' }} />
 
-          {/* Top-right branding */}
-          <div style={{ position: 'absolute', top: 28, right: 44, display: 'flex', alignItems: 'center', gap: 10, zIndex: 10 }}>
-            {logo && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logo} alt="" style={{ height: 22, width: 22, objectFit: 'contain' }} />
-            )}
-            <span style={{ fontSize: 14, fontWeight: 900, color: 'rgba(255,255,255,0.45)' }}>
-              PLUNDER<span style={{ color: 'rgba(0,229,192,0.6)' }}>CLIPS</span>
-            </span>
-            <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 13 }}>·</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: 2 }}>
-              plunderclips.com
-            </span>
-          </div>
-
-          {/* Main content */}
+          {/* Main content — comes before branding in DOM so branding renders on top */}
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
             display: 'flex', alignItems: 'center',
-            padding: '64px', zIndex: 5, gap: 56,
+            padding: '64px', gap: 56,
           }}>
             {/* Profile image */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flexShrink: 0 }}>
@@ -216,6 +201,22 @@ export default async function OGImage({ params }: { params: Promise<{ login: str
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Top-right branding — LAST in DOM = renders on top without z-index */}
+          <div style={{ position: 'absolute', top: 28, right: 44, display: 'flex', alignItems: 'center', gap: 10 }}>
+            {logo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logo} alt="" style={{ height: 22, width: 22, objectFit: 'contain' }} />
+            )}
+            <div style={{ display: 'flex' }}>
+              <span style={{ fontSize: 14, fontWeight: 900, color: 'rgba(255,255,255,0.45)' }}>PLUNDER</span>
+              <span style={{ fontSize: 14, fontWeight: 900, color: 'rgba(0,229,192,0.6)' }}>CLIPS</span>
+            </div>
+            <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 13 }}>·</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: 2 }}>
+              plunderclips.com
+            </span>
           </div>
         </div>
       ),
