@@ -12,10 +12,36 @@ import {
   Shield, CheckCircle, XCircle, Clock, Users, Film,
   AlertTriangle, Radio, Wifi, WifiOff, RefreshCw, Trash2, Search,
 } from 'lucide-react';
+import { ROLE_META, ROLE_DROPDOWN_ORDER, LIVE_ROLES, type RoleKey } from '@/modules/auth/auth.roles';
+
+// ─── Local admin types ────────────────────────────────────────────────────────
+type AdminClip = {
+  id: string; title: string; thumbnailUrl: string | null; platform: string;
+  platformVerified: boolean; broadcasterName: string; submittedByName: string;
+  sourceUrl?: string | null; twitchUrl?: string | null;
+  embedUrl?: string | null; reviewNotes?: string | null;
+  tags: { tag: string }[];
+  moderation?: { status: string; reviewNotes?: string | null };
+};
+type AdminUser = {
+  id: string; twitchLogin: string; displayName: string;
+  profileImage: string | null; role: string;
+  isLive: boolean; viewerCount?: number | null;
+  youtubeChannelName?: string | null;
+  _count: { clips: number };
+  channelClipCount: number;
+  progress?: { xp: number; level: number; class: string } | null;
+};
+type EventSubPartner = {
+  id: string; userId: string; twitchLogin: string; displayName: string;
+  profileImage: string | null; role: string; isLive: boolean;
+  fullySubscribed: boolean;
+  subscriptions: { online?: { status: string }; offline?: { status: string } };
+};
 
 // ─── Decline Modal ────────────────────────────────────────────────────────────
 function DeclineModal({ clip, onConfirm, onCancel, loading }: {
-  clip: any; onConfirm: (reason: string) => void; onCancel: () => void; loading: boolean;
+  clip: AdminClip; onConfirm: (reason: string) => void; onCancel: () => void; loading: boolean;
 }) {
   const [reason, setReason] = useState('');
   const presets = [
@@ -97,12 +123,10 @@ function DeleteClipModal({ onConfirm, onCancel, loading }: {
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const ROLE_STYLES: Record<string, string> = {
-  USER:      'text-white/40 border-white/10',
-  MODERATOR: 'text-blue-400 border-blue-400/30',
-  PARTNER:   'text-purple-400 border-purple-400/30',
-  ADMIN:     'text-red-400 border-red-400/30',
-};
+// Derive role styles from central registry — no duplication
+const ROLE_STYLES: Record<string, string> = Object.fromEntries(
+  Object.entries(ROLE_META).map(([k, v]) => [k, v.cls]),
+);
 
 const PLATFORM_BADGE: Record<string, React.ReactNode> = {
   YOUTUBE: <span className="text-xs font-mono text-red-400 border border-red-400/30 bg-red-400/10 px-1.5 py-0.5 rounded">YT</span>,
@@ -117,7 +141,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<'clips' | 'users' | 'eventsub'>('clips');
   const [clipTab, setClipTab] = useState('PENDING');
   const [page, setPage] = useState(1);
-  const [declineClip, setDeclineClip] = useState<any>(null);
+  const [declineClip, setDeclineClip] = useState<AdminClip | null>(null);
   const [deleteClipId, setDeleteClipId] = useState<string | null>(null);
   const [userSearch, setUserSearch] = useState('');
   const [deletingClip, setDeletingClip] = useState(false);
@@ -304,7 +328,7 @@ export default function AdminPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {clipsData?.clips?.map((clip: any) => (
+                {clipsData?.clips?.map((clip: AdminClip) => (
                   <div key={clip.id} className="sot-card rounded overflow-hidden hover:border-teal/20 transition-colors">
 
                     {/* Mobile: full-width thumbnail */}
@@ -336,7 +360,7 @@ export default function AdminPage() {
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <a href={clip.twitchUrl} target="_blank" rel="noopener noreferrer"
+                          <a href={clip.sourceUrl ?? clip.twitchUrl ?? undefined} target="_blank" rel="noopener noreferrer"
                             className="font-display text-sm font-600 text-white hover:text-teal transition-colors truncate">
                             {clip.title}
                           </a>
@@ -346,15 +370,15 @@ export default function AdminPage() {
                           {clip.broadcasterName} · by {clip.submittedByName}
                         </p>
                         <div className="flex flex-wrap gap-1">
-                          {clip.tags.map((t: any) => <TagBadge key={t.id} tag={t.tag} small />)}
+                          {clip.tags.map((t: { tag: string }) => <TagBadge key={t.tag} tag={t.tag} small />)}
                         </div>
                         {!clip.platformVerified && (
                           <p className="hidden md:flex text-xs text-yellow-400/70 mt-1 items-center gap-1">
                             <AlertTriangle className="w-3 h-3 flex-shrink-0" />Ownership unverified — manual review required
                           </p>
                         )}
-                        {clipTab === 'DECLINED' && clip.reviewNotes && (
-                          <p className="text-xs text-red-400/60 mt-1">{clip.reviewNotes}</p>
+                        {clipTab === 'DECLINED' && (clip.moderation?.reviewNotes ?? clip.reviewNotes) && (
+                          <p className="text-xs text-red-400/60 mt-1">{clip.moderation?.reviewNotes ?? clip.reviewNotes}</p>
                         )}
                       </div>
 
@@ -469,7 +493,7 @@ export default function AdminPage() {
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <p className="text-white/20 text-xs font-mono">
-                    {usersData?.users?.filter((u: any) =>
+                    {usersData?.users?.filter((u: AdminUser) =>
                       !userSearch ||
                       u.displayName.toLowerCase().includes(userSearch.toLowerCase()) ||
                       u.twitchLogin.toLowerCase().includes(userSearch.toLowerCase())
@@ -495,12 +519,12 @@ export default function AdminPage() {
               {/* User rows */}
               <div className="space-y-1">
                 {usersData?.users
-                  ?.filter((u: any) =>
+                  ?.filter((u: AdminUser) =>
                     !userSearch ||
                     u.displayName.toLowerCase().includes(userSearch.toLowerCase()) ||
                     u.twitchLogin.toLowerCase().includes(userSearch.toLowerCase())
                   )
-                  .map((u: any) => (
+                  .map((u: AdminUser) => (
                     <div key={u.id}
                       className="sot-card rounded p-3 md:p-0 flex flex-col md:grid md:grid-cols-[auto_1fr_100px_160px_40px] md:gap-4 md:items-center hover:border-white/10 transition-colors group">
 
@@ -574,15 +598,17 @@ export default function AdminPage() {
                           onChange={e => userMutation.mutate({ id: u.id, role: e.target.value })}
                           className={`w-full bg-sot-dark border rounded px-2.5 py-1.5 font-display text-xs tracking-wider focus:outline-none focus:border-teal/50 transition-colors cursor-pointer ${ROLE_STYLES[u.role] || 'border-white/10 text-white/40'}`}
                         >
-                          {['USER', 'MODERATOR', 'SUPPORTER', 'PARTNER', 'ADMIN'].map(r => (
-                            <option key={r} value={r} className="bg-sot-dark text-white">{r}</option>
+                          {ROLE_DROPDOWN_ORDER.map(r => (
+                            <option key={r} value={r} className="bg-sot-dark text-white">
+                              {ROLE_META[r].label} ({r})
+                            </option>
                           ))}
                         </select>
                       </div>
 
                       {/* Live toggle */}
                       <div className="hidden md:flex justify-center pr-4">
-                        {allowManualLive && ['PARTNER', 'ADMIN'].includes(u.role) ? (
+                        {allowManualLive && LIVE_ROLES.includes(u.role as RoleKey) ? (
                           <button
                             onClick={() => userMutation.mutate({ id: u.id, isLive: !u.isLive })}
                             disabled={userMutation.isPending}
@@ -604,7 +630,7 @@ export default function AdminPage() {
               </div>
 
               {/* Empty search state */}
-              {userSearch && usersData?.users?.filter((u: any) =>
+              {userSearch && usersData?.users?.filter((u: AdminUser) =>
                 u.displayName.toLowerCase().includes(userSearch.toLowerCase()) ||
                 u.twitchLogin.toLowerCase().includes(userSearch.toLowerCase())
               ).length === 0 && (
@@ -639,7 +665,7 @@ export default function AdminPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {eventsubData?.partners?.map((partner: any) => {
+                {eventsubData?.partners?.map((partner: EventSubPartner) => {
                   const onlineStatus = partner.subscriptions.online?.status;
                   const offlineStatus = partner.subscriptions.offline?.status;
 
@@ -702,7 +728,7 @@ export default function AdminPage() {
                   );
                 })}
                 {eventsubData?.partners?.length === 0 && (
-                  <div className="text-center py-16 text-white/20 font-display text-2xl">NO PARTNERS OR ADMINS</div>
+                  <div className="text-center py-16 text-white/20 font-display text-2xl">NO LIVE-ELIGIBLE USERS</div>
                 )}
               </div>
             )}

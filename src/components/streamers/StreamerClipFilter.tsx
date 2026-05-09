@@ -5,11 +5,12 @@ import { useState } from 'react';
 import { ClipCard } from '@/components/clips/ClipCard';
 import { TAG_LABELS } from '@/components/ui/TagBadge';
 import { TrendingUp, Clock } from 'lucide-react';
+import type { ClipDTO } from '@/modules/clips/clips.types';
 
 const TAGS = Object.keys(TAG_LABELS);
 
 interface Props {
-  clips: any[];
+  clips: ClipDTO[];
   displayName: string;
   shownIds: Set<string>; // IDs already rendered server-side — avoid duplicates
 }
@@ -23,7 +24,7 @@ export function StreamerClipFilter({ clips, displayName, shownIds }: Props) {
   const pool = (tag || showAll) ? clips : clips.filter(c => !shownIds.has(c.id));
 
   const filtered = pool
-    .filter(c => !tag || c.tags.some((t: any) => t.tag === tag))
+    .filter(c => !tag || c.tags.some(t => t.tag === tag))
     .sort((a, b) =>
       sort === 'popular'
         ? b.viewCount - a.viewCount
@@ -31,7 +32,7 @@ export function StreamerClipFilter({ clips, displayName, shownIds }: Props) {
     );
 
   // Only show tags that exist on this streamer's clips
-  const availableTags = TAGS.filter(t => clips.some(c => c.tags.some((ct: any) => ct.tag === t)));
+  const availableTags = TAGS.filter(t => clips.some(c => c.tags.some(ct => ct.tag === t)));
 
   return (
     <div>

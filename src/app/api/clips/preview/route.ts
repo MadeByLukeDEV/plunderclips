@@ -1,12 +1,9 @@
 // src/app/api/clips/preview/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/middleware-auth';
-import { fetchTwitchClip, extractClipId } from '@/lib/twitch';
-import {
-  detectPlatform,
-  extractYouTubeVideoId, fetchYouTubeVideo,
-  extractMedalClipId,
-} from '@/lib/platforms';
+import { requireAuth } from '@/modules/auth/auth.middleware';
+import { fetchTwitchClip, extractClipId, buildEmbedUrl } from '@/modules/platform/twitch.service';
+import { detectPlatform, extractMedalClipId } from '@/modules/platform/platform.helpers';
+import { extractYouTubeVideoId, fetchYouTubeVideo, buildYouTubeEmbedUrl } from '@/modules/platform/youtube.service';
 
 export async function GET(request: NextRequest) {
   const { user, error } = await requireAuth(request);
@@ -19,51 +16,50 @@ export async function GET(request: NextRequest) {
   if (!platform) {
     return NextResponse.json(
       { error: 'Unsupported platform. Use Twitch, YouTube, or Medal.tv URLs.' },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   try {
-    // ── TWITCH ──────────────────────────────────────────────────────────────
     if (platform === 'TWITCH') {
       const clipId = extractClipId(url);
       if (!clipId) return NextResponse.json({ error: 'Invalid Twitch clip URL' }, { status: 400 });
       const clip = await fetchTwitchClip(clipId);
       if (!clip) return NextResponse.json({ error: 'Clip not found on Twitch' }, { status: 404 });
+      const host = request.headers.get('host')?.split(':')[0] ?? 'localhost';
       return NextResponse.json({
-        platform: 'TWITCH',
-        title: clip.title,
-        channelName: clip.broadcaster_name,
+        platform:     'TWITCH',
+        title:        clip.title,
+        channelName:  clip.broadcaster_name,
         thumbnailUrl: clip.thumbnail_url,
-        viewCount: clip.view_count,
-        duration: clip.duration,
+        viewCount:    clip.view_count,
+        duration:     clip.duration,
+        embedUrl:     buildEmbedUrl(clipId, host),
       });
     }
 
-    // ── YOUTUBE ─────────────────────────────────────────────────────────────
     if (platform === 'YOUTUBE') {
       const videoId = extractYouTubeVideoId(url);
       if (!videoId) return NextResponse.json({ error: 'Invalid YouTube URL' }, { status: 400 });
       const video = await fetchYouTubeVideo(videoId);
       if (!video) return NextResponse.json({ error: 'Video not found on YouTube' }, { status: 404 });
       return NextResponse.json({
-        platform: 'YOUTUBE',
-        title: video.title,
-        channelName: video.channelName,
-        channelId: video.channelId,
+        platform:     'YOUTUBE',
+        title:        video.title,
+        channelName:  video.channelName,
+        channelId:    video.channelId,
         thumbnailUrl: video.thumbnailUrl,
-        duration: null,
+        duration:     null,
+        embedUrl:     buildYouTubeEmbedUrl(videoId),
       });
     }
 
-    // ── MEDAL ───────────────────────────────────────────────────────────────
-    // No Medal API available — return a basic preview from the URL only
     if (platform === 'MEDAL') {
       const clipId = extractMedalClipId(url);
       if (!clipId) return NextResponse.json({ error: 'Invalid Medal.tv clip URL' }, { status: 400 });
       return NextResponse.json({
         platform: 'MEDAL',
-        title: `Medal.tv clip`,
+        title: 'Medal.tv clip',
         channelName: 'Medal.tv',
         thumbnailUrl: null,
         duration: null,
