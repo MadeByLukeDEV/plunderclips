@@ -196,7 +196,7 @@ export async function submitClip(input: ClipSubmissionInput): Promise<ClipDTO> {
 
   let result: ClipDTO;
   if (platform === 'TWITCH')       result = await submitTwitchClip({ clipUrl, tags, submittedById, submittedByName, appUrl });
-  else if (platform === 'YOUTUBE') result = await submitYouTubeClip({ clipUrl, tags, submittedById, submittedByName, submitterLogin });
+  else if (platform === 'YOUTUBE') result = await submitYouTubeClip({ clipUrl, tags, submittedById, submittedByName });
   else                             result = await submitMedalClip({ clipUrl, tags, submittedById, submittedByName, submitterLogin });
 
   // Award XP + challenge progress — non-fatal, never blocks the submission response
