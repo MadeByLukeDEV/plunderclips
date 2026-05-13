@@ -19,7 +19,7 @@ async function render(jsx: React.ReactElement, fonts: OGFont[]): Promise<Respons
   });
 }
 
-function simpleFallback(fonts: OGFont[]): React.ReactElement {
+function simpleFallback(_fonts: OGFont[]): React.ReactElement {
   return (
     <div style={{ background: '#0c0e10', width: 1200, height: 630, display: 'flex',
       alignItems: 'center', justifyContent: 'center', fontFamily: 'sans-serif' }}>

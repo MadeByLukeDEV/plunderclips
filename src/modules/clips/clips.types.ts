@@ -9,6 +9,7 @@ export interface ClipSubmissionInput {
   tags: Tag[];
   submittedById: string;
   submittedByName: string;
+  submitterLogin: string;
   appUrl: string;
 }
 

@@ -176,7 +176,7 @@ async function _fetchTrendingClips(limit: number): Promise<ClipDTO[]> {
 // ── Submission ────────────────────────────────────────────────────────────────
 
 export async function submitClip(input: ClipSubmissionInput): Promise<ClipDTO> {
-  const { clipUrl, tags, submittedById, submittedByName, appUrl } = input;
+  const { clipUrl, tags, submittedById, submittedByName, submitterLogin, appUrl } = input;
 
   const withinLimit = await checkSubmissionRateLimit(submittedById);
   if (!withinLimit) {
@@ -196,8 +196,8 @@ export async function submitClip(input: ClipSubmissionInput): Promise<ClipDTO> {
 
   let result: ClipDTO;
   if (platform === 'TWITCH')       result = await submitTwitchClip({ clipUrl, tags, submittedById, submittedByName, appUrl });
-  else if (platform === 'YOUTUBE') result = await submitYouTubeClip({ clipUrl, tags, submittedById, submittedByName });
-  else                             result = await submitMedalClip({ clipUrl, tags, submittedById, submittedByName });
+  else if (platform === 'YOUTUBE') result = await submitYouTubeClip({ clipUrl, tags, submittedById, submittedByName, submitterLogin });
+  else                             result = await submitMedalClip({ clipUrl, tags, submittedById, submittedByName, submitterLogin });
 
   // Award XP + challenge progress — non-fatal, never blocks the submission response
   Promise.all([
@@ -379,7 +379,7 @@ async function submitYouTubeClip(input: {
 
   const linked = await prisma.userLinkedAccount.findFirst({
     where: { youtubeChannelId: video.channelId },
-    select: { userId: true },
+    select: { userId: true, user: { select: { twitchLogin: true } } },
   });
   if (!linked) {
     throw new ClipServiceError(
@@ -387,6 +387,10 @@ async function submitYouTubeClip(input: {
       403,
     );
   }
+
+  // Use the channel owner's Twitch login as broadcasterName so the clip links
+  // to the correct streamer profile regardless of YouTube channel name.
+  const broadcasterName = linked.user.twitchLogin;
 
   const submitterLinked = await prisma.userLinkedAccount.findUnique({
     where: { userId: submittedById },
@@ -411,7 +415,7 @@ async function submitYouTubeClip(input: {
         submittedBy: submittedById,
         submittedByName,
         broadcasterId: video.channelId,
-        broadcasterName: video.channelName,
+        broadcasterName,
         tags: { create: tags.map((tag) => ({ tag })) },
       },
       select: { id: true },
@@ -433,8 +437,9 @@ async function submitMedalClip(input: {
   tags: Tag[];
   submittedById: string;
   submittedByName: string;
+  submitterLogin: string;
 }): Promise<ClipDTO> {
-  const { clipUrl, tags, submittedById, submittedByName } = input;
+  const { clipUrl, tags, submittedById, submittedByName, submitterLogin } = input;
 
   const medalClipId = extractMedalClipId(clipUrl);
   if (!medalClipId) throw new ClipServiceError('Invalid Medal.tv clip URL', 400);
@@ -457,7 +462,7 @@ async function submitMedalClip(input: {
         submittedBy: submittedById,
         submittedByName,
         broadcasterId: '',
-        broadcasterName: submittedByName,
+        broadcasterName: submitterLogin,
         tags: { create: tags.map((tag) => ({ tag })) },
       },
       select: { id: true },
