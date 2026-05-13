@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
       tags: parsed.data.tags,
       submittedById: user.id,
       submittedByName: user.displayName,
+      submitterLogin: user.twitchLogin,
       appUrl,
     });
 
