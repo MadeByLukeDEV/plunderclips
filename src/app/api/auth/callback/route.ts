@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { createSession } from '@/modules/auth/auth.service';
 import { getTwitchProfileImage } from '@/lib/images';
 import { getTwitchUser } from '@/modules/platform/twitch.service';
+import { invalidate } from '@/lib/redis';
+import { CACHE_KEY_STREAMERS_ALL, streamerCacheKey } from '@/modules/streamers/streamers.service';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -63,6 +65,9 @@ export async function GET(request: NextRequest) {
         role:         'USER',
       },
     });
+
+    // ── Bust streamer caches so the new/updated profile is visible immediately ──
+    invalidate(CACHE_KEY_STREAMERS_ALL, streamerCacheKey(user.twitchLogin)).catch(() => {});
 
     // ── Upsert live status row (new schema — must exist for every user) ────────
     await prisma.userLiveStatus.upsert({
