@@ -15,7 +15,7 @@ import {
   toStreamerListItemDTO,
   sortStreamers,
 } from './streamers.helpers';
-import { getOrSet } from '@/lib/redis';
+import { getOrSet, invalidate } from '@/lib/redis';
 
 export const CACHE_KEY_STREAMERS_ALL = 'streamers:all';
 export const streamerCacheKey = (login: string) => `streamer:${login}`;
@@ -119,7 +119,7 @@ export async function updateStreamerRole(
 ): Promise<{ id: string; displayName: string; role: Role; isLive: boolean }> {
   const target = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, twitchId: true, role: true },
+    select: { id: true, twitchId: true, twitchLogin: true, role: true },
   });
   if (!target) throw new StreamerServiceError('User not found', 404);
 
@@ -148,6 +148,8 @@ export async function updateStreamerRole(
       liveStatus: { select: { isLive: true } },
     },
   });
+
+  await invalidate(CACHE_KEY_STREAMERS_ALL, streamerCacheKey(target.twitchLogin));
 
   return {
     id: updated.id,
