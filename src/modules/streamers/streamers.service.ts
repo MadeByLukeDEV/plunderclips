@@ -116,7 +116,7 @@ async function _fetchStreamer(login: string): Promise<{
 export async function updateStreamerRole(
   userId: string,
   newRole: Role,
-): Promise<{ id: string; displayName: string; role: Role; isLive: boolean }> {
+): Promise<{ id: string; twitchLogin: string; displayName: string; role: Role; isLive: boolean }> {
   const target = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true, twitchId: true, twitchLogin: true, role: true },
@@ -143,6 +143,7 @@ export async function updateStreamerRole(
     data: { role: newRole },
     select: {
       id: true,
+      twitchLogin: true,
       displayName: true,
       role: true,
       liveStatus: { select: { isLive: true } },
@@ -153,6 +154,7 @@ export async function updateStreamerRole(
 
   return {
     id: updated.id,
+    twitchLogin: updated.twitchLogin,
     displayName: updated.displayName,
     role: updated.role,
     isLive: updated.liveStatus?.isLive ?? false,
