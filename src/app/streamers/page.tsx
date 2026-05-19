@@ -31,7 +31,7 @@ export default async function StreamersPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {streamers.map((s: StreamerListItemDTO) => (
-            <Link key={s.id} href={`/streamers/${s.twitchLogin}`}
+            <Link key={s.id} href={`/streamers/${s.twitchLogin}`} prefetch={false}
               className="sot-card rounded-lg p-4 text-center hover:border-teal/30 transition-colors group">
               <div className="relative w-14 h-14 mx-auto mb-3 rounded-full overflow-hidden border-2 border-white/10 group-hover:border-teal/30 transition-colors">
                 {s.profileImage ? (
