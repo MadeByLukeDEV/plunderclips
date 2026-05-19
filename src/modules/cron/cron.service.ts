@@ -11,6 +11,15 @@ import type { RefreshLiveResult, RefreshCountResult } from './cron.types';
 // Called every 5 minutes by /api/cron/update-live
 
 export async function refreshLiveStatuses(): Promise<RefreshLiveResult> {
+  // Staleness sweep — runs first, requires no external API call.
+  // Clears any isLive:true record not updated in the last 2 hours.
+  // Guards against missed stream.offline webhooks when the cron also fails repeatedly.
+  const staleThreshold = new Date(Date.now() - 2 * 60 * 60 * 1000);
+  const { count: swept } = await prisma.userLiveStatus.updateMany({
+    where: { isLive: true, liveUpdatedAt: { lt: staleThreshold } },
+    data: { isLive: false, streamTitle: null, streamGame: null, viewerCount: null },
+  });
+
   const liveUsers = await prisma.user.findMany({
     where: {
       role: { in: LIVE_ROLES },
@@ -19,9 +28,18 @@ export async function refreshLiveStatuses(): Promise<RefreshLiveResult> {
     select: { id: true, twitchId: true },
   });
 
-  if (liveUsers.length === 0) return { updated: 0, fixed: 0 };
+  if (liveUsers.length === 0) return { updated: 0, fixed: 0, swept };
 
-  const streams = await fetchLiveStreams(liveUsers.map((u) => u.twitchId));
+  // Wrap the Twitch API call — a temporary API failure should not crash the cron
+  // or skip cache invalidation in the route above.
+  let streams: Awaited<ReturnType<typeof fetchLiveStreams>>;
+  try {
+    streams = await fetchLiveStreams(liveUsers.map((u) => u.twitchId));
+  } catch (err) {
+    console.error('[cron] fetchLiveStreams failed, skipping API-based correction:', err);
+    return { updated: 0, fixed: 0, swept };
+  }
+
   const streamMap = new Map(streams.map((s) => [s.user_id, s]));
 
   let updated = 0;
@@ -57,7 +75,7 @@ export async function refreshLiveStatuses(): Promise<RefreshLiveResult> {
     }
   }
 
-  return { updated, fixed };
+  return { updated, fixed, swept };
 }
 
 // ── Job: refresh YouTube view counts ─────────────────────────────────────────
