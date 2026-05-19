@@ -1,5 +1,6 @@
 // src/app/api/admin/users/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { requireStaff, requireAdmin } from '@/modules/auth/auth.middleware';
 import { updateStreamerRole } from '@/modules/streamers/streamers.service';
@@ -32,32 +33,57 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  const withChannelClips = await Promise.all(
-    users.map(async (u) => {
-      const channelClipCount = await prisma.clip.count({
-        where: {
-          broadcasterName: u.twitchLogin,
-          submittedBy: { not: u.id },
-          moderation: { status: 'APPROVED' },
-        },
-      });
-      return {
-        ...u,
-        // Flatten for client compatibility
-        isLive:             u.liveStatus?.isLive          ?? false,
-        streamTitle:        u.liveStatus?.streamTitle      ?? null,
-        streamGame:         u.liveStatus?.streamGame       ?? null,
-        viewerCount:        u.liveStatus?.viewerCount      ?? null,
-        liveUpdatedAt:      u.liveStatus?.liveUpdatedAt    ?? null,
-        youtubeChannelName: u.linkedAccount?.youtubeChannelName ?? null,
-        liveStatus:         undefined,
-        linkedAccount:      undefined,
-        channelClipCount,
-      };
-    }),
-  );
+  // Batch clip counts in 2 queries instead of N — avoids N+1
+  const broadcasterNames = users.map((u) => u.twitchLogin);
 
-  return NextResponse.json({ users: withChannelClips, allowManualLive: ALLOW_MANUAL_LIVE });
+  const [totalRows, selfRows] = await Promise.all([
+    // Total approved clips per broadcaster
+    prisma.clip.groupBy({
+      by: ['broadcasterName'],
+      where: { broadcasterName: { in: broadcasterNames }, moderation: { status: 'APPROVED' } },
+      _count: { id: true },
+    }),
+    // Self-submitted approved clips per (broadcasterName, submittedBy) pair
+    prisma.clip.groupBy({
+      by: ['broadcasterName', 'submittedBy'],
+      where: {
+        broadcasterName: { in: broadcasterNames },
+        submittedBy: { in: users.map((u) => u.id) },
+        moderation: { status: 'APPROVED' },
+      },
+      _count: { id: true },
+    }),
+  ]);
+
+  const totalByBroadcaster = new Map(totalRows.map((r) => [r.broadcasterName, r._count.id]));
+
+  // Map: broadcasterName -> submittedBy -> count (for self-submission lookup)
+  const selfByBroadcaster = new Map<string, Map<string, number>>();
+  for (const row of selfRows) {
+    if (!selfByBroadcaster.has(row.broadcasterName)) {
+      selfByBroadcaster.set(row.broadcasterName, new Map());
+    }
+    selfByBroadcaster.get(row.broadcasterName)!.set(row.submittedBy, row._count.id);
+  }
+
+  const result = users.map((u) => {
+    const total = totalByBroadcaster.get(u.twitchLogin) ?? 0;
+    const self  = selfByBroadcaster.get(u.twitchLogin)?.get(u.id) ?? 0;
+    return {
+      ...u,
+      isLive:             u.liveStatus?.isLive          ?? false,
+      streamTitle:        u.liveStatus?.streamTitle      ?? null,
+      streamGame:         u.liveStatus?.streamGame       ?? null,
+      viewerCount:        u.liveStatus?.viewerCount      ?? null,
+      liveUpdatedAt:      u.liveStatus?.liveUpdatedAt    ?? null,
+      youtubeChannelName: u.linkedAccount?.youtubeChannelName ?? null,
+      liveStatus:         undefined,
+      linkedAccount:      undefined,
+      channelClipCount:   total - self,
+    };
+  });
+
+  return NextResponse.json({ users: result, allowManualLive: ALLOW_MANUAL_LIVE });
 }
 
 export async function PATCH(request: NextRequest) {
@@ -78,6 +104,11 @@ export async function PATCH(request: NextRequest) {
 
     try {
       const updated = await updateStreamerRole(targetId, role as Role);
+
+      // Bust Next.js full route cache so the streamer pages reflect the new role immediately
+      revalidatePath('/streamers');
+      revalidatePath(`/streamers/${updated.twitchLogin}`);
+
       return NextResponse.json({ user: updated });
     } catch (err: unknown) {
       const status = (err as { status?: number }).status ?? 500;
@@ -126,8 +157,11 @@ export async function PATCH(request: NextRequest) {
 
     const updated = await prisma.user.findUniqueOrThrow({
       where: { id: targetId },
-      select: { id: true, displayName: true, role: true, liveStatus: { select: { isLive: true, streamTitle: true } } },
+      select: { id: true, displayName: true, role: true, twitchLogin: true, liveStatus: { select: { isLive: true, streamTitle: true } } },
     });
+
+    revalidatePath('/streamers');
+    revalidatePath(`/streamers/${updated.twitchLogin}`);
 
     return NextResponse.json({
       user: {

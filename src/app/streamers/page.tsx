@@ -7,6 +7,10 @@ import { getAllStreamers } from '@/modules/streamers/streamers.service';
 import type { StreamerListItemDTO } from '@/modules/streamers/streamers.types';
 import { RoleBadge } from '@/components/ui/RoleBadge';
 
+// Always render server-side so Redis cache (invalidated on mutations) is always consulted.
+// Combined with 10-min Redis TTL this is fast and always reflects the latest role/live changes.
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Sea of Thieves Streamers | PlunderClips',
   description: 'Browse all Sea of Thieves streamers registered on PlunderClips. Discover their best clips, highlights, and moments from the seven seas.',

@@ -1,6 +1,7 @@
 // src/app/api/cron/update-live/route.ts
 // Runs every 5 minutes — keeps live streamer status and viewer counts fresh
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { verifyCronRequest } from '@/modules/cron/cron.middleware';
 import { refreshLiveStatuses } from '@/modules/cron/cron.service';
 import { invalidate, invalidatePattern } from '@/lib/redis';
@@ -17,6 +18,9 @@ export async function POST(request: NextRequest) {
       invalidate(CACHE_KEY_LIVE, CACHE_KEY_STREAMERS_ALL),
       invalidatePattern('streamer:*'),
     ]);
+    // Bust Next.js full route cache for all streamer pages
+    revalidatePath('/streamers');
+    revalidatePath('/streamers/[login]', 'page');
     return NextResponse.json({ ok: true, timestamp: new Date().toISOString(), ...result });
   } catch (err) {
     console.error('Cron update-live error:', err);
