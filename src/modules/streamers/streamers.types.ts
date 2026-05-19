@@ -29,6 +29,8 @@ export interface StreamerProfileDTO {
   viewerCount: number | null;
   liveUpdatedAt: Date | null;
   createdAt: Date;
+  youtubeChannelId: string | null;
+  youtubeChannelName: string | null;
 }
 
 // Aggregated stats shown on a streamer's profile page
