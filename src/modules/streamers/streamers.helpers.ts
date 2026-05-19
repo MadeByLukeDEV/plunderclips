@@ -23,6 +23,9 @@ export const streamerProfileSelect = {
       liveUpdatedAt: true,
     },
   },
+  linkedAccount: {
+    select: { youtubeChannelId: true, youtubeChannelName: true },
+  },
 } satisfies Prisma.UserSelect;
 
 // Slim select for list pages — omits createdAt and liveUpdatedAt
@@ -55,6 +58,8 @@ export function toStreamerProfileDTO(user: UserWithFullLiveStatus): StreamerProf
     viewerCount: user.liveStatus?.viewerCount ?? null,
     liveUpdatedAt: user.liveStatus?.liveUpdatedAt ?? null,
     createdAt: user.createdAt,
+    youtubeChannelId: user.linkedAccount?.youtubeChannelId ?? null,
+    youtubeChannelName: user.linkedAccount?.youtubeChannelName ?? null,
   };
 }
 
